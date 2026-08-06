@@ -24,8 +24,4 @@
     <ProjectReference Include="..\SysNova.EN\SysNova.EN.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Configurations\" />
-  </ItemGroup>
-
 </Project>
