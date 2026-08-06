@@ -6,4 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SysNova.Common\SysNova.Common.csproj" />
+    <ProjectReference Include="..\SysNova.DTO\SysNova.DTO.csproj" />
+  </ItemGroup>
+
 </Project>

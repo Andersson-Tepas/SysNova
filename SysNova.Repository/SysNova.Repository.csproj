@@ -6,4 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SysNova.Common\SysNova.Common.csproj" />
+    <ProjectReference Include="..\SysNova.DAL\SysNova.DAL.csproj" />
+    <ProjectReference Include="..\SysNova.EN\SysNova.EN.csproj" />
+  </ItemGroup>
+
 </Project>

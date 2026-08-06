@@ -6,4 +6,18 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.2.0" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SysNova.Common\SysNova.Common.csproj" />
+    <ProjectReference Include="..\SysNova.DAL\SysNova.DAL.csproj" />
+    <ProjectReference Include="..\SysNova.DTO\SysNova.DTO.csproj" />
+    <ProjectReference Include="..\SysNova.EN\SysNova.EN.csproj" />
+    <ProjectReference Include="..\SysNova.Repository\SysNova.Repository.csproj" />
+  </ItemGroup>
+
 </Project>
