@@ -6,7 +6,16 @@ using System.Threading.Tasks;
 
 namespace SysNova.EN.Entities
 {
-    internal class Carrito
+    public class Carrito : BaseEntity
     {
+        public int CarritoId { get; set; }
+
+        public int ClienteId { get; set; }
+
+        public DateTime Fecha { get; set; } = DateTime.Now;
+
+        public virtual Cliente Cliente { get; set; } = null!;
+
+        public virtual ICollection<DetalleCarrito> Detalles { get; set; } = new List<DetalleCarrito>();
     }
 }
