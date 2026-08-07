@@ -20,4 +20,9 @@
     <ProjectReference Include="..\SysNova.Repository\SysNova.Repository.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Interfaces\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
