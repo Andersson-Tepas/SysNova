@@ -21,7 +21,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Interfaces\" />
+    <Folder Include="Interfaces\IProductoService.cs\" />
+    <Folder Include="Interfaces\IMarcaService.cs\" />
+    <Folder Include="Interfaces\IImagenProductoService.cs\" />
+    <Folder Include="Interfaces\ICategoriaService.cs\" />
+    <Folder Include="Interfaces\IRolService.cs\" />
+    <Folder Include="Interfaces\ICarritoService.cs\" />
+    <Folder Include="Interfaces\IDetalleCarritoService.cs\" />
+    <Folder Include="Interfaces\IMetodoPagoService.cs\" />
+    <Folder Include="Interfaces\IPedidoService.cs\" />
+    <Folder Include="Interfaces\IUsuarioService.cs\" />
+    <Folder Include="Interfaces\IDetallePedidoService.cs\" />
+    <Folder Include="Interfaces\IFavoritoService.cs\" />
+    <Folder Include="Interfaces\IResenaService.cs\" />
+    <Folder Include="Interfaces\IEnvioService.cs\" />
+    <Folder Include="Interfaces\IBannerService.cs\" />
+    <Folder Include="Interfaces\IBlogService.cs\" />
+    <Folder Include="Interfaces\IPreguntaFrecuenteService.cs\" />
+    <Folder Include="Interfaces\IContactoService.cs\" />
+    <Folder Include="Interfaces\IClienteService.cs\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
