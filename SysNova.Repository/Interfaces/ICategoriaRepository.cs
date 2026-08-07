@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using SysNova.EN.Entities;
 
 namespace SysNova.Repository.Interfaces
 {
-    internal class ICategoriaRepository
+    public interface ICategoriaRepository : IRepository<Categoria>
     {
     }
 }

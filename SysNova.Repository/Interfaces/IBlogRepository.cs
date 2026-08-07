@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using SysNova.EN.Entities;
+
 namespace SysNova.Repository.Interfaces
 {
-    internal class IBlogRepository
+    public interface IBlogRepository : IRepository<Blog>
     {
     }
 }
