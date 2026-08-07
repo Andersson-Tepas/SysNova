@@ -4,9 +4,17 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using SysNova.DAL.Context;
+using SysNova.EN.Entities;
+using SysNova.Repository.Interfaces;
+
 namespace SysNova.Repository.Repositories
 {
-    internal class ResenaRepository
+    public class ResenaRepository : Repository<Resena>, IResenaRepository
     {
+        public ResenaRepository(SysNovaDbContext context)
+            : base(context)
+        {
+        }
     }
 }
