@@ -22,8 +22,9 @@ namespace SysNova.API.Controllers
             return Ok(usuarios);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Usuario>> GetById(object id)
+        // 1. Cambiado 'object id' por 'int id' y restringido en la ruta '{id:int}'
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Usuario>> GetById(int id)
         {
             var usuario = await _service.GetByIdAsync(id);
 
@@ -47,8 +48,9 @@ namespace SysNova.API.Controllers
             return NoContent();
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(object id)
+        // 2. Cambiado 'object id' por 'int id' y restringido en la ruta '{id:int}'
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
         {
             var usuario = await _service.GetByIdAsync(id);
 

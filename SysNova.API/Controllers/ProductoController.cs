@@ -25,8 +25,8 @@ namespace SysNova.API.Controllers
         }
 
         // GET: api/Producto/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Producto>> GetById(object id)
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<Producto>> GetById(int id)
         {
             var producto = await _service.GetByIdAsync(id);
 
@@ -60,8 +60,8 @@ namespace SysNova.API.Controllers
         }
 
         // DELETE: api/Producto/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(object id)
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
         {
             var producto = await _service.GetByIdAsync(id);
 
