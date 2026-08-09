@@ -22,6 +22,6 @@ namespace SysNova.EN.Entities
 
         public int RolId { get; set; }
 
-        public virtual Rol Rol { get; set; } = null!;
+        public virtual Rol? Rol { get; set; }
     }
 }
