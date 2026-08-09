@@ -30,11 +30,11 @@ namespace SysNova.EN.Entities
 
         public EstadoPedido Estado { get; set; } = EstadoPedido.Pendiente;
 
-        public virtual Cliente Cliente { get; set; } = null!;
+        public virtual Cliente? Cliente { get; set; } 
 
-        public virtual MetodoPago MetodoPago { get; set; } = null!;
+        public virtual MetodoPago? MetodoPago { get; set; } 
 
-        public virtual ICollection<DetallePedido> Detalles { get; set; } = new List<DetallePedido>();
+        public virtual ICollection<DetallePedido>? Detalles { get; set; } 
 
         public virtual Envio? Envio { get; set; }
     }

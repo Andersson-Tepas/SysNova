@@ -26,12 +26,12 @@ namespace SysNova.EN.Entities
 
         public string? Municipio { get; set; }
 
-        public virtual ICollection<Carrito> Carritos { get; set; } = new List<Carrito>();
+        public virtual ICollection<Carrito>? Carritos { get; set; } 
 
-        public virtual ICollection<Pedido> Pedidos { get; set; } = new List<Pedido>();
+        public virtual ICollection<Pedido>? Pedidos { get; set; } 
 
-        public virtual ICollection<Favorito> Favoritos { get; set; } = new List<Favorito>();
+        public virtual ICollection<Favorito>? Favoritos { get; set; } 
 
-        public virtual ICollection<Resena> Resenas { get; set; } = new List<Resena>();
+        public virtual ICollection<Resena>? Resenas { get; set; } 
     }
 }

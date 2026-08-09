@@ -24,6 +24,6 @@ namespace SysNova.EN.Entities
 
         public DateTime? FechaEntrega { get; set; }
 
-        public virtual Pedido Pedido { get; set; } = null!;
+        public virtual Pedido? Pedido { get; set; } 
     }
 }

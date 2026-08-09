@@ -20,8 +20,8 @@ namespace SysNova.EN.Entities
 
         public decimal SubTotal { get; set; }
 
-        public virtual Carrito Carrito { get; set; } = null!;
+        public virtual Carrito? Carrito { get; set; } 
 
-        public virtual Producto Producto { get; set; } = null!;
+        public virtual Producto? Producto { get; set; } 
     }
 }

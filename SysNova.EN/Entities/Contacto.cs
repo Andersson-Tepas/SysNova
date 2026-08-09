@@ -22,6 +22,6 @@ namespace SysNova.EN.Entities
 
         public bool Leido { get; set; }
 
-        public DateTime FechaContacto { get; set; } = DateTime.Now;
+        public DateTime? FechaContacto { get; set; } 
     }
 }

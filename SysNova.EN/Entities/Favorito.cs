@@ -16,8 +16,8 @@ namespace SysNova.EN.Entities
 
         public DateTime FechaAgregado { get; set; } = DateTime.Now;
 
-        public virtual Cliente Cliente { get; set; } = null!;
+        public virtual Cliente? Cliente { get; set; } 
 
-        public virtual Producto Producto { get; set; } = null!;
+        public virtual Producto? Producto { get; set; }
     }
 }

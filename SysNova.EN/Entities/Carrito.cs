@@ -14,8 +14,8 @@ namespace SysNova.EN.Entities
 
         public DateTime Fecha { get; set; } = DateTime.Now;
 
-        public virtual Cliente Cliente { get; set; } = null!;
+        public virtual Cliente? Cliente { get; set; } 
 
-        public virtual ICollection<DetalleCarrito> Detalles { get; set; } = new List<DetalleCarrito>();
+        public virtual ICollection<DetalleCarrito>? Detalles { get; set; } 
     }
 }

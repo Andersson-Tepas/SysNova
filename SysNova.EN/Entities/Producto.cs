@@ -38,18 +38,18 @@ namespace SysNova.EN.Entities
 
         public int MarcaId { get; set; }
 
-        public virtual Categoria Categoria { get; set; } = null!;
+        public virtual Categoria? Categoria { get; set; } 
 
-        public virtual Marca Marca { get; set; } = null!;
+        public virtual Marca? Marca { get; set; } 
 
-        public virtual ICollection<ImagenProducto> Imagenes { get; set; } = new List<ImagenProducto>();
+        public virtual ICollection<ImagenProducto>? Imagenes { get; set; }
 
-        public virtual ICollection<DetalleCarrito> DetallesCarrito { get; set; } = new List<DetalleCarrito>();
+        public virtual ICollection<DetalleCarrito>? DetallesCarrito { get; set; } 
 
-        public virtual ICollection<DetallePedido> DetallesPedido { get; set; } = new List<DetallePedido>();
+        public virtual ICollection<DetallePedido>? DetallesPedido { get; set; } 
 
-        public virtual ICollection<Favorito> Favoritos { get; set; } = new List<Favorito>();
+        public virtual ICollection<Favorito>? Favoritos { get; set; } 
 
-        public virtual ICollection<Resena> Resenas { get; set; } = new List<Resena>();
+        public virtual ICollection<Resena>? Resenas { get; set; } 
     }
 }

@@ -16,6 +16,6 @@ namespace SysNova.EN.Entities
 
         public int ProductoId { get; set; }
 
-        public virtual Producto Producto { get; set; } = null!;
+        public virtual Producto? Producto { get; set; } 
     }
 }
