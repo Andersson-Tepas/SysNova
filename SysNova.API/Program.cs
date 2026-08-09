@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using SysNova.BL.Interfaces;
+using SysNova.BL.Services;
 using SysNova.DAL.Context;
 using SysNova.Repository.Interfaces;
 using SysNova.Repository.Repositories;
@@ -45,6 +47,39 @@ builder.Services.AddScoped<IBannerRepository, BannerRepository>();
 builder.Services.AddScoped<IBlogRepository, BlogRepository>();
 builder.Services.AddScoped<IPreguntaFrecuenteRepository, PreguntaFrecuenteRepository>();
 builder.Services.AddScoped<IContactoRepository, ContactoRepository>();
+
+// ==========================================
+// SERVICES - BUSINESS LOGIC
+// ==========================================
+
+// Catálogo
+builder.Services.AddScoped<IProductoService, ProductoService>();
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IMarcaService, MarcaService>();
+builder.Services.AddScoped<IImagenProductoService, ImagenProductoService>();
+
+// Clientes
+builder.Services.AddScoped<IClienteService, ClienteService>();
+
+// Seguridad
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IRolService, RolService>();
+
+// Ventas
+builder.Services.AddScoped<ICarritoService, CarritoService>();
+builder.Services.AddScoped<IDetalleCarritoService, DetalleCarritoService>();
+builder.Services.AddScoped<IMetodoPagoService, MetodoPagoService>();
+builder.Services.AddScoped<IPedidoService, PedidoService>();
+builder.Services.AddScoped<IDetallePedidoService, DetallePedidoService>();
+builder.Services.AddScoped<IFavoritoService, FavoritoService>();
+builder.Services.AddScoped<IResenaService, ResenaService>();
+builder.Services.AddScoped<IEnvioService, EnvioService>();
+
+// Sitio Web
+builder.Services.AddScoped<IBannerService, BannerService>();
+builder.Services.AddScoped<IBlogService, BlogService>();
+builder.Services.AddScoped<IPreguntaFrecuenteService, PreguntaFrecuenteService>();
+builder.Services.AddScoped<IContactoService, ContactoService>();
 
 // ==========================================
 // CONTROLLERS
