@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<MetodoPago>>> GetAll()
+        public async Task<ActionResult<IEnumerable<MetodoPagoDTO>>> GetAll()
         {
             var metodos = await _service.GetAllAsync();
             return Ok(metodos);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<MetodoPago>> GetById(int id)
+        public async Task<ActionResult<MetodoPagoDTO>> GetById(int id)
         {
             var metodo = await _service.GetByIdAsync(id);
 
@@ -34,17 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<MetodoPago>> Create(
-            MetodoPago metodoPago)
+        public async Task<ActionResult<MetodoPagoDTO>> Create(MetodoPagoDTO metodoPagoDto)
         {
-            var nuevoMetodo = await _service.AddAsync(metodoPago);
+            var nuevoMetodo = await _service.AddAsync(metodoPagoDto);
             return Ok(nuevoMetodo);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(MetodoPago metodoPago)
+        public async Task<IActionResult> Update(MetodoPagoDTO metodoPagoDto)
         {
-            await _service.UpdateAsync(metodoPago);
+            await _service.UpdateAsync(metodoPagoDto);
             return NoContent();
         }
 
@@ -56,7 +55,7 @@ namespace SysNova.API.Controllers
             if (metodo == null)
                 return NotFound();
 
-            await _service.DeleteAsync(metodo);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

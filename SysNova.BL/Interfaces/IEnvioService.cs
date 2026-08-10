@@ -1,22 +1,25 @@
-﻿using SysNova.EN.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface IEnvioService
     {
-        Task<IEnumerable<Envio>> GetAllAsync();
-        Task<Envio?> GetByIdAsync(object id);
-        Task<IEnumerable<Envio>> FindAsync(Expression<Func<Envio, bool>> predicate);
-        Task<Envio> AddAsync(Envio envio);
-        Task UpdateAsync(Envio envio);
-        Task DeleteAsync(Envio envio);
-        Task<bool> ExistsAsync(Expression<Func<Envio, bool>> predicate);
-    }
+        Task<IEnumerable<EnvioDTO>> GetAllAsync();
 
+        Task<EnvioDTO?> GetByIdAsync(int id);
+
+        Task<IEnumerable<EnvioDTO>> FindAsync(Expression<Func<EnvioDTO, bool>> predicate);
+
+        Task<EnvioDTO> AddAsync(EnvioDTO envioDto);
+
+        Task UpdateAsync(EnvioDTO envioDto);
+
+        Task DeleteAsync(int id);
+
+        Task<bool> ExistsAsync(Expression<Func<EnvioDTO, bool>> predicate);
+    }
 }

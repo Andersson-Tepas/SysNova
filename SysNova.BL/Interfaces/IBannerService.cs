@@ -1,21 +1,25 @@
-﻿using SysNova.EN.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface IBannerService
     {
-        Task<IEnumerable<Banner>> GetAllAsync();
-        Task<Banner?> GetByIdAsync(object id);
-        Task<IEnumerable<Banner>> FindAsync(Expression<Func<Banner, bool>> predicate);
-        Task<Banner> AddAsync(Banner banner);
-        Task UpdateAsync(Banner banner);
-        Task DeleteAsync(Banner banner);
-        Task<bool> ExistsAsync(Expression<Func<Banner, bool>> predicate);
+        Task<IEnumerable<BannerDTO>> GetAllAsync();
+
+        Task<BannerDTO?> GetByIdAsync(int id);
+
+        Task<IEnumerable<BannerDTO>> FindAsync(Expression<Func<BannerDTO, bool>> predicate);
+
+        Task<BannerDTO> AddAsync(BannerDTO bannerDto);
+
+        Task UpdateAsync(BannerDTO bannerDto);
+
+        Task DeleteAsync(int id);
+
+        Task<bool> ExistsAsync(Expression<Func<BannerDTO, bool>> predicate);
     }
 }

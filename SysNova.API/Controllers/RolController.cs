@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Rol>>> GetAll()
+        public async Task<ActionResult<IEnumerable<RolDTO>>> GetAll()
         {
             var roles = await _service.GetAllAsync();
             return Ok(roles);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Rol>> GetById(int id)
+        public async Task<ActionResult<RolDTO>> GetById(int id)
         {
             var rol = await _service.GetByIdAsync(id);
 
@@ -34,16 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Rol>> Create(Rol rol)
+        public async Task<ActionResult<RolDTO>> Create(RolDTO rolDto)
         {
-            var nuevoRol = await _service.AddAsync(rol);
+            var nuevoRol = await _service.AddAsync(rolDto);
             return Ok(nuevoRol);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Rol rol)
+        public async Task<IActionResult> Update(RolDTO rolDto)
         {
-            await _service.UpdateAsync(rol);
+            await _service.UpdateAsync(rolDto);
             return NoContent();
         }
 
@@ -55,7 +55,7 @@ namespace SysNova.API.Controllers
             if (rol == null)
                 return NotFound();
 
-            await _service.DeleteAsync(rol);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

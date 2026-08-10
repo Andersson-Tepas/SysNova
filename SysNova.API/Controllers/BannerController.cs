@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Banner>>> GetAll()
+        public async Task<ActionResult<IEnumerable<BannerDTO>>> GetAll()
         {
             var banners = await _service.GetAllAsync();
             return Ok(banners);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Banner>> GetById(int id)
+        public async Task<ActionResult<BannerDTO>> GetById(int id)
         {
             var banner = await _service.GetByIdAsync(id);
 
@@ -34,16 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Banner>> Create(Banner banner)
+        public async Task<ActionResult<BannerDTO>> Create(BannerDTO bannerDto)
         {
-            var nuevoBanner = await _service.AddAsync(banner);
+            var nuevoBanner = await _service.AddAsync(bannerDto);
             return Ok(nuevoBanner);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Banner banner)
+        public async Task<IActionResult> Update(BannerDTO bannerDto)
         {
-            await _service.UpdateAsync(banner);
+            await _service.UpdateAsync(bannerDto);
             return NoContent();
         }
 
@@ -55,7 +55,7 @@ namespace SysNova.API.Controllers
             if (banner == null)
                 return NotFound();
 
-            await _service.DeleteAsync(banner);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

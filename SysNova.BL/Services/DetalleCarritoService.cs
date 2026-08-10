@@ -1,60 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class DetalleCarritoService : IDetalleCarritoService
     {
         private readonly IDetalleCarritoRepository _repository;
+        private readonly IMapper _mapper;
 
-        public DetalleCarritoService(IDetalleCarritoRepository repository)
+        public DetalleCarritoService(IDetalleCarritoRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<DetalleCarrito>> GetAllAsync()
+        public async Task<IEnumerable<DetalleCarritoDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var detalles = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<DetalleCarritoDTO>>(detalles);
         }
 
-        public async Task<DetalleCarrito?> GetByIdAsync(object id)
+        public async Task<DetalleCarritoDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var detalle = await _repository.GetByIdAsync(id);
+            return _mapper.Map<DetalleCarritoDTO?>(detalle);
         }
 
-        public async Task<IEnumerable<DetalleCarrito>> FindAsync(
-            Expression<Func<DetalleCarrito, bool>> predicate)
+        public async Task<IEnumerable<DetalleCarritoDTO>> FindAsync(
+            Expression<Func<DetalleCarritoDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<DetalleCarrito, bool>>>(predicate);
+            var detalles = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<DetalleCarritoDTO>>(detalles);
         }
 
-        public async Task<DetalleCarrito> AddAsync(DetalleCarrito detalle)
+        public async Task<DetalleCarritoDTO> AddAsync(DetalleCarritoDTO detalleDto)
         {
-            return await _repository.AddAsync(detalle);
+            var entity = _mapper.Map<DetalleCarrito>(detalleDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<DetalleCarritoDTO>(result);
         }
 
-        public async Task UpdateAsync(DetalleCarrito detalle)
+        public async Task UpdateAsync(DetalleCarritoDTO detalleDto)
         {
-            await _repository.UpdateAsync(detalle);
+            var entity = _mapper.Map<DetalleCarrito>(detalleDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(DetalleCarrito detalle)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(detalle);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<DetalleCarrito, bool>> predicate)
+            Expression<Func<DetalleCarritoDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<DetalleCarrito, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

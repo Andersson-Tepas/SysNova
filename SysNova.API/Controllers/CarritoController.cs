@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Carrito>>> GetAll()
+        public async Task<ActionResult<IEnumerable<CarritoDTO>>> GetAll()
         {
             var carritos = await _service.GetAllAsync();
             return Ok(carritos);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Carrito>> GetById(int id)
+        public async Task<ActionResult<CarritoDTO>> GetById(int id)
         {
             var carrito = await _service.GetByIdAsync(id);
 
@@ -34,16 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Carrito>> Create(Carrito carrito)
+        public async Task<ActionResult<CarritoDTO>> Create(CarritoDTO carritoDto)
         {
-            var nuevoCarrito = await _service.AddAsync(carrito);
+            var nuevoCarrito = await _service.AddAsync(carritoDto);
             return Ok(nuevoCarrito);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Carrito carrito)
+        public async Task<IActionResult> Update(CarritoDTO carritoDto)
         {
-            await _service.UpdateAsync(carrito);
+            await _service.UpdateAsync(carritoDto);
             return NoContent();
         }
 
@@ -55,7 +55,7 @@ namespace SysNova.API.Controllers
             if (carrito == null)
                 return NotFound();
 
-            await _service.DeleteAsync(carrito);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

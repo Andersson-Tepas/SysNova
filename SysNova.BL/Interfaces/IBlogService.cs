@@ -1,22 +1,25 @@
-﻿using SysNova.EN.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface IBlogService
     {
-        Task<IEnumerable<Blog>> GetAllAsync();
-        Task<Blog?> GetByIdAsync(object id);
-        Task<IEnumerable<Blog>> FindAsync(Expression<Func<Blog, bool>> predicate);
-        Task<Blog> AddAsync(Blog blog);
-        Task UpdateAsync(Blog blog);
-        Task DeleteAsync(Blog blog);
-        Task<bool> ExistsAsync(Expression<Func<Blog, bool>> predicate);
-    }
+        Task<IEnumerable<BlogDTO>> GetAllAsync();
 
+        Task<BlogDTO?> GetByIdAsync(int id);
+
+        Task<IEnumerable<BlogDTO>> FindAsync(Expression<Func<BlogDTO, bool>> predicate);
+
+        Task<BlogDTO> AddAsync(BlogDTO blogDto);
+
+        Task UpdateAsync(BlogDTO blogDto);
+
+        Task DeleteAsync(int id);
+
+        Task<bool> ExistsAsync(Expression<Func<BlogDTO, bool>> predicate);
+    }
 }

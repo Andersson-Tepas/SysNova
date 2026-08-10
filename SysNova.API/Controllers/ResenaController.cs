@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Resena>>> GetAll()
+        public async Task<ActionResult<IEnumerable<ResenaDTO>>> GetAll()
         {
             var resenas = await _service.GetAllAsync();
             return Ok(resenas);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Resena>> GetById(int id)
+        public async Task<ActionResult<ResenaDTO>> GetById(int id)
         {
             var resena = await _service.GetByIdAsync(id);
 
@@ -34,16 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Resena>> Create(Resena resena)
+        public async Task<ActionResult<ResenaDTO>> Create(ResenaDTO resenaDto)
         {
-            var nuevaResena = await _service.AddAsync(resena);
+            var nuevaResena = await _service.AddAsync(resenaDto);
             return Ok(nuevaResena);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Resena resena)
+        public async Task<IActionResult> Update(ResenaDTO resenaDto)
         {
-            await _service.UpdateAsync(resena);
+            await _service.UpdateAsync(resenaDto);
             return NoContent();
         }
 
@@ -55,7 +55,7 @@ namespace SysNova.API.Controllers
             if (resena == null)
                 return NotFound();
 
-            await _service.DeleteAsync(resena);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

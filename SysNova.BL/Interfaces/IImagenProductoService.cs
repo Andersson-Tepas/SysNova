@@ -6,17 +6,20 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
+using SysNova.DTO;
+
 namespace SysNova.BL.Interfaces
 {
     public interface IImagenProductoService
     {
-        Task<IEnumerable<ImagenProducto>> GetAllAsync();
-        Task<ImagenProducto?> GetByIdAsync(object id);
-        Task<IEnumerable<ImagenProducto>> FindAsync(Expression<Func<ImagenProducto, bool>> predicate);
-        Task<ImagenProducto> AddAsync(ImagenProducto imagenProducto);
-        Task UpdateAsync(ImagenProducto imagenProducto);
-        Task DeleteAsync(ImagenProducto imagenProducto);
-        Task<bool> ExistsAsync(Expression<Func<ImagenProducto, bool>> predicate);
-    }
+        Task<IEnumerable<ImagenProductoDTO>> GetAllAsync();
 
+        Task<ImagenProductoDTO?> GetByIdAsync(int id);
+
+        Task<ImagenProductoDTO> AddAsync(ImagenProductoDTO dto);
+
+        Task UpdateAsync(ImagenProductoDTO dto);
+
+        Task DeleteAsync(int id);
+    }
 }

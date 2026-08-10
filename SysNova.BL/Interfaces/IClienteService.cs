@@ -5,17 +5,20 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface IClienteService
     {
-        Task<IEnumerable<Cliente>> GetAllAsync();
-        Task<Cliente?> GetByIdAsync(object id);
-        Task<IEnumerable<Cliente>> FindAsync(Expression<Func<Cliente, bool>> predicate);
-        Task<Cliente> AddAsync(Cliente cliente);
-        Task UpdateAsync(Cliente cliente);
-        Task DeleteAsync(Cliente cliente);
-        Task<bool> ExistsAsync(Expression<Func<Cliente, bool>> predicate);
+        Task<IEnumerable<ClienteDTO>> GetAllAsync();
+
+        Task<ClienteDTO?> GetByIdAsync(int id);
+
+        Task<ClienteDTO> AddAsync(ClienteDTO dto);
+
+        Task UpdateAsync(ClienteDTO dto);
+
+        Task DeleteAsync(int id);
     }
 }

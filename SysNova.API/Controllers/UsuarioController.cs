@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,15 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Usuario>>> GetAll()
+        public async Task<ActionResult<IEnumerable<UsuarioDTO>>> GetAll()
         {
             var usuarios = await _service.GetAllAsync();
             return Ok(usuarios);
         }
 
-        // 1. Cambiado 'object id' por 'int id' y restringido en la ruta '{id:int}'
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Usuario>> GetById(int id)
+        public async Task<ActionResult<UsuarioDTO>> GetById(int id)
         {
             var usuario = await _service.GetByIdAsync(id);
 
@@ -35,20 +34,19 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Usuario>> Create(Usuario usuario)
+        public async Task<ActionResult<UsuarioDTO>> Create(UsuarioDTO usuarioDto)
         {
-            var nuevoUsuario = await _service.AddAsync(usuario);
+            var nuevoUsuario = await _service.AddAsync(usuarioDto);
             return Ok(nuevoUsuario);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Usuario usuario)
+        public async Task<IActionResult> Update(UsuarioDTO usuarioDto)
         {
-            await _service.UpdateAsync(usuario);
+            await _service.UpdateAsync(usuarioDto);
             return NoContent();
         }
 
-        // 2. Cambiado 'object id' por 'int id' y restringido en la ruta '{id:int}'
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -57,7 +55,7 @@ namespace SysNova.API.Controllers
             if (usuario == null)
                 return NotFound();
 
-            await _service.DeleteAsync(usuario);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

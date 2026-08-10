@@ -6,17 +6,20 @@ using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
+using SysNova.DTO;
+
 namespace SysNova.BL.Interfaces
 {
     public interface ICategoriaService
     {
-        Task<IEnumerable<Categoria>> GetAllAsync();
-        Task<Categoria?> GetByIdAsync(object id);
-        Task<IEnumerable<Categoria>> FindAsync(Expression<Func<Categoria, bool>> predicate);
-        Task<Categoria> AddAsync(Categoria categoria);
-        Task UpdateAsync(Categoria categoria);
-        Task DeleteAsync(Categoria categoria);
-        Task<bool> ExistsAsync(Expression<Func<Categoria, bool>> predicate);
-    }
+        Task<IEnumerable<CategoriaDTO>> GetAllAsync();
 
+        Task<CategoriaDTO?> GetByIdAsync(int id);
+
+        Task<CategoriaDTO> AddAsync(CategoriaDTO dto);
+
+        Task UpdateAsync(CategoriaDTO dto);
+
+        Task DeleteAsync(int id);
+    }
 }

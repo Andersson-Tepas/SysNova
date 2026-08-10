@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Categoria>>> GetAll()
+        public async Task<ActionResult<IEnumerable<CategoriaDTO>>> GetAll()
         {
             var categorias = await _service.GetAllAsync();
             return Ok(categorias);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Categoria>> GetById(int id)
+        public async Task<ActionResult<CategoriaDTO>> GetById(int id)
         {
             var categoria = await _service.GetByIdAsync(id);
 
@@ -34,16 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Categoria>> Create(Categoria categoria)
+        public async Task<ActionResult<CategoriaDTO>> Create(CategoriaDTO categoriaDto)
         {
-            var nuevaCategoria = await _service.AddAsync(categoria);
+            var nuevaCategoria = await _service.AddAsync(categoriaDto);
             return Ok(nuevaCategoria);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Categoria categoria)
+        public async Task<IActionResult> Update(CategoriaDTO categoriaDto)
         {
-            await _service.UpdateAsync(categoria);
+            await _service.UpdateAsync(categoriaDto);
             return NoContent();
         }
 
@@ -55,7 +55,7 @@ namespace SysNova.API.Controllers
             if (categoria == null)
                 return NotFound();
 
-            await _service.DeleteAsync(categoria);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

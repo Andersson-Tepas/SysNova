@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Pedido>>> GetAll()
+        public async Task<ActionResult<IEnumerable<PedidoDTO>>> GetAll()
         {
             var pedidos = await _service.GetAllAsync();
             return Ok(pedidos);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Pedido>> GetById(int id)
+        public async Task<ActionResult<PedidoDTO>> GetById(int id)
         {
             var pedido = await _service.GetByIdAsync(id);
 
@@ -34,16 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Pedido>> Create(Pedido pedido)
+        public async Task<ActionResult<PedidoDTO>> Create(PedidoDTO pedidoDto)
         {
-            var nuevoPedido = await _service.AddAsync(pedido);
+            var nuevoPedido = await _service.AddAsync(pedidoDto);
             return Ok(nuevoPedido);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Pedido pedido)
+        public async Task<IActionResult> Update(PedidoDTO pedidoDto)
         {
-            await _service.UpdateAsync(pedido);
+            await _service.UpdateAsync(pedidoDto);
             return NoContent();
         }
 
@@ -55,7 +55,7 @@ namespace SysNova.API.Controllers
             if (pedido == null)
                 return NotFound();
 
-            await _service.DeleteAsync(pedido);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,15 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Contacto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<ContactoDTO>>> GetAll()
         {
             var contactos = await _service.GetAllAsync();
-
             return Ok(contactos);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Contacto>> GetById(int id)
+        public async Task<ActionResult<ContactoDTO>> GetById(int id)
         {
             var contacto = await _service.GetByIdAsync(id);
 
@@ -35,19 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Contacto>> Create(
-            Contacto contacto)
+        public async Task<ActionResult<ContactoDTO>> Create(ContactoDTO contactoDto)
         {
-            var nuevoContacto = await _service.AddAsync(contacto);
-
+            var nuevoContacto = await _service.AddAsync(contactoDto);
             return Ok(nuevoContacto);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Contacto contacto)
+        public async Task<IActionResult> Update(ContactoDTO contactoDto)
         {
-            await _service.UpdateAsync(contacto);
-
+            await _service.UpdateAsync(contactoDto);
             return NoContent();
         }
 
@@ -59,7 +55,7 @@ namespace SysNova.API.Controllers
             if (contacto == null)
                 return NotFound();
 
-            await _service.DeleteAsync(contacto);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

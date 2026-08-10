@@ -1,60 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class ProductoService : IProductoService
     {
         private readonly IProductoRepository _repository;
+        private readonly IMapper _mapper;
 
-        public ProductoService(IProductoRepository repository)
+        public ProductoService(IProductoRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Producto>> GetAllAsync()
+        public async Task<IEnumerable<ProductoDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var productos = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ProductoDTO>>(productos);
         }
 
-        public async Task<Producto?> GetByIdAsync(object id)
+        public async Task<ProductoDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var producto = await _repository.GetByIdAsync(id);
+            return _mapper.Map<ProductoDTO?>(producto);
         }
 
-        public async Task<IEnumerable<Producto>> FindAsync(
-            Expression<Func<Producto, bool>> predicate)
+        public async Task<IEnumerable<ProductoDTO>> FindAsync(
+            Expression<Func<ProductoDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Producto, bool>>>(predicate);
+            var productos = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<ProductoDTO>>(productos);
         }
 
-        public async Task<Producto> AddAsync(Producto producto)
+        public async Task<ProductoDTO> AddAsync(ProductoDTO productoDto)
         {
-            return await _repository.AddAsync(producto);
+            var entity = _mapper.Map<Producto>(productoDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<ProductoDTO>(result);
         }
 
-        public async Task UpdateAsync(Producto producto)
+        public async Task UpdateAsync(ProductoDTO productoDto)
         {
-            await _repository.UpdateAsync(producto);
+            var entity = _mapper.Map<Producto>(productoDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(Producto producto)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(producto);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<Producto, bool>> predicate)
+            Expression<Func<ProductoDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Producto, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

@@ -1,22 +1,25 @@
-﻿using SysNova.EN.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface IMetodoPagoService
     {
-        Task<IEnumerable<MetodoPago>> GetAllAsync();
-        Task<MetodoPago?> GetByIdAsync(object id);
-        Task<IEnumerable<MetodoPago>> FindAsync(Expression<Func<MetodoPago, bool>> predicate);
-        Task<MetodoPago> AddAsync(MetodoPago metodoPago);
-        Task UpdateAsync(MetodoPago metodoPago);
-        Task DeleteAsync(MetodoPago metodoPago);
-        Task<bool> ExistsAsync(Expression<Func<MetodoPago, bool>> predicate);
-    }
+        Task<IEnumerable<MetodoPagoDTO>> GetAllAsync();
 
+        Task<MetodoPagoDTO?> GetByIdAsync(int id);
+
+        Task<IEnumerable<MetodoPagoDTO>> FindAsync(Expression<Func<MetodoPagoDTO, bool>> predicate);
+
+        Task<MetodoPagoDTO> AddAsync(MetodoPagoDTO metodoPagoDto);
+
+        Task UpdateAsync(MetodoPagoDTO metodoPagoDto);
+
+        Task DeleteAsync(int id);
+
+        Task<bool> ExistsAsync(Expression<Func<MetodoPagoDTO, bool>> predicate);
+    }
 }

@@ -1,22 +1,25 @@
-﻿using SysNova.EN.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface ICarritoService
     {
-        Task<IEnumerable<Carrito>> GetAllAsync();
-        Task<Carrito?> GetByIdAsync(object id);
-        Task<IEnumerable<Carrito>> FindAsync(Expression<Func<Carrito, bool>> predicate);
-        Task<Carrito> AddAsync(Carrito carrito);
-        Task UpdateAsync(Carrito carrito);
-        Task DeleteAsync(Carrito carrito);
-        Task<bool> ExistsAsync(Expression<Func<Carrito, bool>> predicate);
-    }
+        Task<IEnumerable<CarritoDTO>> GetAllAsync();
 
+        Task<CarritoDTO?> GetByIdAsync(int id);
+
+        Task<IEnumerable<CarritoDTO>> FindAsync(Expression<Func<CarritoDTO, bool>> predicate);
+
+        Task<CarritoDTO> AddAsync(CarritoDTO carritoDto);
+
+        Task UpdateAsync(CarritoDTO carritoDto);
+
+        Task DeleteAsync(int id);
+
+        Task<bool> ExistsAsync(Expression<Func<CarritoDTO, bool>> predicate);
+    }
 }

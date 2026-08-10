@@ -6,25 +6,20 @@ using System.Threading.Tasks;
 
 using SysNova.EN.Entities;
 using System.Linq.Expressions;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface IProductoService
     {
-        Task<IEnumerable<Producto>> GetAllAsync();
+        Task<IEnumerable<ProductoDTO>> GetAllAsync();
 
-        Task<Producto?> GetByIdAsync(object id);
+        Task<ProductoDTO?> GetByIdAsync(int id);
 
-        Task<IEnumerable<Producto>> FindAsync(
-            Expression<Func<Producto, bool>> predicate);
+        Task<ProductoDTO> AddAsync(ProductoDTO dto);
 
-        Task<Producto> AddAsync(Producto producto);
+        Task UpdateAsync(ProductoDTO dto);
 
-        Task UpdateAsync(Producto producto);
-
-        Task DeleteAsync(Producto producto);
-
-        Task<bool> ExistsAsync(
-            Expression<Func<Producto, bool>> predicate);
+        Task DeleteAsync(int id);
     }
 }

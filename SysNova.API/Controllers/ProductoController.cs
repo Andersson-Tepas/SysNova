@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -15,18 +15,15 @@ namespace SysNova.API.Controllers
             _service = service;
         }
 
-        // GET: api/Producto
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Producto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<ProductoDTO>>> GetAll()
         {
             var productos = await _service.GetAllAsync();
-
             return Ok(productos);
         }
 
-        // GET: api/Producto/5
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Producto>> GetById(int id)
+        public async Task<ActionResult<ProductoDTO>> GetById(int id)
         {
             var producto = await _service.GetByIdAsync(id);
 
@@ -36,30 +33,26 @@ namespace SysNova.API.Controllers
             return Ok(producto);
         }
 
-        // POST: api/Producto
         [HttpPost]
-        public async Task<ActionResult<Producto>> Create(Producto producto)
+        public async Task<ActionResult<ProductoDTO>> Create(ProductoDTO productoDto)
         {
-            var nuevoProducto = await _service.AddAsync(producto);
-
+            var nuevoProducto = await _service.AddAsync(productoDto);
             return Ok(nuevoProducto);
         }
 
-        // PUT: api/Producto
         [HttpPut]
-        public async Task<IActionResult> Update(Producto producto)
+        public async Task<IActionResult> Update(ProductoDTO productoDto)
         {
-            var existente = await _service.GetByIdAsync(producto.ProductoId);
+            var existente = await _service.GetByIdAsync(productoDto.ProductoId);
 
             if (existente == null)
                 return NotFound();
 
-            await _service.UpdateAsync(producto);
+            await _service.UpdateAsync(productoDto);
 
             return NoContent();
         }
 
-        // DELETE: api/Producto/5
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -68,7 +61,7 @@ namespace SysNova.API.Controllers
             if (producto == null)
                 return NotFound();
 
-            await _service.DeleteAsync(producto);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

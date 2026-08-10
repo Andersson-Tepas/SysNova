@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Favorito>>> GetAll()
+        public async Task<ActionResult<IEnumerable<FavoritoDTO>>> GetAll()
         {
             var favoritos = await _service.GetAllAsync();
             return Ok(favoritos);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Favorito>> GetById(int id)
+        public async Task<ActionResult<FavoritoDTO>> GetById(int id)
         {
             var favorito = await _service.GetByIdAsync(id);
 
@@ -34,16 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Favorito>> Create(Favorito favorito)
+        public async Task<ActionResult<FavoritoDTO>> Create(FavoritoDTO favoritoDto)
         {
-            var nuevoFavorito = await _service.AddAsync(favorito);
+            var nuevoFavorito = await _service.AddAsync(favoritoDto);
             return Ok(nuevoFavorito);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Favorito favorito)
+        public async Task<IActionResult> Update(FavoritoDTO favoritoDto)
         {
-            await _service.UpdateAsync(favorito);
+            await _service.UpdateAsync(favoritoDto);
             return NoContent();
         }
 
@@ -55,7 +55,7 @@ namespace SysNova.API.Controllers
             if (favorito == null)
                 return NotFound();
 
-            await _service.DeleteAsync(favorito);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

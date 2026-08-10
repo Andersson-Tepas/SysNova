@@ -1,21 +1,25 @@
-﻿using SysNova.EN.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface IPedidoService
     {
-        Task<IEnumerable<Pedido>> GetAllAsync();
-        Task<Pedido?> GetByIdAsync(object id);
-        Task<IEnumerable<Pedido>> FindAsync(Expression<Func<Pedido, bool>> predicate);
-        Task<Pedido> AddAsync(Pedido pedido);
-        Task UpdateAsync(Pedido pedido);
-        Task DeleteAsync(Pedido pedido);
-        Task<bool> ExistsAsync(Expression<Func<Pedido, bool>> predicate);
+        Task<IEnumerable<PedidoDTO>> GetAllAsync();
+
+        Task<PedidoDTO?> GetByIdAsync(int id);
+
+        Task<IEnumerable<PedidoDTO>> FindAsync(Expression<Func<PedidoDTO, bool>> predicate);
+
+        Task<PedidoDTO> AddAsync(PedidoDTO pedidoDto);
+
+        Task UpdateAsync(PedidoDTO pedidoDto);
+
+        Task DeleteAsync(int id);
+
+        Task<bool> ExistsAsync(Expression<Func<PedidoDTO, bool>> predicate);
     }
 }

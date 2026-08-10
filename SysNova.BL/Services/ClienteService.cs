@@ -1,60 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class ClienteService : IClienteService
     {
         private readonly IClienteRepository _repository;
+        private readonly IMapper _mapper;
 
-        public ClienteService(IClienteRepository repository)
+        public ClienteService(IClienteRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Cliente>> GetAllAsync()
+        public async Task<IEnumerable<ClienteDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var clientes = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ClienteDTO>>(clientes);
         }
 
-        public async Task<Cliente?> GetByIdAsync(object id)
+        public async Task<ClienteDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var cliente = await _repository.GetByIdAsync(id);
+            return _mapper.Map<ClienteDTO?>(cliente);
         }
 
-        public async Task<IEnumerable<Cliente>> FindAsync(
-            Expression<Func<Cliente, bool>> predicate)
+        public async Task<IEnumerable<ClienteDTO>> FindAsync(
+            Expression<Func<ClienteDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Cliente, bool>>>(predicate);
+            var clientes = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<ClienteDTO>>(clientes);
         }
 
-        public async Task<Cliente> AddAsync(Cliente cliente)
+        public async Task<ClienteDTO> AddAsync(ClienteDTO clienteDto)
         {
-            return await _repository.AddAsync(cliente);
+            var entity = _mapper.Map<Cliente>(clienteDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<ClienteDTO>(result);
         }
 
-        public async Task UpdateAsync(Cliente cliente)
+        public async Task UpdateAsync(ClienteDTO clienteDto)
         {
-            await _repository.UpdateAsync(cliente);
+            var entity = _mapper.Map<Cliente>(clienteDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(Cliente cliente)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(cliente);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<Cliente, bool>> predicate)
+            Expression<Func<ClienteDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Cliente, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

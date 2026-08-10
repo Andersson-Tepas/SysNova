@@ -1,60 +1,75 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class UsuarioService : IUsuarioService
     {
         private readonly IUsuarioRepository _repository;
+        private readonly IMapper _mapper;
 
-        public UsuarioService(IUsuarioRepository repository)
+        public UsuarioService(IUsuarioRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Usuario>> GetAllAsync()
+        public async Task<IEnumerable<UsuarioDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var usuarios = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<UsuarioDTO>>(usuarios);
         }
 
-        public async Task<Usuario?> GetByIdAsync(object id)
+        public async Task<UsuarioDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var usuario = await _repository.GetByIdAsync(id);
+            return _mapper.Map<UsuarioDTO?>(usuario);
         }
 
-        public async Task<IEnumerable<Usuario>> FindAsync(
-            Expression<Func<Usuario, bool>> predicate)
+        public async Task<IEnumerable<UsuarioDTO>> FindAsync(
+            Expression<Func<UsuarioDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            // Traduce el predicado del DTO a la Entidad para la consulta
+            var entityPredicate = _mapper.Map<Expression<Func<Usuario, bool>>>(predicate);
+            var usuarios = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<UsuarioDTO>>(usuarios);
         }
 
-        public async Task<Usuario> AddAsync(Usuario usuario)
+        public async Task<UsuarioDTO> AddAsync(UsuarioDTO usuarioDto)
         {
-            return await _repository.AddAsync(usuario);
+            var entity = _mapper.Map<Usuario>(usuarioDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<UsuarioDTO>(result);
         }
 
-        public async Task UpdateAsync(Usuario usuario)
+        public async Task UpdateAsync(UsuarioDTO usuarioDto)
         {
-            await _repository.UpdateAsync(usuario);
+            var entity = _mapper.Map<Usuario>(usuarioDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(Usuario usuario)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(usuario);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<Usuario, bool>> predicate)
+            Expression<Func<UsuarioDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Usuario, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

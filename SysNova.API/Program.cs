@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SysNova.BL.Interfaces;
+using SysNova.BL.Mappings;
 using SysNova.BL.Services;
 using SysNova.DAL.Context;
 using SysNova.Repository.Interfaces;
@@ -14,6 +16,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<SysNovaDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// ==========================================
+// AUTOMAPPER
+// ==========================================
+
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
 // ==========================================
 // REPOSITORIES

@@ -1,21 +1,25 @@
-﻿using SysNova.EN.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO;
 
 namespace SysNova.BL.Interfaces
 {
     public interface IRolService
     {
-        Task<IEnumerable<Rol>> GetAllAsync();
-        Task<Rol?> GetByIdAsync(object id);
-        Task<IEnumerable<Rol>> FindAsync(Expression<Func<Rol, bool>> predicate);
-        Task<Rol> AddAsync(Rol rol);
-        Task UpdateAsync(Rol rol);
-        Task DeleteAsync(Rol rol);
-        Task<bool> ExistsAsync(Expression<Func<Rol, bool>> predicate);
+        Task<IEnumerable<RolDTO>> GetAllAsync();
+
+        Task<RolDTO?> GetByIdAsync(int id);
+
+        Task<IEnumerable<RolDTO>> FindAsync(Expression<Func<RolDTO, bool>> predicate);
+
+        Task<RolDTO> AddAsync(RolDTO rolDto);
+
+        Task UpdateAsync(RolDTO rolDto);
+
+        Task DeleteAsync(int id);
+
+        Task<bool> ExistsAsync(Expression<Func<RolDTO, bool>> predicate);
     }
 }

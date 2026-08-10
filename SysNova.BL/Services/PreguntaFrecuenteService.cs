@@ -1,61 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class PreguntaFrecuenteService : IPreguntaFrecuenteService
     {
         private readonly IPreguntaFrecuenteRepository _repository;
+        private readonly IMapper _mapper;
 
-        public PreguntaFrecuenteService(IPreguntaFrecuenteRepository repository)
+        public PreguntaFrecuenteService(IPreguntaFrecuenteRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<PreguntaFrecuente>> GetAllAsync()
+        public async Task<IEnumerable<PreguntaFrecuenteDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var preguntas = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<PreguntaFrecuenteDTO>>(preguntas);
         }
 
-        public async Task<PreguntaFrecuente?> GetByIdAsync(object id)
+        public async Task<PreguntaFrecuenteDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var pregunta = await _repository.GetByIdAsync(id);
+            return _mapper.Map<PreguntaFrecuenteDTO?>(pregunta);
         }
 
-        public async Task<IEnumerable<PreguntaFrecuente>> FindAsync(
-            Expression<Func<PreguntaFrecuente, bool>> predicate)
+        public async Task<IEnumerable<PreguntaFrecuenteDTO>> FindAsync(
+            Expression<Func<PreguntaFrecuenteDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<PreguntaFrecuente, bool>>>(predicate);
+            var preguntas = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<PreguntaFrecuenteDTO>>(preguntas);
         }
 
-        public async Task<PreguntaFrecuente> AddAsync(
-            PreguntaFrecuente pregunta)
+        public async Task<PreguntaFrecuenteDTO> AddAsync(PreguntaFrecuenteDTO preguntaDto)
         {
-            return await _repository.AddAsync(pregunta);
+            var entity = _mapper.Map<PreguntaFrecuente>(preguntaDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<PreguntaFrecuenteDTO>(result);
         }
 
-        public async Task UpdateAsync(PreguntaFrecuente pregunta)
+        public async Task UpdateAsync(PreguntaFrecuenteDTO preguntaDto)
         {
-            await _repository.UpdateAsync(pregunta);
+            var entity = _mapper.Map<PreguntaFrecuente>(preguntaDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(PreguntaFrecuente pregunta)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(pregunta);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<PreguntaFrecuente, bool>> predicate)
+            Expression<Func<PreguntaFrecuenteDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<PreguntaFrecuente, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

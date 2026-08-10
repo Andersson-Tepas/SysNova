@@ -1,22 +1,25 @@
-﻿using SysNova.EN.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading.Tasks;
+using SysNova.DTO; // Asegúrate de tener la referencia a tus DTOs
 
 namespace SysNova.BL.Interfaces
 {
     public interface IUsuarioService
     {
-        Task<IEnumerable<Usuario>> GetAllAsync();
-        Task<Usuario?> GetByIdAsync(object id);
-        Task<IEnumerable<Usuario>> FindAsync(Expression<Func<Usuario, bool>> predicate);
-        Task<Usuario> AddAsync(Usuario usuario);
-        Task UpdateAsync(Usuario usuario);
-        Task DeleteAsync(Usuario usuario);
-        Task<bool> ExistsAsync(Expression<Func<Usuario, bool>> predicate);
-    }
+        Task<IEnumerable<UsuarioDTO>> GetAllAsync();
 
+        Task<UsuarioDTO?> GetByIdAsync(int id); // Se recomienda tipar el ID (por ejemplo 'int' en lugar de 'object')
+
+        Task<IEnumerable<UsuarioDTO>> FindAsync(Expression<Func<UsuarioDTO, bool>> predicate);
+
+        Task<UsuarioDTO> AddAsync(UsuarioDTO usuarioDto);
+
+        Task UpdateAsync(UsuarioDTO usuarioDto);
+
+        Task DeleteAsync(int id); // Es mejor práctica eliminar pasando el ID en lugar del DTO/Entidad completa
+
+        Task<bool> ExistsAsync(Expression<Func<UsuarioDTO, bool>> predicate);
+    }
 }

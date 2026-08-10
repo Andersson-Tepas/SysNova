@@ -1,60 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class BannerService : IBannerService
     {
         private readonly IBannerRepository _repository;
+        private readonly IMapper _mapper;
 
-        public BannerService(IBannerRepository repository)
+        public BannerService(IBannerRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Banner>> GetAllAsync()
+        public async Task<IEnumerable<BannerDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var banners = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<BannerDTO>>(banners);
         }
 
-        public async Task<Banner?> GetByIdAsync(object id)
+        public async Task<BannerDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var banner = await _repository.GetByIdAsync(id);
+            return _mapper.Map<BannerDTO?>(banner);
         }
 
-        public async Task<IEnumerable<Banner>> FindAsync(
-            Expression<Func<Banner, bool>> predicate)
+        public async Task<IEnumerable<BannerDTO>> FindAsync(
+            Expression<Func<BannerDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Banner, bool>>>(predicate);
+            var banners = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<BannerDTO>>(banners);
         }
 
-        public async Task<Banner> AddAsync(Banner banner)
+        public async Task<BannerDTO> AddAsync(BannerDTO bannerDto)
         {
-            return await _repository.AddAsync(banner);
+            var entity = _mapper.Map<Banner>(bannerDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<BannerDTO>(result);
         }
 
-        public async Task UpdateAsync(Banner banner)
+        public async Task UpdateAsync(BannerDTO bannerDto)
         {
-            await _repository.UpdateAsync(banner);
+            var entity = _mapper.Map<Banner>(bannerDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(Banner banner)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(banner);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<Banner, bool>> predicate)
+            Expression<Func<BannerDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Banner, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

@@ -1,60 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class RolService : IRolService
     {
         private readonly IRolRepository _repository;
+        private readonly IMapper _mapper;
 
-        public RolService(IRolRepository repository)
+        public RolService(IRolRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Rol>> GetAllAsync()
+        public async Task<IEnumerable<RolDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var roles = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<RolDTO>>(roles);
         }
 
-        public async Task<Rol?> GetByIdAsync(object id)
+        public async Task<RolDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var rol = await _repository.GetByIdAsync(id);
+            return _mapper.Map<RolDTO?>(rol);
         }
 
-        public async Task<IEnumerable<Rol>> FindAsync(
-            Expression<Func<Rol, bool>> predicate)
+        public async Task<IEnumerable<RolDTO>> FindAsync(
+            Expression<Func<RolDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Rol, bool>>>(predicate);
+            var roles = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<RolDTO>>(roles);
         }
 
-        public async Task<Rol> AddAsync(Rol rol)
+        public async Task<RolDTO> AddAsync(RolDTO rolDto)
         {
-            return await _repository.AddAsync(rol);
+            var entity = _mapper.Map<Rol>(rolDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<RolDTO>(result);
         }
 
-        public async Task UpdateAsync(Rol rol)
+        public async Task UpdateAsync(RolDTO rolDto)
         {
-            await _repository.UpdateAsync(rol);
+            var entity = _mapper.Map<Rol>(rolDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(Rol rol)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(rol);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<Rol, bool>> predicate)
+            Expression<Func<RolDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Rol, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

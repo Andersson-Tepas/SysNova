@@ -1,60 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class PedidoService : IPedidoService
     {
         private readonly IPedidoRepository _repository;
+        private readonly IMapper _mapper;
 
-        public PedidoService(IPedidoRepository repository)
+        public PedidoService(IPedidoRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<Pedido>> GetAllAsync()
+        public async Task<IEnumerable<PedidoDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var pedidos = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<PedidoDTO>>(pedidos);
         }
 
-        public async Task<Pedido?> GetByIdAsync(object id)
+        public async Task<PedidoDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var pedido = await _repository.GetByIdAsync(id);
+            return _mapper.Map<PedidoDTO?>(pedido);
         }
 
-        public async Task<IEnumerable<Pedido>> FindAsync(
-            Expression<Func<Pedido, bool>> predicate)
+        public async Task<IEnumerable<PedidoDTO>> FindAsync(
+            Expression<Func<PedidoDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Pedido, bool>>>(predicate);
+            var pedidos = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<PedidoDTO>>(pedidos);
         }
 
-        public async Task<Pedido> AddAsync(Pedido pedido)
+        public async Task<PedidoDTO> AddAsync(PedidoDTO pedidoDto)
         {
-            return await _repository.AddAsync(pedido);
+            var entity = _mapper.Map<Pedido>(pedidoDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<PedidoDTO>(result);
         }
 
-        public async Task UpdateAsync(Pedido pedido)
+        public async Task UpdateAsync(PedidoDTO pedidoDto)
         {
-            await _repository.UpdateAsync(pedido);
+            var entity = _mapper.Map<Pedido>(pedidoDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(Pedido pedido)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(pedido);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<Pedido, bool>> predicate)
+            Expression<Func<PedidoDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<Pedido, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

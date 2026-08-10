@@ -1,60 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
-
+using AutoMapper;
 using SysNova.BL.Interfaces;
+using SysNova.DTO;
 using SysNova.EN.Entities;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.BL.Services
 {
     public class ImagenProductoService : IImagenProductoService
     {
         private readonly IImagenProductoRepository _repository;
+        private readonly IMapper _mapper;
 
-        public ImagenProductoService(IImagenProductoRepository repository)
+        public ImagenProductoService(IImagenProductoRepository repository, IMapper mapper)
         {
             _repository = repository;
+            _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ImagenProducto>> GetAllAsync()
+        public async Task<IEnumerable<ImagenProductoDTO>> GetAllAsync()
         {
-            return await _repository.GetAllAsync();
+            var imagenes = await _repository.GetAllAsync();
+            return _mapper.Map<IEnumerable<ImagenProductoDTO>>(imagenes);
         }
 
-        public async Task<ImagenProducto?> GetByIdAsync(object id)
+        public async Task<ImagenProductoDTO?> GetByIdAsync(int id)
         {
-            return await _repository.GetByIdAsync(id);
+            var imagen = await _repository.GetByIdAsync(id);
+            return _mapper.Map<ImagenProductoDTO?>(imagen);
         }
 
-        public async Task<IEnumerable<ImagenProducto>> FindAsync(
-            Expression<Func<ImagenProducto, bool>> predicate)
+        public async Task<IEnumerable<ImagenProductoDTO>> FindAsync(
+            Expression<Func<ImagenProductoDTO, bool>> predicate)
         {
-            return await _repository.FindAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<ImagenProducto, bool>>>(predicate);
+            var imagenes = await _repository.FindAsync(entityPredicate);
+            return _mapper.Map<IEnumerable<ImagenProductoDTO>>(imagenes);
         }
 
-        public async Task<ImagenProducto> AddAsync(ImagenProducto imagen)
+        public async Task<ImagenProductoDTO> AddAsync(ImagenProductoDTO imagenDto)
         {
-            return await _repository.AddAsync(imagen);
+            var entity = _mapper.Map<ImagenProducto>(imagenDto);
+            var result = await _repository.AddAsync(entity);
+            return _mapper.Map<ImagenProductoDTO>(result);
         }
 
-        public async Task UpdateAsync(ImagenProducto imagen)
+        public async Task UpdateAsync(ImagenProductoDTO imagenDto)
         {
-            await _repository.UpdateAsync(imagen);
+            var entity = _mapper.Map<ImagenProducto>(imagenDto);
+            await _repository.UpdateAsync(entity);
         }
 
-        public async Task DeleteAsync(ImagenProducto imagen)
+        public async Task DeleteAsync(int id)
         {
-            await _repository.DeleteAsync(imagen);
+            var entity = await _repository.GetByIdAsync(id);
+            if (entity != null)
+            {
+                await _repository.DeleteAsync(entity);
+            }
         }
 
         public async Task<bool> ExistsAsync(
-            Expression<Func<ImagenProducto, bool>> predicate)
+            Expression<Func<ImagenProductoDTO, bool>> predicate)
         {
-            return await _repository.ExistsAsync(predicate);
+            var entityPredicate = _mapper.Map<Expression<Func<ImagenProducto, bool>>>(predicate);
+            return await _repository.ExistsAsync(entityPredicate);
         }
     }
 }

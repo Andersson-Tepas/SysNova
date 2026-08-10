@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Marca>>> GetAll()
+        public async Task<ActionResult<IEnumerable<MarcaDTO>>> GetAll()
         {
             var marcas = await _service.GetAllAsync();
             return Ok(marcas);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Marca>> GetById(int id)
+        public async Task<ActionResult<MarcaDTO>> GetById(int id)
         {
             var marca = await _service.GetByIdAsync(id);
 
@@ -34,16 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Marca>> Create(Marca marca)
+        public async Task<ActionResult<MarcaDTO>> Create(MarcaDTO marcaDto)
         {
-            var nuevaMarca = await _service.AddAsync(marca);
+            var nuevaMarca = await _service.AddAsync(marcaDto);
             return Ok(nuevaMarca);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Marca marca)
+        public async Task<IActionResult> Update(MarcaDTO marcaDto)
         {
-            await _service.UpdateAsync(marca);
+            await _service.UpdateAsync(marcaDto);
             return NoContent();
         }
 
@@ -55,7 +55,7 @@ namespace SysNova.API.Controllers
             if (marca == null)
                 return NotFound();
 
-            await _service.DeleteAsync(marca);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,14 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ImagenProducto>>> GetAll()
+        public async Task<ActionResult<IEnumerable<ImagenProductoDTO>>> GetAll()
         {
             var imagenes = await _service.GetAllAsync();
             return Ok(imagenes);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<ImagenProducto>> GetById(int id)
+        public async Task<ActionResult<ImagenProductoDTO>> GetById(int id)
         {
             var imagen = await _service.GetByIdAsync(id);
 
@@ -34,17 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ImagenProducto>> Create(
-            ImagenProducto imagen)
+        public async Task<ActionResult<ImagenProductoDTO>> Create(ImagenProductoDTO imagenDto)
         {
-            var nuevaImagen = await _service.AddAsync(imagen);
+            var nuevaImagen = await _service.AddAsync(imagenDto);
             return Ok(nuevaImagen);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(ImagenProducto imagen)
+        public async Task<IActionResult> Update(ImagenProductoDTO imagenDto)
         {
-            await _service.UpdateAsync(imagen);
+            await _service.UpdateAsync(imagenDto);
             return NoContent();
         }
 
@@ -56,7 +55,7 @@ namespace SysNova.API.Controllers
             if (imagen == null)
                 return NotFound();
 
-            await _service.DeleteAsync(imagen);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }

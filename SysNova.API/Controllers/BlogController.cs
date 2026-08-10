@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
-using SysNova.EN.Entities;
+using SysNova.DTO;
 
 namespace SysNova.API.Controllers
 {
@@ -16,15 +16,14 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Blog>>> GetAll()
+        public async Task<ActionResult<IEnumerable<BlogDTO>>> GetAll()
         {
             var blogs = await _service.GetAllAsync();
-
             return Ok(blogs);
         }
 
         [HttpGet("{id:int}")]
-        public async Task<ActionResult<Blog>> GetById(int id)
+        public async Task<ActionResult<BlogDTO>> GetById(int id)
         {
             var blog = await _service.GetByIdAsync(id);
 
@@ -35,18 +34,16 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<Blog>> Create(Blog blog)
+        public async Task<ActionResult<BlogDTO>> Create(BlogDTO blogDto)
         {
-            var nuevoBlog = await _service.AddAsync(blog);
-
+            var nuevoBlog = await _service.AddAsync(blogDto);
             return Ok(nuevoBlog);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(Blog blog)
+        public async Task<IActionResult> Update(BlogDTO blogDto)
         {
-            await _service.UpdateAsync(blog);
-
+            await _service.UpdateAsync(blogDto);
             return NoContent();
         }
 
@@ -58,7 +55,7 @@ namespace SysNova.API.Controllers
             if (blog == null)
                 return NotFound();
 
-            await _service.DeleteAsync(blog);
+            await _service.DeleteAsync(id);
 
             return NoContent();
         }
