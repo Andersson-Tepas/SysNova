@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -6,6 +7,7 @@ namespace SysNova.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Administrador,Cliente")]
     public class FavoritoController : ControllerBase
     {
         private readonly IFavoritoService _service;
@@ -34,16 +36,25 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<FavoritoDTO>> Create(FavoritoDTO favoritoDto)
+        public async Task<ActionResult<FavoritoDTO>> Create(
+            FavoritoDTO favoritoDto)
         {
             var nuevoFavorito = await _service.AddAsync(favoritoDto);
             return Ok(nuevoFavorito);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(FavoritoDTO favoritoDto)
+        public async Task<IActionResult> Update(
+            FavoritoDTO favoritoDto)
         {
+            var existente = await _service.GetByIdAsync(
+                favoritoDto.FavoritoId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(favoritoDto);
+
             return NoContent();
         }
 

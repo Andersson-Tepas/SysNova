@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -6,6 +7,7 @@ namespace SysNova.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Administrador,Cliente")]
     public class DetalleCarritoController : ControllerBase
     {
         private readonly IDetalleCarritoService _service;
@@ -34,16 +36,25 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<DetalleCarritoDTO>> Create(DetalleCarritoDTO detalleDto)
+        public async Task<ActionResult<DetalleCarritoDTO>> Create(
+            DetalleCarritoDTO detalleDto)
         {
             var nuevoDetalle = await _service.AddAsync(detalleDto);
             return Ok(nuevoDetalle);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(DetalleCarritoDTO detalleDto)
+        public async Task<IActionResult> Update(
+            DetalleCarritoDTO detalleDto)
         {
+            var existente = await _service.GetByIdAsync(
+                detalleDto.DetalleCarritoId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(detalleDto);
+
             return NoContent();
         }
 

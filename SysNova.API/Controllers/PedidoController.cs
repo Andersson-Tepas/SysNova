@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -16,6 +17,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Administrador,Cliente")]
         public async Task<ActionResult<IEnumerable<PedidoDTO>>> GetAll()
         {
             var pedidos = await _service.GetAllAsync();
@@ -23,6 +25,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "Administrador,Cliente")]
         public async Task<ActionResult<PedidoDTO>> GetById(int id)
         {
             var pedido = await _service.GetByIdAsync(id);
@@ -34,6 +37,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrador,Cliente")]
         public async Task<ActionResult<PedidoDTO>> Create(PedidoDTO pedidoDto)
         {
             var nuevoPedido = await _service.AddAsync(pedidoDto);
@@ -41,13 +45,21 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Update(PedidoDTO pedidoDto)
         {
+            var existente = await _service.GetByIdAsync(pedidoDto.PedidoId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(pedidoDto);
+
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int id)
         {
             var pedido = await _service.GetByIdAsync(id);

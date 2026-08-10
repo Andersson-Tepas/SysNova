@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -16,6 +17,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<PreguntaFrecuenteDTO>>> GetAll()
         {
             var preguntas = await _service.GetAllAsync();
@@ -23,6 +25,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         public async Task<ActionResult<PreguntaFrecuenteDTO>> GetById(int id)
         {
             var pregunta = await _service.GetByIdAsync(id);
@@ -34,20 +37,32 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<PreguntaFrecuenteDTO>> Create(PreguntaFrecuenteDTO preguntaDto)
+        [Authorize(Roles = "Administrador")]
+        public async Task<ActionResult<PreguntaFrecuenteDTO>> Create(
+            PreguntaFrecuenteDTO preguntaDto)
         {
             var nuevaPregunta = await _service.AddAsync(preguntaDto);
             return Ok(nuevaPregunta);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(PreguntaFrecuenteDTO preguntaDto)
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> Update(
+            PreguntaFrecuenteDTO preguntaDto)
         {
+            var existente = await _service.GetByIdAsync(
+                preguntaDto.PreguntaFrecuenteId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(preguntaDto);
+
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int id)
         {
             var pregunta = await _service.GetByIdAsync(id);

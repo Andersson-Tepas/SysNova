@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -16,6 +17,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<MetodoPagoDTO>>> GetAll()
         {
             var metodos = await _service.GetAllAsync();
@@ -23,6 +25,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         public async Task<ActionResult<MetodoPagoDTO>> GetById(int id)
         {
             var metodo = await _service.GetByIdAsync(id);
@@ -34,20 +37,32 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<MetodoPagoDTO>> Create(MetodoPagoDTO metodoPagoDto)
+        [Authorize(Roles = "Administrador")]
+        public async Task<ActionResult<MetodoPagoDTO>> Create(
+            MetodoPagoDTO metodoPagoDto)
         {
             var nuevoMetodo = await _service.AddAsync(metodoPagoDto);
             return Ok(nuevoMetodo);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(MetodoPagoDTO metodoPagoDto)
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> Update(
+            MetodoPagoDTO metodoPagoDto)
         {
+            var existente = await _service.GetByIdAsync(
+                metodoPagoDto.MetodoPagoId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(metodoPagoDto);
+
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int id)
         {
             var metodo = await _service.GetByIdAsync(id);

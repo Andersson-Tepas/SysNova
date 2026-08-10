@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -16,6 +17,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<MarcaDTO>>> GetAll()
         {
             var marcas = await _service.GetAllAsync();
@@ -23,6 +25,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         public async Task<ActionResult<MarcaDTO>> GetById(int id)
         {
             var marca = await _service.GetByIdAsync(id);
@@ -34,6 +37,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrador")]
         public async Task<ActionResult<MarcaDTO>> Create(MarcaDTO marcaDto)
         {
             var nuevaMarca = await _service.AddAsync(marcaDto);
@@ -41,13 +45,21 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Update(MarcaDTO marcaDto)
         {
+            var existente = await _service.GetByIdAsync(marcaDto.MarcaId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(marcaDto);
+
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int id)
         {
             var marca = await _service.GetByIdAsync(id);

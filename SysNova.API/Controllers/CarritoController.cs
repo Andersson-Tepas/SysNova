@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -6,6 +7,7 @@ namespace SysNova.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Administrador,Cliente")]
     public class CarritoController : ControllerBase
     {
         private readonly ICarritoService _service;
@@ -43,7 +45,13 @@ namespace SysNova.API.Controllers
         [HttpPut]
         public async Task<IActionResult> Update(CarritoDTO carritoDto)
         {
+            var existente = await _service.GetByIdAsync(carritoDto.CarritoId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(carritoDto);
+
             return NoContent();
         }
 

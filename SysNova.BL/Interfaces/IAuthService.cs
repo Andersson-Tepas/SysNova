@@ -11,5 +11,6 @@ namespace SysNova.BL.Interfaces
     public interface IAuthService
     {
         Task<string?> LoginAsync(LoginDTO login);
+        Task<bool> RegisterAsync(RegisterDTO register);
     }
 }

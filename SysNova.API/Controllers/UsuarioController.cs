@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -6,6 +7,7 @@ namespace SysNova.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Administrador")]
     public class UsuarioController : ControllerBase
     {
         private readonly IUsuarioService _service;
@@ -43,7 +45,13 @@ namespace SysNova.API.Controllers
         [HttpPut]
         public async Task<IActionResult> Update(UsuarioDTO usuarioDto)
         {
+            var existente = await _service.GetByIdAsync(usuarioDto.UsuarioId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(usuarioDto);
+
             return NoContent();
         }
 

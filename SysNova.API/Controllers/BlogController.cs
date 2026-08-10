@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -16,6 +17,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<BlogDTO>>> GetAll()
         {
             var blogs = await _service.GetAllAsync();
@@ -23,6 +25,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         public async Task<ActionResult<BlogDTO>> GetById(int id)
         {
             var blog = await _service.GetByIdAsync(id);
@@ -34,6 +37,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "Administrador")]
         public async Task<ActionResult<BlogDTO>> Create(BlogDTO blogDto)
         {
             var nuevoBlog = await _service.AddAsync(blogDto);
@@ -41,13 +45,21 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPut]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Update(BlogDTO blogDto)
         {
+            var existente = await _service.GetByIdAsync(blogDto.BlogId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(blogDto);
+
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int id)
         {
             var blog = await _service.GetByIdAsync(id);

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SysNova.BL.Interfaces;
 using SysNova.DTO;
 
@@ -16,6 +17,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Administrador,Cliente")]
         public async Task<ActionResult<IEnumerable<EnvioDTO>>> GetAll()
         {
             var envios = await _service.GetAllAsync();
@@ -23,6 +25,7 @@ namespace SysNova.API.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [Authorize(Roles = "Administrador,Cliente")]
         public async Task<ActionResult<EnvioDTO>> GetById(int id)
         {
             var envio = await _service.GetByIdAsync(id);
@@ -34,20 +37,32 @@ namespace SysNova.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<EnvioDTO>> Create(EnvioDTO envioDto)
+        [Authorize(Roles = "Administrador")]
+        public async Task<ActionResult<EnvioDTO>> Create(
+            EnvioDTO envioDto)
         {
             var nuevoEnvio = await _service.AddAsync(envioDto);
             return Ok(nuevoEnvio);
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(EnvioDTO envioDto)
+        [Authorize(Roles = "Administrador")]
+        public async Task<IActionResult> Update(
+            EnvioDTO envioDto)
         {
+            var existente = await _service.GetByIdAsync(
+                envioDto.EnvioId);
+
+            if (existente == null)
+                return NotFound();
+
             await _service.UpdateAsync(envioDto);
+
             return NoContent();
         }
 
         [HttpDelete("{id:int}")]
+        [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int id)
         {
             var envio = await _service.GetByIdAsync(id);

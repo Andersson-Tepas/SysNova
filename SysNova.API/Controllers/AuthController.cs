@@ -48,5 +48,36 @@ namespace SysNova.API.Controllers
                 token = token
             });
         }
+
+        // ==========================================
+        // REGISTER
+        // ==========================================
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] RegisterDTO register)
+        {
+            if (register == null)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "Los datos de registro son requeridos."
+                });
+            }
+
+            var resultado = await _authService.RegisterAsync(register);
+
+            if (!resultado)
+            {
+                return BadRequest(new
+                {
+                    mensaje = "No se pudo registrar el usuario. El correo podría ya estar registrado."
+                });
+            }
+
+            return Ok(new
+            {
+                mensaje = "Registro exitoso."
+            });
+        }
     }
 }
