@@ -1,11 +1,13 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 using SysNova.BL.Interfaces;
 using SysNova.BL.Mappings;
 using SysNova.BL.Services;
 using SysNova.DAL.Context;
 using SysNova.Repository.Interfaces;
 using SysNova.Repository.Repositories;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,6 +92,46 @@ builder.Services.AddScoped<IPreguntaFrecuenteService, PreguntaFrecuenteService>(
 builder.Services.AddScoped<IContactoService, ContactoService>();
 
 // ==========================================
+// AUTH SERVICE
+// ==========================================
+
+builder.Services.AddScoped<IAuthService, AuthService>();
+
+// ==========================================
+// JWT AUTHENTICATION
+// ==========================================
+
+var jwtKey = builder.Configuration["Jwt:Key"]
+    ?? throw new InvalidOperationException(
+        "La clave JWT no está configurada en appsettings.json.");
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+
+        options.DefaultChallengeScheme =
+            JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtKey))
+        };
+    });
+
+// ==========================================
 // CONTROLLERS
 // ==========================================
 
@@ -115,6 +157,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// ==========================================
+// AUTHENTICATION & AUTHORIZATION
+// ==========================================
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 

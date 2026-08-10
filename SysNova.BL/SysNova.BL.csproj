@@ -83,8 +83,4 @@
     <ProjectReference Include="..\SysNova.Repository\SysNova.Repository.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
 </Project>
