@@ -1,0 +1,199 @@
+﻿@page "/register"
+@layout AuthLayout
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@using SysNova.DTO
+
+<div class="auth-page">
+    <div class="auth-card">
+
+        <!-- PANEL IZQUIERDO -->
+        <section class="auth-brand-panel">
+            <div class="brand-logo">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M13.2 2 5 13h5.8L9.8 22 19 10.2h-6.1L13.2 2Z" />
+                    </svg>
+                </div>
+                <span>NEXO<span>Tech</span></span>
+            </div>
+
+            <div class="brand-content">
+                <div class="brand-eyebrow">TU TECNOLOGÍA, MÁS CERCA</div>
+                <h1>Todo lo que necesitas<br />para avanzar.</h1>
+                <p>Crea tu espacio NEXO y disfruta una experiencia<br />de compra diseñada para ti.</p>
+            </div>
+
+            <div class="brand-benefits">
+                <div class="benefit">
+                    <div class="benefit-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                    </div>
+                    <span>Seguimiento de tus pedidos en tiempo real</span>
+                </div>
+                <div class="benefit">
+                    <div class="benefit-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                    </div>
+                    <span>Ofertas exclusivas para miembros NEXO</span>
+                </div>
+                <div class="benefit">
+                    <div class="benefit-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+                    </div>
+                    <span>Soporte experto cuando lo necesites</span>
+                </div>
+            </div>
+
+            <div class="decor-circle decor-circle-top"></div>
+            <div class="decor-circle decor-circle-bottom"></div>
+        </section>
+
+        <!-- PANEL DERECHO (Formulario) -->
+        <section class="auth-form-panel">
+            <div class="auth-form-container register-container">
+
+                <div class="mobile-brand-logo">
+                    <div class="brand-icon">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M13.2 2 5 13h5.8L9.8 22 19 10.2h-6.1L13.2 2Z" />
+                        </svg>
+                    </div>
+                    <span>NEXO<span>Tech</span></span>
+                </div>
+
+                <div class="form-eyebrow">ÚNETE A NEXO</div>
+                <h2>Crea tu cuenta</h2>
+
+                <p class="form-description">
+                    Guarda tus favoritos y recibe beneficios exclusivos.
+                </p>
+
+                @if (!string.IsNullOrEmpty(mensajeError))
+                {
+                    <div class="alert alert-danger" style="color: #ef4444; background: #fef2f2; padding: 10px; border-radius: 8px; margin-bottom: 15px;">
+                        @mensajeError
+                    </div>
+                }
+
+                <EditForm Model="registerModel" OnValidSubmit="ProcesarRegistro" class="auth-form">
+
+                    <!-- NOMBRE COMPLETO -->
+                    <div class="form-group">
+                        <label for="register-name">Nombre completo</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="8" r="3.5" />
+                                <path d="M5 20a7 7 0 0 1 14 0" />
+                            </svg>
+                            <InputText id="register-name" type="text" @bind-Value="nombreCompleto" placeholder="Tu nombre y apellido" autocomplete="name" required />
+                        </div>
+                    </div>
+
+                    <!-- CORREO -->
+                    <div class="form-group">
+                        <label for="register-email">Correo electrónico</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="3" y="5" width="18" height="14" rx="2" />
+                                <path d="m3 7 9 6 9-6" />
+                            </svg>
+                            <InputText id="register-email" type="email" @bind-Value="registerModel.Correo" placeholder="tu@email.com" autocomplete="email" required />
+                        </div>
+                    </div>
+
+                    <!-- CONTRASEÑA -->
+                    <div class="form-group">
+                        <label for="register-password">Contraseña</label>
+                        <div class="input-wrapper">
+                            <svg class="input-icon" viewBox="0 0 24 24" aria-hidden="true">
+                                <rect x="5" y="10" width="14" height="10" rx="2" />
+                                <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+                                <circle cx="12" cy="15" r="1" />
+                            </svg>
+                            <InputText id="register-password" type="@tipoPassword" @bind-Value="registerModel.Password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" required />
+                            <button type="button" class="password-toggle" @onclick="TogglePassword">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+                                    <circle cx="12" cy="12" r="2.5" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- TÉRMINOS -->
+                    <div class="terms-option">
+                        <label>
+                            <input type="checkbox" required />
+                            <span>
+                                Acepto los <a href="/terms">términos de uso</a> y la <a href="/privacy">política de privacidad</a> de NEXO Tech.
+                            </span>
+                        </label>
+                    </div>
+
+                    <!-- BOTÓN -->
+                    <button type="submit" class="auth-button" disabled="@cargando">
+                        <span>@(cargando ? "Creando..." : "Crear mi cuenta")</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M5 12h14" />
+                            <path d="m13 6 6 6-6 6" />
+                        </svg>
+                    </button>
+
+                </EditForm>
+
+                <div class="auth-switch">
+                    <span>¿Ya tienes una cuenta?</span>
+                    <a href="/login">Inicia sesión</a>
+                </div>
+
+            </div>
+        </section>
+    </div>
+</div>
+
+@code {
+    private RegisterDTO registerModel = new();
+    private string nombreCompleto = string.Empty;
+    private string mensajeError = string.Empty;
+    private bool cargando = false;
+    private bool mostrarPassword = false;
+    private string tipoPassword => mostrarPassword ? "text" : "password";
+
+    private void TogglePassword() => mostrarPassword = !mostrarPassword;
+
+    private async Task ProcesarRegistro()
+    {
+        cargando = true;
+        mensajeError = string.Empty;
+
+        // Separar el nombre completo en Nombres y Apellidos
+        var partes = nombreCompleto.Trim().Split(' ', 2);
+        registerModel.Nombres = partes[0];
+        registerModel.Apellidos = partes.Length > 1 ? partes[1] : "-";
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Auth/register", registerModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Registro exitoso -> Redirigimos al Login
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                var error = await response.Content.ReadFromJsonAsync<AuthResponseDTO>();
+                mensajeError = error?.Mensaje ?? "No se pudo registrar el usuario.";
+            }
+        }
+        catch (Exception)
+        {
+            mensajeError = "No se pudo conectar con el servidor.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+}

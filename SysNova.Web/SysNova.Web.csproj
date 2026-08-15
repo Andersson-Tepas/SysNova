@@ -7,8 +7,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SysNova.BL\SysNova.BL.csproj" />
     <ProjectReference Include="..\SysNova.Common\SysNova.Common.csproj" />
     <ProjectReference Include="..\SysNova.DTO\SysNova.DTO.csproj" />
+    <ProjectReference Include="..\SysNova.Repository\SysNova.Repository.csproj" />
   </ItemGroup>
 
 </Project>

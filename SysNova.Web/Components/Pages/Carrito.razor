@@ -1,0 +1,208 @@
+﻿@using SysNova.DTO
+@inject IJSRuntime JS
+
+@* TELÓN DE FONDO CON DESENFOQUE (BACKDROP) *@
+@if (IsOpen)
+{
+    <button type="button"
+            aria-label="Cerrar carrito"
+            class="cart-backdrop"
+            @onclick="CerrarCarrito">
+    </button>
+}
+
+@* PANEL LATERAL FLOTANTE (DRAWER) *@
+<aside aria-label="Carrito de compras"
+       aria-hidden="@(!IsOpen)"
+       class="cart-drawer @(IsOpen ? "is-open" : "")">
+
+    @* CABECERA *@
+    <div class="cart-header">
+        <div>
+            <p class="cart-subtitle">TU SELECCIÓN</p>
+            <h2 class="cart-title">Carrito de compras</h2>
+        </div>
+        <button type="button" class="btn-icon-close" aria-label="Cerrar carrito" @onclick="CerrarCarrito">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+            </svg>
+        </button>
+    </div>
+
+    @* CUERPO PRINCIPAL *@
+    <div class="cart-body">
+        @if (Items == null || Items.Count == 0)
+        {
+            <!-- ESTADO VACÍO -->
+            <div class="cart-empty-container">
+                <div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                        <path d="M3 6h18" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    <h3 class="empty-title">Tu carrito está vacío</h3>
+                    <p class="empty-description">Añade tus productos favoritos para comenzar.</p>
+                    <button type="button" class="btn-continue" @onclick="CerrarCarrito">Seguir comprando</button>
+                </div>
+            </div>
+        }
+        else
+        {
+            <!-- LISTA DE PRODUCTOS -->
+            <div class="cart-items-list">
+                @foreach (var entry in Items)
+                {
+                    var producto = entry.Key;
+                    var cantidad = entry.Value;
+                    var subtotal = producto.Precio * cantidad;
+
+                    <div class="cart-item-card">
+                        <div class="item-img-box">
+                            <img src="@(string.IsNullOrEmpty(producto.ImagenPrincipal) ? "/placeholder.png" : producto.ImagenPrincipal)"
+                                 alt="@producto.Nombre"
+                                 class="item-img" />
+                        </div>
+                        <div class="item-content">
+                            <div class="item-header">
+                                <h3 class="item-title">@producto.Nombre</h3>
+                                <button type="button"
+                                        class="btn-delete"
+                                        aria-label="Eliminar @producto.Nombre"
+                                        @onclick="() => EliminarItem(producto.ProductoId)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M3 6h18" />
+                                        <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                        <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <p class="item-price">US$ @(subtotal.ToString("N0"))</p>
+
+                            <div class="item-controls">
+                                <button type="button"
+                                        class="btn-qty"
+                                        aria-label="Disminuir cantidad"
+                                        @onclick="() => ActualizarCantidad(producto.ProductoId, cantidad - 1)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14" />
+                                    </svg>
+                                </button>
+                                <span class="qty-number">@cantidad</span>
+                                <button type="button"
+                                        class="btn-qty"
+                                        aria-label="Aumentar cantidad"
+                                        @onclick="() => ActualizarCantidad(producto.ProductoId, cantidad + 1)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M5 12h14" />
+                                        <path d="M12 5v14" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @* PIE DEL CARRITO (SUBTOTAL Y CHECKOUT) *@
+    @if (Items != null && Items.Count > 0)
+    {
+        <div class="cart-footer">
+            <div class="subtotal-row">
+                <span class="subtotal-label">Subtotal</span>
+                <span class="subtotal-amount">US$ @(Total.ToString("N0"))</span>
+            </div>
+            <p class="shipping-note">Envío gratis en compras superiores a $99.</p>
+            <button type="button" class="btn-checkout" @onclick="FinalizarCompra">
+                Finalizar compra
+            </button>
+        </div>
+    }
+</aside>
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<bool> IsOpenChanged { get; set; }
+
+    [Parameter] public Dictionary<ProductoDTO, int> Items { get; set; } = new();
+    [Parameter] public EventCallback<Dictionary<ProductoDTO, int>> ItemsChanged { get; set; }
+
+    public decimal Total => Items?.Sum(x => x.Key.Precio * x.Value) ?? 0;
+    public int Count => Items?.Sum(x => x.Value) ?? 0;
+
+    public async Task AbrirCarrito()
+    {
+        IsOpen = true;
+        await IsOpenChanged.InvokeAsync(true);
+        await BloquearScroll(true);
+        StateHasChanged();
+    }
+
+    public async Task CerrarCarrito()
+    {
+        IsOpen = false;
+        await IsOpenChanged.InvokeAsync(false);
+        await BloquearScroll(false);
+        StateHasChanged();
+    }
+
+    private async Task BloquearScroll(bool bloquear)
+    {
+        try
+        {
+            if (bloquear)
+                await JS.InvokeVoidAsync("eval", "document.body.style.overflow = 'hidden'");
+            else
+                await JS.InvokeVoidAsync("eval", "document.body.style.overflow = ''");
+        }
+        catch { }
+    }
+
+    public async Task AgregarProducto(ProductoDTO producto)
+    {
+        if (Items == null) Items = new();
+
+        var existente = Items.Keys.FirstOrDefault(p => p.ProductoId == producto.ProductoId);
+        if (existente != null)
+        {
+            Items[existente]++;
+        }
+        else
+        {
+            Items.Add(producto, 1);
+        }
+
+        await ItemsChanged.InvokeAsync(Items);
+        await AbrirCarrito();
+    }
+
+    public async Task ActualizarCantidad(int productoId, int nuevaCantidad)
+    {
+        if (nuevaCantidad < 1) return;
+        var producto = Items.Keys.FirstOrDefault(p => p.ProductoId == productoId);
+        if (producto != null)
+        {
+            Items[producto] = nuevaCantidad;
+            await ItemsChanged.InvokeAsync(Items);
+        }
+    }
+
+    public async Task EliminarItem(int productoId)
+    {
+        var producto = Items.Keys.FirstOrDefault(p => p.ProductoId == productoId);
+        if (producto != null)
+        {
+            Items.Remove(producto);
+            await ItemsChanged.InvokeAsync(Items);
+        }
+    }
+
+    private void FinalizarCompra()
+    {
+        // Redirección al proceso de pago
+    }
+}
