@@ -31,9 +31,10 @@
             <p class="user-subtext">Tu espacio personal en NEXO Tech.</p>
         </div>
 
-        <!-- Lista de Detalles -->
+        <!-- Lista de Navegación / Accesos Directos -->
         <div class="profile-info-list">
 
+            <!-- Correo -->
             <div class="info-card">
                 <div class="info-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -47,25 +48,40 @@
                 </div>
             </div>
 
-            <div class="info-card">
+            <!-- Opción: Mis Pedidos / Panel de Pedidos -->
+            <div class="info-card info-card-clickable" @onclick='() => NavegarA("/pedidos")' style="cursor: pointer;">
                 <div class="info-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                     </svg>
                 </div>
                 <div class="info-details">
-                    <span class="info-label">Pedidos recientes</span>
-                    <span class="info-value">@RecentOrdersCount pedidos</span>
+                    <span class="info-label">@(IsAdmin ? "Gestión Global" : "Mis compras")</span>
+                    <span class="info-value">@(IsAdmin ? "Administrar Pedidos" : $"{RecentOrdersCount} pedidos realizados")</span>
                 </div>
             </div>
 
+            <!-- Opción: Mis Favoritos -->
+            <div class="info-card info-card-clickable" @onclick='() => NavegarA("/favoritos")' style="cursor: pointer;">
+                <div class="info-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 3.8 3 5.5l7 7Z"></path>
+                    </svg>
+                </div>
+                <div class="info-details">
+                    <span class="info-label">Lista de Deseos</span>
+                    <span class="info-value">Mis Favoritos</span>
+                </div>
+            </div>
+
+            <!-- Estado de la Cuenta -->
             <div class="info-card info-card-status">
                 <div class="info-icon-check">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                 </div>
-                <span class="status-text">Cuenta NEXO activa</span>
+                <span class="status-text">@(IsAdmin ? "Cuenta Admin NEXO Active" : "Cuenta NEXO activa")</span>
             </div>
 
         </div>
@@ -91,6 +107,7 @@
 
     [Parameter] public string UserName { get; set; } = string.Empty;
     [Parameter] public string UserEmail { get; set; } = string.Empty;
+    [Parameter] public bool IsAdmin { get; set; } = false;
     [Parameter] public int RecentOrdersCount { get; set; } = 0;
 
     [Parameter] public EventCallback OnLogout { get; set; }
@@ -101,27 +118,30 @@
         await IsOpenChanged.InvokeAsync(IsOpen);
     }
 
+    private async Task NavegarA(string ruta)
+    {
+        await Close();
+        Navigation.NavigateTo(ruta);
+    }
+
     private async Task HandleLogout()
     {
-        // 1. Ocultar el drawer
         await Close();
 
-        // 2. Limpiar el localStorage
         try
         {
             await JS.InvokeVoidAsync("localStorage.removeItem", "userEmail");
             await JS.InvokeVoidAsync("localStorage.removeItem", "userName");
+            await JS.InvokeVoidAsync("localStorage.removeItem", "userRole");
             await JS.InvokeVoidAsync("localStorage.removeItem", "authToken");
         }
         catch { }
 
-        // 3. Notificar al Layout
         if (OnLogout.HasDelegate)
         {
             await OnLogout.InvokeAsync();
         }
 
-        // 4. Se queda en el Inicio ("/") y fuerza la recarga limpia de la app
         Navigation.NavigateTo("/", forceLoad: true);
     }
 }

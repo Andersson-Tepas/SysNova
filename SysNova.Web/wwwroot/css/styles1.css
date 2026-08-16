@@ -1606,3 +1606,723 @@ body {
         width: 16px;
         height: 16px;
     }
+
+/* =========================================================
+   MODAL DETALLE PRODUCTO
+   FIJO, CENTRADO Y SIN SCROLL
+   ========================================================= */
+
+.producto-detalle-backdrop {
+    background-color: rgba(15, 23, 42, 0.80);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /*
+       BLOQUEA CUALQUIER SCROLL
+       EN EL FONDO DEL MODAL
+    */
+    overflow: hidden !important;
+    /*
+       Evita que el navegador agregue
+       desplazamiento horizontal.
+    */
+    overscroll-behavior: none !important;
+}
+
+
+/* =========================================================
+   MODAL PRINCIPAL
+   ========================================================= */
+
+.producto-detalle-modal {
+    position: relative;
+    width: 95%;
+    max-width: 1048px;
+    /*
+       Altura fija como en el diseño.
+    */
+    height: 720px;
+    max-height: 90vh;
+    margin: auto !important;
+    background-color: #111111;
+    border-radius: 28px;
+    /*
+       MUY IMPORTANTE:
+       NUNCA MOSTRAR SCROLL
+    */
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65), 0 10px 30px rgba(0, 0, 0, 0.35);
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   GRID DEL MODAL
+   ========================================================= */
+
+.producto-detalle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+    height: 100%;
+    /*
+       BLOQUEA SCROLL INTERNO
+    */
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+}
+
+
+/* =========================================================
+   PANEL IZQUIERDO
+   ========================================================= */
+
+.producto-detalle-imagen-panel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background-color: #171717;
+    /*
+       SIN SCROLL
+    */
+    overflow: hidden !important;
+}
+
+
+/* =========================================================
+   IMAGEN
+   ========================================================= */
+
+.producto-detalle-image-box {
+    width: 420px;
+    height: 420px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden !important;
+}
+
+
+    .producto-detalle-image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+
+/* =========================================================
+   TOP VENTAS
+   ========================================================= */
+
+.producto-detalle-top {
+    position: absolute;
+    top: 28px;
+    left: 28px;
+    padding: 7px 14px;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.10);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    backdrop-filter: blur(5px);
+    z-index: 5;
+}
+
+
+/* =========================================================
+   BOTÓN X
+   ========================================================= */
+
+.producto-detalle-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #ffffff;
+    font-size: 17px;
+    cursor: pointer;
+    opacity: 0.85;
+    z-index: 100;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+
+    .producto-detalle-close:hover {
+        background-color: rgba(255, 255, 255, 0.08);
+        opacity: 1;
+    }
+
+
+/* =========================================================
+   INFORMACIÓN DERECHA
+   ========================================================= */
+
+.producto-detalle-info {
+    display: flex;
+    flex-direction: column;
+    padding: 42px;
+    min-width: 0;
+    min-height: 0;
+    background-color: #111111;
+    /*
+       ESTA ES LA PARTE IMPORTANTE.
+       NO PERMITIR SCROLL.
+    */
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+}
+
+
+/* =========================================================
+   CATEGORÍA
+   ========================================================= */
+
+.producto-detalle-categoria {
+    margin-bottom: 12px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 3px;
+}
+
+
+/* =========================================================
+   TÍTULO
+   ========================================================= */
+
+.producto-detalle-titulo {
+    margin: 0 0 18px 0;
+    padding-right: 30px;
+    color: #ffffff;
+    font-size: 39px;
+    line-height: 1.08;
+    font-weight: 800;
+    letter-spacing: -1.4px;
+    /*
+       Si el nombre es demasiado largo,
+       no genera scroll.
+    */
+    overflow: hidden;
+}
+
+
+/* =========================================================
+   RATING
+   ========================================================= */
+
+.producto-detalle-rating {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 28px;
+    font-size: 14px;
+}
+
+
+.producto-detalle-stars {
+    display: flex;
+    gap: 2px;
+    color: #777777;
+    font-size: 15px;
+}
+
+
+.producto-detalle-rating strong {
+    color: #ffffff;
+    font-size: 15px;
+}
+
+
+.producto-detalle-rating span {
+    color: #858585;
+}
+
+
+/* =========================================================
+   PRECIO
+   ========================================================= */
+
+.producto-detalle-precio {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 13px;
+    margin-bottom: 28px;
+}
+
+
+.producto-detalle-precio-actual {
+    color: #ffffff;
+    font-size: 31px;
+    font-weight: 800;
+    letter-spacing: -0.8px;
+}
+
+
+.producto-detalle-precio-anterior {
+    color: #777777;
+    font-size: 16px;
+    text-decoration: line-through;
+}
+
+
+.producto-detalle-descuento {
+    padding: 5px 9px;
+    border-radius: 14px;
+    background-color: rgba(255, 255, 255, 0.08);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   DESCRIPCIÓN
+   ========================================================= */
+
+.producto-detalle-descripcion {
+    margin: 0;
+    color: #9a9a9a;
+    font-size: 16px;
+    line-height: 1.6;
+    /*
+       NO GENERAR SCROLL.
+       Si es demasiado larga, se corta.
+    */
+    overflow: hidden !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+}
+
+
+/* =========================================================
+   SEPARADOR
+   ========================================================= */
+
+.producto-detalle-separador {
+    width: 100%;
+    height: 1px;
+    margin: 28px 0 23px;
+    background-color: #2a2a2a;
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   BENEFICIOS
+   ========================================================= */
+
+.producto-detalle-beneficios {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 34px;
+    color: #ffffff;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+
+    .producto-detalle-beneficios > div {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+
+    .producto-detalle-beneficios i {
+        font-size: 20px;
+    }
+
+
+/* =========================================================
+   SECCIÓN COMPRA
+   ========================================================= */
+
+.producto-detalle-compra {
+    margin-top: auto;
+    flex-shrink: 0;
+    overflow: hidden !important;
+}
+
+
+/* =========================================================
+   CANTIDAD
+   ========================================================= */
+
+.producto-detalle-cantidad {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 22px;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+
+/* =========================================================
+   SELECTOR DE CANTIDAD
+   ========================================================= */
+
+.producto-detalle-selector {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    border: 1px solid #2c2c2c;
+    border-radius: 28px;
+    background-color: #171717;
+    overflow: hidden !important;
+}
+
+
+    .producto-detalle-selector button {
+        width: 45px;
+        height: 100%;
+        border: none;
+        background-color: transparent;
+        color: #ffffff;
+        font-size: 21px;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+    }
+
+
+        .producto-detalle-selector button:hover {
+            background-color: rgba(255, 255, 255, 0.06);
+        }
+
+
+        .producto-detalle-selector button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+
+    .producto-detalle-selector span {
+        min-width: 28px;
+        text-align: center;
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 600;
+    }
+
+
+/* =========================================================
+   BOTÓN AÑADIR AL CARRITO
+   ========================================================= */
+
+.producto-detalle-carrito {
+    width: 100%;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: none;
+    border-radius: 30px;
+    background-color: #f1f1f1;
+    color: #111111;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s ease, background-color 0.18s ease;
+}
+
+
+    .producto-detalle-carrito:hover {
+        background-color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+
+    .producto-detalle-carrito:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+
+    .producto-detalle-carrito i {
+        font-size: 20px;
+    }
+
+
+/* =========================================================
+   COMPRA SEGURA
+   ========================================================= */
+
+.producto-detalle-seguridad {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 16px;
+    color: #858585;
+    font-size: 12px;
+}
+
+
+    .producto-detalle-seguridad i {
+        color: #ffffff;
+    }
+
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 900px) {
+
+    .producto-detalle-backdrop {
+        width: 100vw;
+        height: 100vh;
+        padding: 15px;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-modal {
+        width: 94vw;
+        height: calc(100vh - 30px);
+        max-height: none;
+        border-radius: 24px;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-grid {
+        grid-template-columns: 1fr;
+        height: 100%;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-imagen-panel {
+        height: 42%;
+        min-height: 0;
+        padding: 20px;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-image-box {
+        width: min(300px, 70%);
+        height: 100%;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-info {
+        height: 58%;
+        padding: 25px 35px;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-titulo {
+        font-size: 30px;
+    }
+
+
+    .producto-detalle-precio-actual {
+        font-size: 28px;
+    }
+}
+
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 576px) {
+
+    .producto-detalle-backdrop {
+        padding: 10px;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-modal {
+        width: 100%;
+        height: calc(100vh - 20px);
+        max-height: none;
+        border-radius: 20px;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-close {
+        top: 14px;
+        right: 14px;
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+
+    .producto-detalle-imagen-panel {
+        height: 38%;
+        min-height: 0;
+        padding: 15px;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-image-box {
+        width: 230px;
+        height: 100%;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-top {
+        top: 15px;
+        left: 15px;
+        padding: 6px 11px;
+        font-size: 11px;
+    }
+
+
+    .producto-detalle-info {
+        height: 62%;
+        padding: 20px 25px;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-categoria {
+        margin-bottom: 7px;
+        font-size: 11px;
+        letter-spacing: 2px;
+    }
+
+
+    .producto-detalle-titulo {
+        margin-bottom: 12px;
+        font-size: 25px;
+        line-height: 1.08;
+    }
+
+
+    .producto-detalle-rating {
+        gap: 6px;
+        margin-bottom: 17px;
+        font-size: 12px;
+    }
+
+
+    .producto-detalle-stars {
+        font-size: 12px;
+    }
+
+
+    .producto-detalle-precio {
+        gap: 8px;
+        margin-bottom: 15px;
+    }
+
+
+    .producto-detalle-precio-actual {
+        font-size: 25px;
+    }
+
+
+    .producto-detalle-precio-anterior {
+        font-size: 13px;
+    }
+
+
+    .producto-detalle-descuento {
+        padding: 4px 7px;
+        font-size: 10px;
+    }
+
+
+    .producto-detalle-descripcion {
+        font-size: 13px;
+        line-height: 1.45;
+        -webkit-line-clamp: 2;
+        overflow: hidden !important;
+    }
+
+
+    .producto-detalle-separador {
+        margin: 15px 0;
+    }
+
+
+    .producto-detalle-beneficios {
+        gap: 15px;
+        font-size: 11px;
+    }
+
+
+        .producto-detalle-beneficios i {
+            font-size: 16px;
+        }
+
+
+    .producto-detalle-cantidad {
+        gap: 12px;
+        margin-bottom: 14px;
+        font-size: 13px;
+    }
+
+
+    .producto-detalle-selector {
+        height: 40px;
+        overflow: hidden !important;
+    }
+
+
+        .producto-detalle-selector button {
+            width: 38px;
+            font-size: 18px;
+        }
+
+
+        .producto-detalle-selector span {
+            min-width: 24px;
+            font-size: 13px;
+        }
+
+
+    .producto-detalle-carrito {
+        height: 48px;
+        font-size: 13px;
+    }
+
+
+        .producto-detalle-carrito i {
+            font-size: 17px;
+        }
+
+
+    .producto-detalle-seguridad {
+        margin-top: 10px;
+        font-size: 10px;
+    }
+}

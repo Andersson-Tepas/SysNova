@@ -1,5 +1,223 @@
-﻿<h3>Pedidos</h3>
+﻿@page "/pedidos"
+@using SysNova.DTO
+@using SysNova.EN.Enums
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<div class="main-container min-vh-100 p-4 p-md-5">
+    <!-- CABECERA -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
+        <div>
+            <span class="text-gold fw-bold text-uppercase fs-7 tracking-wider">
+                @(esAdmin ? "Panel de Control" : "Historial de Compras")
+            </span>
+            <h1 class="fw-bold text-white mb-0 fs-2">
+                @(esAdmin ? "Gestión Global de Pedidos" : "Mis Pedidos")
+            </h1>
+        </div>
+
+        <!-- FILTRO ADMIN -->
+        @if (esAdmin)
+        {
+            <div class="d-flex align-items-center gap-2">
+                <span class="text-secondary fs-7">Estado:</span>
+                <select class="form-select input-dark text-white rounded-3 fs-7" @onchange="FiltrarPorEstado">
+                    <option value="">Todos los estados</option>
+                    @foreach (var estado in Enum.GetValues<EstadoPedido>())
+                    {
+                        <option value="@estado">@estado</option>
+                    }
+                </select>
+            </div>
+        }
+    </div>
+
+    @if (cargando)
+    {
+        <div class="d-flex justify-content-center align-items-center py-5">
+            <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+        </div>
+    }
+    else if (!pedidosFiltrados.Any())
+    {
+        <div class="product-card rounded-4 p-5 text-center my-4 border border-secondary border-opacity-10">
+            <i class="bi bi-box-seam text-secondary display-1 mb-3"></i>
+            <h3 class="text-white fw-bold fs-4">No se encontraron pedidos</h3>
+            <p class="text-secondary fs-7 max-w-md mx-auto">
+                @(esAdmin ? "No existen registros registrados en la plataforma bajo este filtro." : "Aún no has realizado ninguna orden de compra.")
+            </p>
+        </div>
+    }
+    else
+    {
+        <!-- TABLA/LISTADO DE PEDIDOS -->
+        <div class="product-card rounded-4 overflow-hidden border border-secondary border-opacity-10 shadow-custom">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover align-middle mb-0 bg-transparent">
+                    <thead class="bg-slate-900 border-bottom border-secondary border-opacity-20 text-uppercase fs-8 text-gold">
+                        <tr>
+                            <th class="py-3 px-4">N° Pedido</th>
+                            <th class="py-3 px-4">Fecha</th>
+                            <th class="py-3 px-4">SubTotal</th>
+                            <th class="py-3 px-4">IVA</th>
+                            <th class="py-3 px-4">Total</th>
+                            <th class="py-3 px-4">Estado</th>
+                            @if (esAdmin)
+                            {
+                                <th class="py-3 px-4 text-center">Acciones</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody class="fs-7">
+                        @foreach (var pedido in pedidosFiltrados)
+                        {
+                            <tr class="border-bottom border-secondary border-opacity-10">
+                                <td class="py-3 px-4 fw-bold text-white">
+                                    #@pedido.NumeroPedido
+                                </td>
+                                <td class="py-3 px-4 text-secondary">
+                                    @pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")
+                                </td>
+                                <td class="py-3 px-4 text-white">US$ @pedido.SubTotal.ToString("N0")</td>
+                                <td class="py-3 px-4 text-secondary">US$ @pedido.IVA.ToString("N0")</td>
+                                <td class="py-3 px-4 fw-bold text-gold">US$ @pedido.Total.ToString("N0")</td>
+                                <td class="py-3 px-4">
+                                    @if (esAdmin)
+                                    {
+                                        <!-- SELECT CAMBIO DE ESTADO (ADMIN) -->
+                                        <select class="form-select form-select-sm input-dark text-white rounded-2 fs-7"
+                                                value="@pedido.Estado"
+                                                @onchange="(e) => CambiarEstadoPedido(pedido, e)">
+                                            @foreach (var est in Enum.GetValues<EstadoPedido>())
+                                            {
+                                                <option value="@est">@est</option>
+                                            }
+                                        </select>
+                                    }
+                                    else
+                                    {
+                                        <!-- BADGE CLIENTE -->
+                                        <span class="badge @ObtenerClaseBadge(pedido.Estado) px-3 py-2 rounded-pill fw-medium">
+                                            @pedido.Estado
+                                        </span>
+                                    }
+                                </td>
+                                @if (esAdmin)
+                                {
+                                    <td class="py-3 px-4 text-center">
+                                        <button class="btn btn-sm btn-outline-danger border-0 rounded-circle p-2"
+                                                title="Eliminar pedido"
+                                                @onclick="() => EliminarPedido(pedido.PedidoId)">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
 
 @code {
+    [Parameter] public bool esAdmin { get; set; } = false; // Alterna modo Cliente / Admin
 
+    private bool cargando = true;
+    private List<PedidoDTO> listaPedidos = new();
+    private List<PedidoDTO> pedidosFiltrados = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarPedidos();
+    }
+
+    private async Task CargarPedidos()
+    {
+        cargando = true;
+        try
+        {
+            var result = await Http.GetFromJsonAsync<List<PedidoDTO>>("api/Pedido");
+            if (result != null)
+            {
+                listaPedidos = result.OrderByDescending(p => p.FechaPedido).ToList();
+                pedidosFiltrados = listaPedidos;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar pedidos: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void FiltrarPorEstado(ChangeEventArgs e)
+    {
+        var valor = e.Value?.ToString();
+        if (string.IsNullOrEmpty(valor))
+        {
+            pedidosFiltrados = listaPedidos;
+        }
+        else if (Enum.TryParse<EstadoPedido>(valor, out var estadoSeleccionado))
+        {
+            pedidosFiltrados = listaPedidos.Where(p => p.Estado == estadoSeleccionado).ToList();
+        }
+    }
+
+    private async Task CambiarEstadoPedido(PedidoDTO pedido, ChangeEventArgs e)
+    {
+        if (Enum.TryParse<EstadoPedido>(e.Value?.ToString(), out var nuevoEstado))
+        {
+            pedido.Estado = nuevoEstado;
+            pedido.FechaModificacion = DateTime.Now;
+
+            try
+            {
+                var response = await Http.PutAsJsonAsync("api/Pedido", pedido);
+                if (!response.IsSuccessStatusCode)
+                {
+                    await CargarPedidos(); // Revertir si la API falla
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error actualizando estado: {ex.Message}");
+            }
+        }
+    }
+
+    private async Task EliminarPedido(int id)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Pedido/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                listaPedidos.RemoveAll(p => p.PedidoId == id);
+                pedidosFiltrados.RemoveAll(p => p.PedidoId == id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar pedido: {ex.Message}");
+        }
+    }
+
+    private string ObtenerClaseBadge(EstadoPedido estado)
+    {
+        return estado.ToString().ToLower() switch
+        {
+            "pendiente" => "bg-warning text-dark",
+            "enviado" => "bg-info text-dark",
+            "entregado" => "bg-success text-white",
+            "cancelado" => "bg-danger text-white",
+            _ => "bg-secondary text-white"
+        };
+    }
 }

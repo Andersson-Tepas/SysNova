@@ -1,4 +1,10 @@
 ﻿@page "/"
+@using SysNova.DTO
+@inject HttpClient Http
+@* O inyecta tus servicios personalizados si utilizas Dependency Injection directa:
+   @inject ICategoriaService CategoriaService
+   @inject IProductoService ProductoService 
+*@
 
 <PageTitle>NEXOTech - Inicio</PageTitle>
 
@@ -83,7 +89,7 @@
     </div>
 </section>
 
-<!-- CATEGORÍAS -->
+<!-- CATEGORÍAS (LECTURA DE BASE DE DATOS) -->
 <section class="categories-section">
     <div class="section-header">
         <span class="section-tag">EXPLORA</span>
@@ -92,73 +98,31 @@
     </div>
 
     <div class="categories-grid">
-        <a href="/categoria/laptops" class="category-card">
-            <div class="category-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-            </div>
-            <h3>Laptops</h3>
-            <p>128 productos</p>
-        </a>
-
-        <a href="/categoria/smartphones" class="category-card">
-            <div class="category-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" /></svg>
-            </div>
-            <h3>Smartphones</h3>
-            <p>96 productos</p>
-        </a>
-
-        <a href="/categoria/audio" class="category-card">
-            <div class="category-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
-            </div>
-            <h3>Audio</h3>
-            <p>74 productos</p>
-        </a>
-
-        <a href="/categoria/gaming" class="category-card">
-            <div class="category-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 002 2h14a2 2 0 002-2V7a2 2 0 00-2-2H5z" /></svg>
-            </div>
-            <h3>Gaming</h3>
-            <p>112 productos</p>
-        </a>
-
-        <a href="/categoria/wearables" class="category-card">
-            <div class="category-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-            </div>
-            <h3>Wearables</h3>
-            <p>58 productos</p>
-        </a>
-
-        <a href="/categoria/smarthome" class="category-card">
-            <div class="category-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-            </div>
-            <h3>Smart Home</h3>
-            <p>63 productos</p>
-        </a>
-
-        <a href="/categoria/fotografia" class="category-card">
-            <div class="category-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9a2 2 0 012-2h0.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            </div>
-            <h3>Fotografía</h3>
-            <p>41 productos</p>
-        </a>
-
-        <a href="/categoria/accesorios" class="category-card">
-            <div class="category-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M11 4a2 2 0 114 0v1a2 2 0 01-2 2 2 2 0 01-2-2V4zM4 7a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V7z" /></svg>
-            </div>
-            <h3>Accesorios</h3>
-            <p>210 productos</p>
-        </a>
+        @if (cargandoCategorias)
+        {
+            <p>Cargando categorías...</p>
+        }
+        else if (listaCategorias != null && listaCategorias.Any())
+        {
+            @foreach (var cat in listaCategorias)
+            {
+                <div class="category-card" @onclick='() => SeleccionarCategoria(cat.CategoriaId)' style="cursor: pointer;">
+                    <div class="category-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    </div>
+                    <h3>@cat.Nombre</h3>
+                    <p>@ObtenerCantidadProductosPorCategoria(cat.CategoriaId) productos</p>
+                </div>
+            }
+        }
+        else
+        {
+            <p>No se encontraron categorías disponibles.</p>
+        }
     </div>
 </section>
 
-<!-- PRODUCTOS DESTACADOS -->
+<!-- PRODUCTOS DESTACADOS (LECTURA DE BASE DE DATOS) -->
 <section class="featured-section">
     <div class="section-header">
         <span class="section-tag">LO MÁS DESEADO</span>
@@ -166,236 +130,80 @@
         <p class="section-subtitle">Selección curada de los equipos favoritos de nuestros clientes.</p>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filtros dinámicos según Categorías de BD -->
     <div class="filter-pills">
-        <button class="pill-btn active">Todos</button>
-        <button class="pill-btn">Laptops</button>
-        <button class="pill-btn">Smartphones</button>
-        <button class="pill-btn">Audio</button>
-        <button class="pill-btn">Gaming</button>
+        <button type="button" class="pill-btn @(categoriaIdSeleccionada == 0 ? "active" : "")" @onclick='() => SeleccionarCategoria(0)'>Todos</button>
+        @if (listaCategorias != null)
+        {
+            @foreach (var cat in listaCategorias)
+            {
+                <button type="button" class="pill-btn @(categoriaIdSeleccionada == cat.CategoriaId ? "active" : "")" @onclick='() => SeleccionarCategoria(cat.CategoriaId)'>
+                    @cat.Nombre
+                </button>
+            }
+        }
     </div>
 
     <!-- Grid de productos -->
     <div class="products-grid">
-        <!-- Producto 1 -->
-        <div class="product-card">
-            <span class="product-badge">Top ventas</span>
-            <div class="product-img-wrapper">
-                <img src="images/laptop-hero.png" alt="NEXO UltraBook 14 Pro" />
-            </div>
-            <div class="product-info">
-                <span class="product-cat">LAPTOPS</span>
-                <h3 class="product-name">NEXO UltraBook 14 Pro</h3>
-                <div class="product-rating">
-                    <span class="star">★</span>
-                    <span class="score">4.9</span>
-                    <span class="reviews">(312)</span>
-                </div>
-                <div class="product-price-box">
-                    <div class="prices">
-                        <span class="current-price">US$ 1.299</span>
-                        <span class="old-price">US$ 1.499</span>
-                    </div>
-                    <span class="savings">Ahorras 13%</span>
-                </div>
-            </div>
-            <button class="btn-add-cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                Añadir al carrito
-            </button>
-        </div>
+        @if (cargandoProductos)
+        {
+            <p>Cargando productos...</p>
+        }
+        else if (ProductosFiltrados != null && ProductosFiltrados.Any())
+        {
+            @foreach (var prod in ProductosFiltrados)
+            {
+                <div class="product-card" @onclick="() => AbrirDetalleProducto(prod)" style="cursor: pointer;">
+                    @if (prod.Nuevo)
+                    {
+                        <span class="product-badge">Nuevo</span>
+                    }
+                    else if (prod.Destacado)
+                    {
+                        <span class="product-badge">Top ventas</span>
+                    }
 
-        <!-- Producto 2 -->
-        <div class="product-card">
-            <span class="product-badge">-24%</span>
-            <div class="product-img-wrapper">
-                <img src="images/laptop-banner.png" alt="NEXO Sound Max ANC" />
-            </div>
-            <div class="product-info">
-                <span class="product-cat">AUDIO</span>
-                <h3 class="product-name">NEXO Sound Max ANC</h3>
-                <div class="product-rating">
-                    <span class="star">★</span>
-                    <span class="score">4.8</span>
-                    <span class="reviews">(528)</span>
-                </div>
-                <div class="product-price-box">
-                    <div class="prices">
-                        <span class="current-price">US$ 249</span>
-                        <span class="old-price">US$ 329</span>
+                    <div class="product-img-wrapper">
+                        <img src="@(string.IsNullOrEmpty(prod.ImagenPrincipal) ? "images/laptop-hero.png" : prod.ImagenPrincipal)" alt="@prod.Nombre" />
                     </div>
-                    <span class="savings">Ahorras 24%</span>
-                </div>
-            </div>
-            <button class="btn-add-cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                Añadir al carrito
-            </button>
-        </div>
-
-        <!-- Producto 3 -->
-        <div class="product-card">
-            <span class="product-badge">Nuevo</span>
-            <div class="product-img-wrapper">
-                <img src="images/laptop-hero.png" alt="NEXO Phone X 5G" />
-            </div>
-            <div class="product-info">
-                <span class="product-cat">SMARTPHONES</span>
-                <h3 class="product-name">NEXO Phone X 5G</h3>
-                <div class="product-rating">
-                    <span class="star">★</span>
-                    <span class="score">4.7</span>
-                    <span class="reviews">(189)</span>
-                </div>
-                <div class="product-price-box">
-                    <div class="prices">
-                        <span class="current-price">US$ 899</span>
+                    <div class="product-info">
+                        <span class="product-cat">SKU: @prod.CodigoSKU</span>
+                        <h3 class="product-name">@prod.Nombre</h3>
+                        <div class="product-rating">
+                            <span class="star">★</span>
+                            <span class="score">4.8</span>
+                            <span class="reviews">(Stock: @prod.Stock)</span>
+                        </div>
+                        <div class="product-price-box">
+                            <div class="prices">
+                                <span class="current-price">US$ @prod.Precio</span>
+                                @if (prod.PrecioAnterior.HasValue)
+                                {
+                                    <span class="old-price">US$ @prod.PrecioAnterior</span>
+                                }
+                            </div>
+                            @if (prod.PorcentajeDescuento.HasValue && prod.PorcentajeDescuento > 0)
+                            {
+                                <span class="savings">Ahorras @prod.PorcentajeDescuento%</span>
+                            }
+                            else
+                            {
+                                <span class="savings placeholder-space">.</span>
+                            }
+                        </div>
                     </div>
-                    <span class="savings placeholder-space">.</span>
+                    <button type="button" class="btn-add-cart" @onclick:stopPropagation="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
+                        Añadir al carrito
+                    </button>
                 </div>
-            </div>
-            <button class="btn-add-cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                Añadir al carrito
-            </button>
-        </div>
-
-        <!-- Producto 4 -->
-        <div class="product-card">
-            <div class="product-img-wrapper">
-                <img src="images/laptop-banner.png" alt="NEXO Watch Fit 3" />
-            </div>
-            <div class="product-info">
-                <span class="product-cat">WEARABLES</span>
-                <h3 class="product-name">NEXO Watch Fit 3</h3>
-                <div class="product-rating">
-                    <span class="star">★</span>
-                    <span class="score">4.6</span>
-                    <span class="reviews">(421)</span>
-                </div>
-                <div class="product-price-box">
-                    <div class="prices">
-                        <span class="current-price">US$ 199</span>
-                        <span class="old-price">US$ 249</span>
-                    </div>
-                    <span class="savings">Ahorras 20%</span>
-                </div>
-            </div>
-            <button class="btn-add-cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                Añadir al carrito
-            </button>
-        </div>
-
-        <!-- Producto 5 -->
-        <div class="product-card">
-            <span class="product-badge">-19%</span>
-            <div class="product-img-wrapper">
-                <img src="images/laptop-banner.png" alt="NEXO Mecha K RGB" />
-            </div>
-            <div class="product-info">
-                <span class="product-cat">GAMING</span>
-                <h3 class="product-name">NEXO Mecha K RGB</h3>
-                <div class="product-rating">
-                    <span class="star">★</span>
-                    <span class="score">4.8</span>
-                    <span class="reviews">(214)</span>
-                </div>
-                <div class="product-price-box">
-                    <div class="prices">
-                        <span class="current-price">US$ 129</span>
-                        <span class="old-price">US$ 159</span>
-                    </div>
-                    <span class="savings">Ahorras 19%</span>
-                </div>
-            </div>
-            <button class="btn-add-cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                Añadir al carrito
-            </button>
-        </div>
-
-        <!-- Producto 6 -->
-        <div class="product-card">
-            <span class="product-badge">Nuevo</span>
-            <div class="product-img-wrapper">
-                <img src="images/laptop-hero.png" alt="NEXO Drone Air 4K" />
-            </div>
-            <div class="product-info">
-                <span class="product-cat">FOTOGRAFÍA</span>
-                <h3 class="product-name">NEXO Drone Air 4K</h3>
-                <div class="product-rating">
-                    <span class="star">★</span>
-                    <span class="score">4.7</span>
-                    <span class="reviews">(96)</span>
-                </div>
-                <div class="product-price-box">
-                    <div class="prices">
-                        <span class="current-price">US$ 649</span>
-                    </div>
-                    <span class="savings placeholder-space">.</span>
-                </div>
-            </div>
-            <button class="btn-add-cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                Añadir al carrito
-            </button>
-        </div>
-
-        <!-- Producto 7 -->
-        <div class="product-card">
-            <div class="product-img-wrapper">
-                <img src="images/laptop-banner.png" alt="NEXO Pad Controller" />
-            </div>
-            <div class="product-info">
-                <span class="product-cat">GAMING</span>
-                <h3 class="product-name">NEXO Pad Controller</h3>
-                <div class="product-rating">
-                    <span class="star">★</span>
-                    <span class="score">4.5</span>
-                    <span class="reviews">(158)</span>
-                </div>
-                <div class="product-price-box">
-                    <div class="prices">
-                        <span class="current-price">US$ 79</span>
-                        <span class="old-price">US$ 99</span>
-                    </div>
-                    <span class="savings">Ahorras 20%</span>
-                </div>
-            </div>
-            <button class="btn-add-cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                Añadir al carrito
-            </button>
-        </div>
-
-        <!-- Producto 8 -->
-        <div class="product-card">
-            <span class="product-badge">-21%</span>
-            <div class="product-img-wrapper">
-                <img src="images/laptop-hero.png" alt="NEXO Boom Speaker" />
-            </div>
-            <div class="product-info">
-                <span class="product-cat">AUDIO</span>
-                <h3 class="product-name">NEXO Boom Speaker</h3>
-                <div class="product-rating">
-                    <span class="star">★</span>
-                    <span class="score">4.8</span>
-                    <span class="reviews">(305)</span>
-                </div>
-                <div class="product-price-box">
-                    <div class="prices">
-                        <span class="current-price">US$ 149</span>
-                        <span class="old-price">US$ 189</span>
-                    </div>
-                    <span class="savings">Ahorras 21%</span>
-                </div>
-            </div>
-            <button class="btn-add-cart">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                Añadir al carrito
-            </button>
-        </div>
+            }
+        }
+        else
+        {
+            <p>No se encontraron productos en esta categoría.</p>
+        }
     </div>
 
     <!-- Botón ver todo el catálogo -->
@@ -545,7 +353,6 @@
     </div>
 
     <div class="testimonials-grid">
-        <!-- Card 1 -->
         <div class="testimonial-card">
             <div class="quote-mark">“</div>
             <div class="testimonial-stars">★★★★★</div>
@@ -561,7 +368,6 @@
             </div>
         </div>
 
-        <!-- Card 2 -->
         <div class="testimonial-card">
             <div class="quote-mark">“</div>
             <div class="testimonial-stars">★★★★★</div>
@@ -577,7 +383,6 @@
             </div>
         </div>
 
-        <!-- Card 3 -->
         <div class="testimonial-card">
             <div class="quote-mark">“</div>
             <div class="testimonial-stars">★★★★★</div>
@@ -604,7 +409,6 @@
     </div>
 
     <div class="faq-container">
-        <!-- Item 1 (Abierto como en la imagen) -->
         <details class="faq-item" open>
             <summary class="faq-question">
                 ¿Cuánto tarda el envío?
@@ -615,7 +419,6 @@
             </div>
         </details>
 
-        <!-- Item 2 -->
         <details class="faq-item">
             <summary class="faq-question">
                 ¿Los productos tienen garantía oficial?
@@ -626,7 +429,6 @@
             </div>
         </details>
 
-        <!-- Item 3 -->
         <details class="faq-item">
             <summary class="faq-question">
                 ¿Qué métodos de pago aceptan?
@@ -637,7 +439,6 @@
             </div>
         </details>
 
-        <!-- Item 4 -->
         <details class="faq-item">
             <summary class="faq-question">
                 ¿Puedo devolver un producto?
@@ -648,7 +449,6 @@
             </div>
         </details>
 
-        <!-- Item 5 -->
         <details class="faq-item">
             <summary class="faq-question">
                 ¿Ofrecen soporte técnico después de la compra?
@@ -673,7 +473,6 @@
     </div>
 
     <div class="blog-grid">
-        <!-- Card 1 -->
         <article class="blog-card">
             <div class="blog-img-wrapper">
                 <span class="blog-badge">Guías</span>
@@ -693,7 +492,6 @@
             </div>
         </article>
 
-        <!-- Card 2 -->
         <article class="blog-card">
             <div class="blog-img-wrapper">
                 <span class="blog-badge">Tendencias</span>
@@ -713,7 +511,6 @@
             </div>
         </article>
 
-        <!-- Card 3 -->
         <article class="blog-card">
             <div class="blog-img-wrapper">
                 <span class="blog-badge">Gaming</span>
@@ -735,7 +532,7 @@
     </div>
 </section>
 
-<!-- SECCIÓN CONTACTO (HABLEMOS DE TECNOLOGÍA) -->
+<!-- SECCIÓN CONTACTO -->
 <section class="contact-section">
     <div class="section-header">
         <span class="section-tag">CONTACTO</span>
@@ -744,7 +541,6 @@
     </div>
 
     <div class="contact-container">
-        <!-- Formulario principal -->
         <form class="contact-form-card">
             <div class="form-row">
                 <div class="form-group">
@@ -775,7 +571,6 @@
             </button>
         </form>
 
-        <!-- Tarjetas inferiores de información (Teléfono, Correo, Horario) -->
         <div class="contact-info-grid">
             <div class="info-card">
                 <div class="info-icon">
@@ -816,3 +611,89 @@
         </div>
     </div>
 </section>
+
+<!-- MODAL DE DETALLE DE PRODUCTO -->
+<ProductoDetalle @bind-mostrarModal="mostrarModalDetalle" Producto="productoSeleccionado" />
+
+@code {
+    private bool mostrarModalDetalle = false;
+    private SysNova.DTO.ProductoDTO productoSeleccionado = new();
+    private int categoriaIdSeleccionada = 0; // 0 significa TODOS
+
+    private bool cargandoCategorias = true;
+    private bool cargandoProductos = true;
+
+    private List<SysNova.DTO.CategoriaDTO> listaCategorias = new();
+    private List<SysNova.DTO.ProductoDTO> listaProductos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarCategoriasBD();
+        await CargarProductosBD();
+    }
+
+    private async Task CargarCategoriasBD()
+    {
+        try
+        {
+            cargandoCategorias = true;
+            // Ajusta la ruta a la URL de tu API
+            var result = await Http.GetFromJsonAsync<List<SysNova.DTO.CategoriaDTO>>("api/categoria");
+            if (result != null)
+            {
+                listaCategorias = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar categorías: {ex.Message}");
+        }
+        finally
+        {
+            cargandoCategorias = false;
+        }
+    }
+
+    private async Task CargarProductosBD()
+    {
+        try
+        {
+            cargandoProductos = true;
+            // Ajusta la ruta a la URL de tu API
+            var result = await Http.GetFromJsonAsync<List<SysNova.DTO.ProductoDTO>>("api/producto");
+            if (result != null)
+            {
+                listaProductos = result;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar productos: {ex.Message}");
+        }
+        finally
+        {
+            cargandoProductos = false;
+        }
+    }
+
+    private int ObtenerCantidadProductosPorCategoria(int categoriaId)
+    {
+        return listaProductos?.Count(p => p.CategoriaId == categoriaId) ?? 0;
+    }
+
+    private IEnumerable<SysNova.DTO.ProductoDTO> ProductosFiltrados =>
+        categoriaIdSeleccionada == 0
+            ? listaProductos
+            : listaProductos.Where(p => p.CategoriaId == categoriaIdSeleccionada);
+
+    private void SeleccionarCategoria(int categoriaId)
+    {
+        categoriaIdSeleccionada = categoriaId;
+    }
+
+    private void AbrirDetalleProducto(SysNova.DTO.ProductoDTO producto)
+    {
+        productoSeleccionado = producto;
+        mostrarModalDetalle = true;
+    }
+}
