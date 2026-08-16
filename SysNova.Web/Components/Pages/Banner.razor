@@ -1,0 +1,308 @@
+﻿@page "/banner"
+@using SysNova.DTO
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<div class="main-container py-4 position-relative">
+    <!-- Panel de Administración (Visible solo para rol Administrador) -->
+    <AuthorizeView Roles="Administrador">
+        <Authorized>
+            <div class="container mb-3 text-end">
+                <button class="btn btn-warning text-dark fw-bold shadow-sm" @onclick="AbrirModalCrear">
+                    <i class="bi bi-plus-lg me-1"></i> Agregar Banner
+                </button>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+
+    <!-- Estado: Cargando -->
+    @if (cargando)
+    {
+        <div class="d-flex justify-content-center align-items-center py-5">
+            <div class="spinner-border text-gold" role="status">
+                <span class="visually-hidden">Cargando promociones...</span>
+            </div>
+        </div>
+    }
+    <!-- Estado: Sin Banners -->
+    else if (bannersVisibles == null || !bannersVisibles.Any())
+    {
+    <div class="text-center py-5 text-muted">
+        <p class="fs-5">No hay promociones activas en este momento.</p>
+    </div>
+    }
+    <!-- Estado: Carrusel Hero -->
+    else
+    {
+    <div class="container">
+        <div id="bannerHeroCarousel" class="carousel slide carousel-fade shadow-custom rounded-4 overflow-hidden" data-bs-ride="carousel">
+            <!-- Indicadores -->
+            <div class="carousel-indicators">
+                @for (int i = 0; i < bannersVisibles.Count; i++)
+                {
+                    var index = i;
+                    <button type="button"
+                            data-bs-target="#bannerHeroCarousel"
+                            data-bs-slide-to="@index"
+                            class="@(index == 0 ? "active" : "")"
+                            aria-current="@(index == 0 ? "true" : "false")"
+                            aria-label="Slide @(index + 1)">
+                    </button>
+                }
+            </div>
+
+            <!-- Diapositivas -->
+            <div class="carousel-inner">
+                @for (int i = 0; i < bannersVisibles.Count; i++)
+                {
+                    var banner = bannersVisibles[i];
+                    var index = i;
+                    <div class="carousel-item @(index == 0 ? "active" : "")" data-bs-interval="6000">
+                        <div class="position-relative product-img-container" style="height: 480px;">
+                            <img src="@banner.Imagen" class="d-block w-100 h-100 object-fit-cover" alt="@banner.Titulo">
+                            <div class="position-absolute top-0 start-0 w-100 h-100 bg-slate-900 opacity-50"></div>
+                        </div>
+
+                        <!-- Contenido del Banner -->
+                        <div class="carousel-caption text-start p-4 p-md-5 rounded-3 modal-dark-content bg-opacity-75 shadow-lg mb-4 ms-2 me-2 ms-md-5 me-md-5">
+                            <h1 class="display-5 fw-bold text-gold">@banner.Titulo</h1>
+
+                            @if (!string.IsNullOrEmpty(banner.SubTitulo))
+                            {
+                                <p class="fs-5 text-light my-3 line-clamp-2">@banner.SubTitulo</p>
+                            }
+
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-4">
+                                @if (!string.IsNullOrEmpty(banner.BotonUrl) && !string.IsNullOrEmpty(banner.BotonTexto))
+                                {
+                                    <a href="@banner.BotonUrl" class="btn btn-warning btn-lg text-dark fw-bold px-4 transition-all">
+                                        @banner.BotonTexto
+                                    </a>
+                                }
+
+                                <!-- Acciones Rápidas del Administrador en la Slide -->
+                                <AuthorizeView Roles="Administrador">
+                                    <Authorized>
+                                        <div class="btn-group ms-auto">
+                                            <button class="btn btn-sm btn-outline-warning" @onclick="() => AbrirModalEditar(banner)">
+                                                Editar
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarBanner(banner.BannerId)">
+                                                Eliminar
+                                            </button>
+                                        </div>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Controles Prev/Next -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#bannerHeroCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#bannerHeroCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        </div>
+    </div>
+    }
+
+    <!-- Modal CRUD (Administrador) -->
+    @if (mostrarModal)
+    {
+        <div class="custom-modal-backdrop">
+            <div class="custom-modal-dialog">
+                <div class="modal-dark-content p-4 rounded-3 border border-secondary shadow-custom">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4 class="modal-title text-gold fw-bold">
+                            @(bannerForm.BannerId == 0 ? "Nuevo Banner" : "Editar Banner")
+                        </h4>
+                        <button type="button" class="btn-close btn-close-custom" @onclick="CerrarModal"></button>
+                    </div>
+
+                    <EditForm Model="bannerForm" OnValidSubmit="GuardarBanner">
+                        <DataAnnotationsValidator />
+
+                        <div class="custom-modal-body pe-2">
+                            <div class="mb-3">
+                                <label class="form-label text-light">Título</label>
+                                <InputText @bind-Value="bannerForm.Titulo" class="form-control input-dark" placeholder="Ej: Oferta de Verano" required />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-light">Subtítulo</label>
+                                <InputText @bind-Value="bannerForm.SubTitulo" class="form-control input-dark" placeholder="Ej: Hasta 50% de descuento" />
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label text-light">URL de la Imagen</label>
+                                <InputText @bind-Value="bannerForm.Imagen" class="form-control input-dark" placeholder="https://..." required />
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-light">Texto Botón (CTA)</label>
+                                    <InputText @bind-Value="bannerForm.BotonTexto" class="form-control input-dark" placeholder="Ej: Comprar Ahora" />
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label text-light">URL Botón (CTA)</label>
+                                    <InputText @bind-Value="bannerForm.BotonUrl" class="form-control input-dark" placeholder="Ej: /productos" />
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label text-light">Orden</label>
+                                    <InputNumber @bind-Value="bannerForm.Orden" class="form-control input-dark" />
+                                </div>
+                                <div class="col-md-4 mb-3 d-flex align-items-end">
+                                    <div class="form-check form-switch mb-2">
+                                        <InputCheckbox @bind-Value="bannerForm.Mostrar" class="form-check-input" id="checkMostrar" />
+                                        <label class="form-check-label text-light" for="checkMostrar">Mostrar</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 mb-3 d-flex align-items-end">
+                                    <div class="form-check form-switch mb-2">
+                                        <InputCheckbox @bind-Value="bannerForm.Activo" class="form-check-input" id="checkActivo" />
+                                        <label class="form-check-label text-light" for="checkActivo">Activo</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top border-secondary">
+                            <button type="button" class="btn btn-outline-light" @onclick="CerrarModal">Cancelar</button>
+                            <button type="submit" class="btn btn-warning text-dark fw-bold">Guardar</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<BannerDTO> listaBanners = new();
+    private List<BannerDTO> bannersVisibles = new();
+    private BannerDTO bannerForm = new();
+    private bool cargando = true;
+    private bool mostrarModal = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarBanners();
+    }
+
+    private async Task CargarBanners()
+    {
+        cargando = true;
+        try
+        {
+            var resultado = await Http.GetFromJsonAsync<List<BannerDTO>>("api/Banner");
+            if (resultado != null)
+            {
+                listaBanners = resultado;
+                // Público y Cliente solo ven banners con Mostrar = true y Activo = true, ordenados
+                bannersVisibles = listaBanners
+                    .Where(b => b.Activo && b.Mostrar)
+                    .OrderBy(b => b.Orden)
+                    .ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar banners: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+    private void AbrirModalCrear()
+    {
+        bannerForm = new BannerDTO
+        {
+            Activo = true,
+            Mostrar = true,
+            Orden = listaBanners.Count + 1,
+            FechaCreacion = DateTime.Now
+        };
+        mostrarModal = true;
+    }
+
+    private void AbrirModalEditar(BannerDTO banner)
+    {
+        bannerForm = new BannerDTO
+        {
+            BannerId = banner.BannerId,
+            Titulo = banner.Titulo,
+            SubTitulo = banner.SubTitulo,
+            Imagen = banner.Imagen,
+            BotonTexto = banner.BotonTexto,
+            BotonUrl = banner.BotonUrl,
+            Orden = banner.Orden,
+            Mostrar = banner.Mostrar,
+            Activo = banner.Activo,
+            FechaCreacion = banner.FechaCreacion
+        };
+        mostrarModal = true;
+    }
+
+    private void CerrarModal()
+    {
+        mostrarModal = false;
+    }
+
+    private async Task GuardarBanner()
+    {
+        try
+        {
+            if (bannerForm.BannerId == 0)
+            {
+                var response = await Http.PostAsJsonAsync("api/Banner", bannerForm);
+                if (response.IsSuccessStatusCode)
+                {
+                    await CargarBanners();
+                    CerrarModal();
+                }
+            }
+            else
+            {
+                bannerForm.FechaModificacion = DateTime.Now;
+                var response = await Http.PutAsJsonAsync("api/Banner", bannerForm);
+                if (response.IsSuccessStatusCode)
+                {
+                    await CargarBanners();
+                    CerrarModal();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar banner: {ex.Message}");
+        }
+    }
+
+    private async Task EliminarBanner(int bannerId)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/Banner/{bannerId}");
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarBanners();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al eliminar banner: {ex.Message}");
+        }
+    }
+}
