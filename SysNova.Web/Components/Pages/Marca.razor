@@ -1,171 +1,809 @@
-﻿@page "/Marcas"
-@using SysNova.DTO
-@using Microsoft.AspNetCore.Components.Authorization
-@inject HttpClient Http
+﻿@page "/marcas"
 
-<div class="main-container py-4">
-    <div class="container">
-        <!-- Encabezado y Acción de Administrador -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="text-gold fw-bold m-0">Nuestras Marcas</h2>
-                <p class="text-muted mb-0">Marcas destacadas disponibles en el catálogo</p>
-            </div>
-            <AuthorizeView Roles="Administrador">
-                <Authorized>
-                    <button class="btn btn-warning text-dark fw-bold shadow-sm" @onclick="AbrirModalCrear">
-                        <i class="bi bi-plus-lg me-1"></i> Agregar Marca
-                    </button>
-                </Authorized>
-            </AuthorizeView>
+@using Microsoft.AspNetCore.Components.Forms
+
+@using SysNova.DTO
+@using SysNova.Web.Services
+
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject AuthStateService AuthState
+
+<PageTitle>Marcas - SysNova Tech</PageTitle>
+
+<div class="container-fluid min-vh-100 p-4 main-container">
+
+    <!-- ========================================== -->
+    <!-- ENCABEZADO -->
+    <!-- ========================================== -->
+
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom border-secondary border-opacity-25">
+
+        <div>
+            <h1 class="h2 fw-bold text-white mb-1">
+                Marcas Aliadas
+            </h1>
+
+            <p class="text-secondary small mb-0">
+                Gestión y catálogo de fabricantes y marcas asociadas
+            </p>
         </div>
 
-        <!-- Carga de datos -->
-        @if (cargando)
+        @if (esAdmin)
         {
-            <div class="d-flex justify-content-center align-items-center py-5">
-                <div class="spinner-border text-gold" role="status">
-                    <span class="visually-hidden">Cargando marcas...</span>
+            <button class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3 py-2"
+                    @onclick="AbrirModalCrear">
+
+                <svg width="18"
+                     height="18"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <path d="M12 5v14M5 12h14" />
+
+                </svg>
+
+                Nueva Marca
+
+            </button>
+        }
+
+    </header>
+
+
+    <!-- ========================================== -->
+    <!-- PANEL ADMIN -->
+    <!-- ========================================== -->
+    @if (esAdmin)
+    {
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 mb-4 text-white">
+
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3">
+
+                <h6 class="mb-0 text-white-50">
+                    Panel de Control de Marcas
+                </h6>
+
+                <div class="small">
+
+                    Total marcas:
+
+                    <strong class="text-info">
+                        @listaMarcas.Count
+                    </strong>
+
+                    <span class="mx-2 text-secondary">
+                        |
+                    </span>
+
+                    Activas:
+
+                    <strong class="text-success">
+                        @listaMarcas.Count(m => m.Activo)
+                    </strong>
+
                 </div>
+
             </div>
-        }
-        else if (marcasVisibles == null || !marcasVisibles.Any())
-        {
-            <div class="text-center py-5 text-muted">
-                <p class="fs-5">No hay marcas activas registradas.</p>
+
+        </div>
+    }
+
+
+    <!-- ========================================== -->
+    <!-- LAYOUT PRINCIPAL -->
+    <!-- ========================================== -->
+
+    <div class="row g-4">
+
+        <!-- ====================================== -->
+        <!-- SIDEBAR -->
+        <!-- ====================================== -->
+
+        <aside class="col-12 col-lg-3">
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Búsqueda
+                </h6>
+
+                <input type="text"
+                       class="form-control input-dark"
+                       placeholder="Nombre, país o descripción..."
+                       @bind="busquedaTexto"
+                       @bind:event="oninput" />
+
             </div>
-        }
-        else
-        {
-            <!-- Grid de Tarjetas de Marca -->
-            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-                @foreach (var marca in marcasVisibles)
-                {
-                    <div class="col">
-                        <div class="card card-categoria h-100 bg-slate-800 border border-secondary shadow-custom transition-all text-light rounded-3 overflow-hidden">
-                            <div class="p-3 bg-slate-900 d-flex justify-content-center align-items-center" style="height: 140px;">
-                                @if (!string.IsNullOrEmpty(marca.Logo))
-                                {
-                                    <img src="@marca.Logo" alt="@marca.Nombre" class="img-fluid object-fit-contain style-logo" style="max-height: 100px;" />
-                                }
-                                else
-                                {
-                                    <span class="fs-3 fw-bold text-gold">@marca.Nombre</span>
-                                }
-                            </div>
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title text-gold fw-bold">@marca.Nombre</h5>
 
-                                @if (!string.IsNullOrEmpty(marca.Pais))
-                                {
-                                    <span class="badge bg-secondary mb-2 align-self-start">@marca.Pais</span>
-                                }
 
-                                @if (!string.IsNullOrEmpty(marca.Descripcion))
-                                {
-                                    <p class="card-text text-slate-300 small line-clamp-2 mb-3">@marca.Descripcion</p>
-                                }
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
 
-                                <AuthorizeView Roles="Administrador">
-                                    <Authorized>
-                                        <div class="mt-auto pt-2 border-top border-secondary d-flex justify-content-end gap-2">
-                                            <button class="btn btn-sm btn-outline-warning" @onclick="() => AbrirModalEditar(marca)">Editar</button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarMarca(marca.MarcaId)">Eliminar</button>
-                                        </div>
-                                    </Authorized>
-                                </AuthorizeView>
-                            </div>
-                        </div>
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Filtros Rápidos
+                </h6>
+
+                <div class="d-flex flex-column gap-2">
+
+                    <div class="form-check">
+
+                        <input class="form-check-input input-dark"
+                               type="checkbox"
+                               id="chkFavoritosMarca"
+                               @bind="soloFavoritos" />
+
+                        <label class="form-check-label small"
+                               for="chkFavoritosMarca">
+
+                            Guardadas (❤️ @idsFavoritos.Count)
+
+                        </label>
+
                     </div>
-                }
+
+                </div>
+
             </div>
-        }
+
+
+            <button class="btn btn-outline-secondary w-100 btn-sm text-white"
+                    @onclick="LimpiarFiltros">
+
+                Limpiar Filtros
+
+            </button>
+
+        </aside>
+
+
+        <!-- ====================================== -->
+        <!-- CONTENIDO -->
+        <!-- ====================================== -->
+
+        <main class="col-12 col-lg-9">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
+
+                <span class="text-secondary small">
+
+                    Mostrando
+
+                    <strong class="text-white">
+                        @MarcasFiltradas.Count()
+                    </strong>
+
+                    marcas
+
+                </span>
+
+
+                <div class="d-flex align-items-center gap-2">
+
+                    <label class="small text-secondary mb-0 text-nowrap">
+                        Ordenar por:
+                    </label>
+
+                    <select class="form-select form-select-sm input-dark w-auto"
+                            @bind="criterioOrden">
+
+                        <option value="nombre">
+                            Nombre A-Z
+                        </option>
+
+                        <option value="recientes">
+                            Más recientes
+                        </option>
+
+                        <option value="pais">
+                            País
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================== -->
+            <!-- CARGANDO -->
+            <!-- ================================== -->
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+
+                    <div class="spinner-border text-primary mb-3"
+                         role="status">
+                    </div>
+
+                    <p class="text-secondary mb-0">
+                        Cargando marcas...
+                    </p>
+
+                </div>
+            }
+
+
+            <!-- ================================== -->
+            <!-- SIN RESULTADOS -->
+            <!-- ================================== -->
+            @if (!cargando && !MarcasFiltradas.Any())
+            {
+                <div class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-25">
+
+                    <p class="fs-5 mb-3">
+                        🔍 No se encontraron marcas con los criterios seleccionados.
+                    </p>
+
+                    <button class="btn btn-outline-primary btn-sm"
+                            @onclick="LimpiarFiltros">
+
+                        Restablecer filtros
+
+                    </button>
+
+                </div>
+            }
+
+
+            <!-- ================================== -->
+            <!-- MARCAS -->
+            <!-- ================================== -->
+            @if (!cargando && MarcasFiltradas.Any())
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+
+                    @foreach (var item in MarcasFiltradas)
+                    {
+                        var esFav = idsFavoritos.Contains(item.MarcaId);
+
+                        <div class="col">
+
+                            <div class="card h-100 border-secondary border-opacity-25 shadow-sm overflow-hidden text-white position-relative marca-card"
+                                 style="opacity: @(!item.Activo ? "0.6" : "1");">
+
+
+                                <!-- FAVORITO -->
+
+                                <button type="button"
+                                        class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle p-1 d-flex align-items-center justify-content-center z-3 border border-secondary border-opacity-50"
+                                        style="width:34px;height:34px;"
+                                        @onclick="() => ToggleFavorito(item.MarcaId)"
+                                        title="@(esFav ? "Quitar de guardados" : "Guardar marca")">
+
+                                    <svg width="18"
+                                         height="18"
+                                         viewBox="0 0 24 24"
+                                         fill="@(esFav ? "#dc3545" : "none")"
+                                         stroke="@(esFav ? "#dc3545" : "currentColor")"
+                                         stroke-width="2">
+
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+
+                                    </svg>
+
+                                </button>
+
+
+                                <!-- ESTADO -->
+
+                                <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 z-2">
+
+                                    @if (!item.Activo)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            INACTIVA
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <!-- LOGO -->
+
+                                <div class="position-relative bg-dark bg-opacity-50 text-center p-3 border-bottom border-secondary border-opacity-25 d-flex align-items-center justify-content-center"
+                                     style="height:180px;">
+
+                                    <img src="@(string.IsNullOrEmpty(item.Logo)
+                                                                                                                                  ? "images/marca-default.png"
+                                                                                                                                  : item.Logo)"
+                                 alt="@item.Nombre"
+                                 class="img-fluid h-100 object-fit-contain rounded p-2" />
+
+
+                                    <!-- ACCIONES ADMIN -->
+                            @if (esAdmin)
+                                    {
+                                        <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 d-flex justify-content-center gap-2">
+
+                                            <button class="btn btn-sm btn-outline-warning py-0 px-2"
+                                                    @onclick="() => AbrirModalEditar(item)">
+
+                                                ✏️ Editar
+
+                                            </button>
+
+
+                                            <button class="btn btn-sm btn-outline-danger py-0 px-2"
+                                                    @onclick="() => EliminarMarca(item.MarcaId)">
+
+                                                🗑️ Eliminar
+
+                                            </button>
+
+                                        </div>
+                                    }
+
+                            </div>
+
+
+                            <!-- INFORMACIÓN -->
+
+                            <div class="card-body d-flex flex-column justify-content-between p-3">
+
+                                <div>
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                        <span class="badge bg-dark border border-secondary border-opacity-25 text-info fw-normal">
+
+                                            @(string.IsNullOrEmpty(item.Pais)
+                                                                                    ? "Global"
+                                                                                    : item.Pais)
+
+                                        </span>
+
+
+                                        <small class="text-secondary">
+                                            📅 @item.FechaCreacion.ToString("dd MMM yyyy")
+                                        </small>
+
+                                    </div>
+
+
+                                    <h5 class="card-title h6 text-white text-truncate mb-2"
+                                        title="@item.Nombre">
+
+                                        @item.Nombre
+
+                                    </h5>
+
+
+                                    <p class="card-text text-secondary small line-clamp-2 mb-3">
+
+                                        @(string.IsNullOrEmpty(item.Descripcion)
+                                                                            ? "Sin descripción disponible."
+                                                                            : item.Descripcion)
+
+                                </p>
+
+                                    </div>
+
+
+                                    <button class="btn btn-outline-primary w-100 btn-sm"
+                                            @onclick="() => VerDetalles(item)">
+
+                                        Ver Catálogo
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                                }
+
+                </div>
+            }
+
+        </main>
+
     </div>
 
-    <!-- Modal CRUD (Administrador) -->
-    @if (mostrarModal)
-    {
-        <div class="custom-modal-backdrop">
-            <div class="custom-modal-dialog">
-                <div class="modal-dark-content p-4 rounded-3 border border-secondary shadow-custom">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="modal-title text-gold fw-bold">
-                            @(marcaForm.MarcaId == 0 ? "Nueva Marca" : "Editar Marca")
-                        </h4>
-                        <button type="button" class="btn-close btn-close-custom" @onclick="CerrarModal"></button>
-                    </div>
-
-                    <EditForm Model="marcaForm" OnValidSubmit="GuardarMarca">
-                        <DataAnnotationsValidator />
-
-                        <div class="custom-modal-body pe-2">
-                            <div class="mb-3">
-                                <label class="form-label text-light">Nombre</label>
-                                <InputText @bind-Value="marcaForm.Nombre" class="form-control input-dark" placeholder="Ej: Sony" required />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label text-light">Descripción</label>
-                                <InputTextArea @bind-Value="marcaForm.Descripcion" class="form-control input-dark" rows="3" placeholder="Breve descripción..." />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label text-light">URL del Logo</label>
-                                <InputText @bind-Value="marcaForm.Logo" class="form-control input-dark" placeholder="https://..." />
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-light">País de Origen</label>
-                                    <InputText @bind-Value="marcaForm.Pais" class="form-control input-dark" placeholder="Ej: Japón" />
-                                </div>
-                                <div class="col-md-6 mb-3 d-flex align-items-end">
-                                    <div class="form-check form-switch mb-2">
-                                        <InputCheckbox @bind-Value="marcaForm.Activo" class="form-check-input" id="checkMarcaActivo" />
-                                        <label class="form-check-label text-light" for="checkMarcaActivo">Activo</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top border-secondary">
-                            <button type="button" class="btn btn-outline-light" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-warning text-dark fw-bold">Guardar</button>
-                        </div>
-                    </EditForm>
-                </div>
-            </div>
-        </div>
-    }
 </div>
 
+
+<!-- ========================================== -->
+<!-- MODAL ADMIN -->
+<!-- ========================================== -->
+@if (mostrarModal && esAdmin)
+{
+    <div class="custom-modal-backdrop">
+
+        <div class="custom-modal-dialog">
+
+            <div class="modal-content border-secondary border-opacity-25 shadow-lg text-white modal-dark-content">
+
+
+                <div class="modal-header border-secondary border-opacity-25 pb-3">
+
+                    <h5 class="modal-title text-white">
+
+                        @(esEdicion
+                                            ? "Editar Marca"
+                                            : "Nueva Marca")
+
+                </h5>
+
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            @onclick="CerrarModal">
+                    </button>
+
+                </div>
+
+
+                <EditForm Model="@formModel"
+                          OnValidSubmit="GuardarMarca">
+
+                    <DataAnnotationsValidator />
+
+
+                    <div class="modal-body py-3">
+
+                        <!-- NOMBRE -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Nombre de la Marca
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="formModel.Nombre"
+                                       placeholder="Ej: Sony, Dell, Apple..." />
+
+                            <ValidationMessage For="@(() => formModel.Nombre)"
+                                               class="text-danger small" />
+
+                        </div>
+
+
+                        <!-- PAÍS / LOGO -->
+
+                        <div class="row g-3 mb-3">
+
+                            <div class="col-6">
+
+                                <label class="form-label small text-secondary">
+                                    País de Origen
+                                </label>
+
+                                <InputText class="form-control input-dark"
+                                           @bind-Value="formModel.Pais"
+                                           placeholder="Ej: Japón, EE.UU." />
+
+                            </div>
+
+
+                            <div class="col-6">
+
+                                <label class="form-label small text-secondary">
+                                    Logo de la Marca
+                                </label>
+
+                                <div class="d-flex flex-column gap-2">
+
+                                    <InputFile OnChange="SubirLogo"
+                                               accept=".png,.jpg,.jpeg,.webp"
+                                               class="form-control input-dark"
+                                               disabled="@subiendoLogo" />
+
+                                    <small class="text-secondary">
+                                        PNG, JPG o WEBP · máximo 5 MB
+                                    </small>
+
+                                @if (subiendoLogo)
+                                    {
+                                        <div class="d-flex align-items-center gap-2 text-info small">
+                                            <span class="spinner-border spinner-border-sm"></span>
+                                            Subiendo logo...
+                                        </div>
+                                    }
+
+                                    @if (!string.IsNullOrWhiteSpace(formModel.Logo))
+                                    {
+                                        <div class="border border-secondary border-opacity-25 rounded p-2 bg-dark bg-opacity-50 text-center">
+
+                                            <img src="@formModel.Logo"
+                                                 alt="Vista previa del logo"
+                                                 style="max-width:140px;max-height:70px;object-fit:contain;" />
+
+                                        </div>
+                                    }
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DESCRIPCIÓN -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label small text-secondary">
+                            Descripción
+                        </label>
+
+                        <InputTextArea class="form-control input-dark"
+                                       rows="4"
+                                       @bind-Value="formModel.Descripcion"
+                                       placeholder="Reseña o descripción de la marca..." />
+
+                    </div>
+
+
+                    <!-- ACTIVO -->
+
+                    <div class="d-flex flex-wrap gap-4 pt-2">
+
+                        <div class="form-check form-switch ms-auto">
+
+                            <InputCheckbox class="form-check-input"
+                                           type="checkbox"
+                                           role="switch"
+                                           @bind-Value="formModel.Activo"
+                                           id="chkActivoMarca" />
+
+                            <label class="form-check-label small"
+                                   for="chkActivoMarca">
+
+                                Activa
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FOOTER -->
+
+                <div class="modal-footer border-secondary border-opacity-25 pt-2">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            @onclick="CerrarModal">
+
+                        Cancelar
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn btn-primary btn-sm px-3"
+                            disabled="@guardando">
+
+                        @(guardando
+                                                ? "Guardando..."
+                                                : "Guardar")
+
+                    </button>
+
+                    </div>
+
+                </EditForm>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+
 @code {
+
+    // ==========================================
+    // DATOS
+    // ==========================================
+
     private List<MarcaDTO> listaMarcas = new();
-    private List<MarcaDTO> marcasVisibles = new();
-    private MarcaDTO marcaForm = new();
+
+    private MarcaDTO formModel = new();
+
+    private HashSet<int> idsFavoritos = new();
+
+
+    // ==========================================
+    // ESTADO
+    // ==========================================
+
+    private bool esAdmin = false;
+
     private bool cargando = true;
+
+    private bool guardando = false;
+
     private bool mostrarModal = false;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarMarcas();
-    }
+    private bool esEdicion = false;
 
-    private async Task CargarMarcas()
+    private bool subiendoLogo = false;
+
+
+    // ==========================================
+    // FILTROS
+    // ==========================================
+
+    private string busquedaTexto = "";
+
+    private bool soloFavoritos = false;
+
+    private string criterioOrden = "nombre";
+
+
+    // ==========================================
+    // PRIMER RENDER
+    // ==========================================
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        cargando = true;
+        if (!firstRender)
+            return;
+
         try
         {
-            var resultado = await Http.GetFromJsonAsync<List<MarcaDTO>>("api/Marca");
-            if (resultado != null)
+            /*
+             * AuthStateService utiliza localStorage,
+             * por eso lo inicializamos después
+             * del primer render.
+             */
+
+            await AuthState.InicializarAsync();
+
+            esAdmin = AuthState.EsAdministrador;
+
+            await CargarFavoritos();
+
+            await CargarMarcas();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error inicializando Marcas: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    // ==========================================
+    // TOKEN HTTP
+    // ==========================================
+
+    private async Task AplicarTokenAutorizacion()
+    {
+        try
+        {
+            var token =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "authToken");
+
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                listaMarcas = resultado;
-                marcasVisibles = listaMarcas.Where(m => m.Activo).ToList();
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization = null;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al cargar marcas: {ex.Message}");
+            Console.WriteLine(
+                $"Error al obtener token: {ex.Message}");
+        }
+    }
+
+
+    // ==========================================
+    // FAVORITOS
+    // ==========================================
+
+    private async Task CargarFavoritos()
+    {
+        try
+        {
+            var favsJson =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "sysnova_marca_favoritos");
+
+
+            if (!string.IsNullOrWhiteSpace(favsJson))
+            {
+                var lista =
+                    System.Text.Json.JsonSerializer
+                        .Deserialize<List<int>>(favsJson);
+
+                if (lista != null)
+                {
+                    idsFavoritos =
+                        new HashSet<int>(lista);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al cargar favoritos: {ex.Message}");
+        }
+    }
+
+
+    private async Task ToggleFavorito(int id)
+    {
+        if (idsFavoritos.Contains(id))
+        {
+            idsFavoritos.Remove(id);
+        }
+        else
+        {
+            idsFavoritos.Add(id);
+        }
+
+        try
+        {
+            var json =
+                System.Text.Json.JsonSerializer
+                    .Serialize(idsFavoritos);
+
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "sysnova_marca_favoritos",
+                json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al guardar favorito: {ex.Message}");
+        }
+    }
+
+
+    // ==========================================
+    // CARGAR MARCAS
+    // ==========================================
+
+    private async Task CargarMarcas()
+    {
+        cargando = true;
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+            var res =
+                await Http.GetFromJsonAsync<List<MarcaDTO>>(
+                    "api/marca");
+
+            if (res != null)
+            {
+                listaMarcas = res;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al consultar API: {ex.Message}");
         }
         finally
         {
@@ -173,76 +811,456 @@
         }
     }
 
-    private void AbrirModalCrear()
+
+    // ==========================================
+    // FILTRADO
+    // ==========================================
+
+    private IEnumerable<MarcaDTO> MarcasFiltradas
     {
-        marcaForm = new MarcaDTO
+        get
+        {
+            IEnumerable<MarcaDTO> res =
+                listaMarcas;
+
+
+            /*
+             * Público y Cliente solamente
+             * deberían visualizar marcas activas.
+             */
+
+            if (!esAdmin)
+            {
+                res =
+                    res.Where(m => m.Activo);
+            }
+
+
+            if (!string.IsNullOrWhiteSpace(busquedaTexto))
+            {
+                res =
+                    res.Where(m =>
+                        (m.Nombre != null &&
+                         m.Nombre.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (m.Pais != null &&
+                         m.Pais.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (m.Descripcion != null &&
+                         m.Descripcion.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase)));
+            }
+
+
+            if (soloFavoritos)
+            {
+                res =
+                    res.Where(m =>
+                        idsFavoritos.Contains(
+                            m.MarcaId));
+            }
+
+
+            if (criterioOrden == "recientes")
+            {
+                return res.OrderByDescending(
+                    m => m.FechaCreacion);
+            }
+
+
+            if (criterioOrden == "pais")
+            {
+                return res.OrderBy(
+                    m => m.Pais);
+            }
+
+
+            return res.OrderBy(
+                m => m.Nombre);
+        }
+    }
+
+
+    // ==========================================
+    // LIMPIAR FILTROS
+    // ==========================================
+
+    private void LimpiarFiltros()
+    {
+        busquedaTexto = "";
+
+        soloFavoritos = false;
+
+        criterioOrden = "nombre";
+    }
+
+
+    // ==========================================
+    // SCROLL MODAL
+    // ==========================================
+
+    private async Task BloquearScrollFondo(
+        bool bloquear)
+    {
+        try
+        {
+            var style =
+                bloquear
+                    ? "hidden"
+                    : "auto";
+
+            await JS.InvokeVoidAsync(
+                "eval",
+                $"document.body.style.overflow = '{style}'");
+        }
+        catch
+        {
+        }
+    }
+
+
+    // ==========================================
+    // CREAR
+    // ==========================================
+
+    private async Task AbrirModalCrear()
+    {
+        if (!esAdmin)
+            return;
+
+
+        formModel = new MarcaDTO
         {
             Activo = true,
             FechaCreacion = DateTime.Now
         };
+
+
+        esEdicion = false;
+
         mostrarModal = true;
+
+        await BloquearScrollFondo(true);
     }
 
-    private void AbrirModalEditar(MarcaDTO marca)
+
+    // ==========================================
+    // EDITAR
+    // ==========================================
+
+    private async Task AbrirModalEditar(
+        MarcaDTO item)
     {
-        marcaForm = new MarcaDTO
+        if (!esAdmin)
+            return;
+
+
+        formModel = new MarcaDTO
         {
-            MarcaId = marca.MarcaId,
-            Nombre = marca.Nombre,
-            Descripcion = marca.Descripcion,
-            Logo = marca.Logo,
-            Pais = marca.Pais,
-            Activo = marca.Activo,
-            FechaCreacion = marca.FechaCreacion
+            MarcaId = item.MarcaId,
+            Nombre = item.Nombre,
+            Descripcion = item.Descripcion,
+            Logo = item.Logo,
+            Pais = item.Pais,
+            Activo = item.Activo,
+            FechaCreacion = item.FechaCreacion,
+            FechaModificacion = DateTime.Now
         };
+
+
+        esEdicion = true;
+
         mostrarModal = true;
+
+        await BloquearScrollFondo(true);
     }
 
-    private void CerrarModal() => mostrarModal = false;
+
+    // ==========================================
+    // CERRAR MODAL
+    // ==========================================
+
+    private async Task CerrarModal()
+    {
+        mostrarModal = false;
+
+        await BloquearScrollFondo(false);
+    }
+
+
+    // ==========================================
+    // SUBIR LOGO
+    // ==========================================
+
+    private async Task SubirLogo(
+        InputFileChangeEventArgs e)
+    {
+        if (!esAdmin)
+            return;
+
+        var archivo = e.File;
+
+        if (archivo == null)
+            return;
+
+        const long maxFileSize =
+            5 * 1024 * 1024;
+
+        var extensionesPermitidas =
+            new[]
+            {
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".webp"
+            };
+
+        var extension =
+            Path.GetExtension(
+                archivo.Name)
+            .ToLowerInvariant();
+
+        if (!extensionesPermitidas.Contains(extension))
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "Formato no permitido. Usa PNG, JPG, JPEG o WEBP.");
+
+            return;
+        }
+
+        if (archivo.Size > maxFileSize)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "El logo no puede superar los 5 MB.");
+
+            return;
+        }
+
+        subiendoLogo = true;
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+            using var contenido =
+                new MultipartFormDataContent();
+
+            await using var stream =
+                archivo.OpenReadStream(
+                    maxFileSize);
+
+            using var archivoContent =
+                new StreamContent(stream);
+
+            archivoContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    string.IsNullOrWhiteSpace(
+                        archivo.ContentType)
+                        ? "application/octet-stream"
+                        : archivo.ContentType);
+
+            contenido.Add(
+                archivoContent,
+                "archivo",
+                archivo.Name);
+
+            var response =
+                await Http.PostAsync(
+                    "api/marca/upload-logo",
+                    contenido);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detalle =
+                    await response.Content
+                        .ReadAsStringAsync();
+
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    $"No se pudo subir el logo. {detalle}");
+
+                return;
+            }
+
+            var resultado =
+                await response.Content
+                    .ReadFromJsonAsync<LogoUploadResponse>();
+
+            if (resultado == null ||
+                string.IsNullOrWhiteSpace(
+                    resultado.Url))
+            {
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    "La API no devolvió la URL del logo.");
+
+                return;
+            }
+
+            formModel.Logo =
+                resultado.Url;
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al subir el logo: {ex.Message}");
+        }
+        finally
+        {
+            subiendoLogo = false;
+
+            await InvokeAsync(
+                StateHasChanged);
+        }
+    }
+
+
+    private sealed class LogoUploadResponse
+    {
+        public string Url { get; set; } =
+            string.Empty;
+
+        public string NombreArchivo { get; set; } =
+            string.Empty;
+    }
+
+
+    // ==========================================
+    // GUARDAR
+    // ==========================================
 
     private async Task GuardarMarca()
     {
+        if (!esAdmin)
+            return;
+
+
+        guardando = true;
+
         try
         {
-            if (marcaForm.MarcaId == 0)
+            await AplicarTokenAutorizacion();
+
+            HttpResponseMessage response;
+
+
+            if (esEdicion)
             {
-                var response = await Http.PostAsJsonAsync("api/Marca", marcaForm);
-                if (response.IsSuccessStatusCode)
-                {
-                    await CargarMarcas();
-                    CerrarModal();
-                }
+                formModel.FechaModificacion =
+                    DateTime.Now;
+
+                response =
+                    await Http.PutAsJsonAsync(
+                        "api/marca",
+                        formModel);
             }
             else
             {
-                marcaForm.FechaModificacion = DateTime.Now;
-                var response = await Http.PutAsJsonAsync("api/Marca", marcaForm);
-                if (response.IsSuccessStatusCode)
-                {
-                    await CargarMarcas();
-                    CerrarModal();
-                }
+                formModel.FechaCreacion =
+                    DateTime.Now;
+
+                response =
+                    await Http.PostAsJsonAsync(
+                        "api/marca",
+                        formModel);
             }
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CerrarModal();
+
+                await CargarMarcas();
+
+                return;
+            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al guardar ({response.StatusCode}).");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al guardar marca: {ex.Message}");
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error de conexión: {ex.Message}");
+        }
+        finally
+        {
+            guardando = false;
         }
     }
 
+
+    // ==========================================
+    // ELIMINAR
+    // ==========================================
+
     private async Task EliminarMarca(int id)
     {
+        if (!esAdmin)
+            return;
+
+
+        var confirmado =
+            await JS.InvokeAsync<bool>(
+                "confirm",
+                "¿Estás seguro de eliminar esta marca?");
+
+
+        if (!confirmado)
+            return;
+
+
         try
         {
-            var response = await Http.DeleteAsync($"api/Marca/{id}");
+            await AplicarTokenAutorizacion();
+
+            var response =
+                await Http.DeleteAsync(
+                    $"api/marca/{id}");
+
+
             if (response.IsSuccessStatusCode)
             {
                 await CargarMarcas();
+
+                return;
             }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"No se pudo eliminar la marca. Código: {response.StatusCode}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al eliminar marca: {ex.Message}");
+            Console.WriteLine(
+                $"Error al eliminar: {ex.Message}");
         }
+    }
+
+
+    // ==========================================
+    // DETALLES
+    // ==========================================
+
+    private void VerDetalles(MarcaDTO item)
+    {
+        Console.WriteLine(
+            $"Consultando catálogo de: {item.Nombre}");
     }
 }

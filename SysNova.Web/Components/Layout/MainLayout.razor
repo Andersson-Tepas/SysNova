@@ -2,8 +2,14 @@
 @using Microsoft.AspNetCore.Components
 @using SysNova.DTO
 @using SysNova.Web.Components.Pages
+@using SysNova.Web.Services
+
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
+@inject AuthStateService AuthState
+@inject CarritoService CarritoState
+
+@implements IDisposable
 
 <div class="sn-layout">
 
@@ -12,194 +18,377 @@
         <!-- 1. TOP BAR -->
         <div class="sn-topbar">
             <div class="sn-container sn-topbar-content">
+
                 <div class="sn-topbar-message">
                     <span>⚡</span>
-                    <span>Envío gratis en compras superiores a $99 · <strong>Garantía oficial</strong></span>
+                    <span>
+                        Envío gratis en compras superiores a $99 ·
+                        <strong>Garantía oficial</strong>
+                    </span>
                 </div>
 
                 <div class="sn-topbar-links">
                     <a href="#rastrea">Rastrea tu pedido</a>
                     <a href="#soporte">Ayuda &amp; Soporte</a>
                 </div>
+
             </div>
         </div>
 
+
         <!-- 2. NAVBAR NEGRO PRINCIPAL -->
         <div class="sn-navbar">
+
             <div class="sn-container sn-navbar-content">
 
                 <!-- LOGO -->
                 <a href="/" class="sn-logo">
+
                     <div class="sn-logo-badge">
                         <span>⚡</span>
                     </div>
+
                     <span class="sn-logo-text">
                         NEXO<span>Tech</span>
                     </span>
+
                 </a>
+
 
                 <!-- BUSCADOR DESKTOP -->
                 <div class="sn-search sn-desktop-search">
+
                     <span class="sn-search-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="7"></circle>
-                            <path d="m20 20-3.5-3.5"></path>
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2">
+
+                            <circle cx="11"
+                                    cy="11"
+                                    r="7">
+                            </circle>
+
+                            <path d="m20 20-3.5-3.5">
+                            </path>
+
                         </svg>
+
                     </span>
-                    <input type="search" placeholder="Busca laptops, audífonos, smartphones..." aria-label="Buscar productos" />
+
+                    <input type="search"
+                           placeholder="Busca laptops, audífonos, smartphones..."
+                           aria-label="Buscar productos" />
+
                 </div>
 
-                <!-- MENÚ DE NAVEGACIÓN EN LÍNEA -->
+
+                <!-- MENÚ DE NAVEGACIÓN -->
                 <nav class="sn-nav-menu-inline">
-                    <a href="/" class="sn-nav-link active">Inicio</a>
-                    <a href="/categorias" class="sn-nav-link">Categorías</a>
-                    <a href="/productos" class="sn-nav-link">Productos</a>
-                    <a href="/ofertas" class="sn-nav-link">Ofertas</a>
-                    <a href="/blog" class="sn-nav-link">Blog</a>
-                    <a href="/contacto" class="sn-nav-link">Contacto</a>
+
+                    <a href="/" class="sn-nav-link active">
+                        Inicio
+                    </a>
+
+                    <a href="/categorias" class="sn-nav-link">
+                        Categorías
+                    </a>
+
+                    <a href="/productos" class="sn-nav-link">
+                        Productos
+                    </a>
+
+                    <a href="/ofertas" class="sn-nav-link">
+                        Ofertas
+                    </a>
+
+                    <a href="/blog" class="sn-nav-link">
+                        Blog
+                    </a>
+
+                    <a href="/contacto" class="sn-nav-link">
+                        Contacto
+                    </a>
+
                 </nav>
+
 
                 <!-- ACCIONES DERECHA -->
                 <div class="sn-actions">
-                    <!-- BOTÓN DE PERFIL (Abre el Offcanvas o manda a login) -->
-                    <button type="button" class="sn-action-button sn-user-btn" aria-label="Mi cuenta" @onclick="AbrirPerfil">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M20 21a8 8 0 0 0-16 0"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
+
+                    <!-- PERFIL -->
+                    <button type="button"
+                            class="sn-action-button sn-user-btn"
+                            aria-label="Mi cuenta"
+                            @onclick="AbrirPerfil">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2">
+
+                            <path d="M20 21a8 8 0 0 0-16 0">
+                            </path>
+
+                            <circle cx="12"
+                                    cy="7"
+                                    r="4">
+                            </circle>
+
                         </svg>
+
                     </button>
 
-                    <!-- BOTÓN DE CARRITO -->
-                    <button type="button" class="sn-action-button sn-cart-button" aria-label="Carrito de compras" @onclick="AbrirCarrito">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="9" cy="20" r="1"></circle>
-                            <circle cx="19" cy="20" r="1"></circle>
-                            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6"></path>
+
+                    <!-- CARRITO -->
+                    <button type="button"
+                            class="sn-action-button sn-cart-button"
+                            aria-label="Carrito de compras"
+                            @onclick="AbrirCarrito">
+
+                        <svg viewBox="0 0 24 24"
+                             fill="none"
+                             stroke="currentColor"
+                             stroke-width="2">
+
+                            <circle cx="9"
+                                    cy="20"
+                                    r="1">
+                            </circle>
+
+                            <circle cx="19"
+                                    cy="20"
+                                    r="1">
+                            </circle>
+
+                            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6">
+                            </path>
+
                         </svg>
+
                         @if (cantidadTotal > 0)
                         {
-                            <span class="sn-cart-count">@cantidadTotal</span>
+                            <span class="sn-cart-count">
+                                @cantidadTotal
+                            </span>
                         }
+
                     </button>
+
                 </div>
 
             </div>
 
+
             <!-- BUSCADOR MÓVIL -->
             <div class="sn-mobile-search-row">
+
                 <div class="sn-container">
+
                     <div class="sn-search">
+
                         <span class="sn-search-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="7"></circle>
-                                <path d="m20 20-3.5-3.5"></path>
+
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2">
+
+                                <circle cx="11"
+                                        cy="11"
+                                        r="7">
+                                </circle>
+
+                                <path d="m20 20-3.5-3.5">
+                                </path>
+
                             </svg>
+
                         </span>
-                        <input type="search" placeholder="Buscar productos..." aria-label="Buscar productos" />
+
+                        <input type="search"
+                               placeholder="Buscar productos..."
+                               aria-label="Buscar productos" />
+
                     </div>
+
                 </div>
+
             </div>
 
         </div>
 
     </header>
 
-    <!-- CONTENIDO DE LAS PÁGINAS -->
+
+    <!-- CONTENIDO -->
     <main class="sn-main-content">
         @Body
     </main>
 
-    <!-- COMPONENTE FOOTER SEPARADO -->
+
+    <!-- FOOTER -->
     <Footer />
 
+
+    <!-- CARRITO -->
+    <Carrito @bind-IsOpen="isCartOpen" />
+
+
+    <!-- PERFIL -->
+    <ProfileDrawer @bind-IsOpen="isProfileOpen"
+                   UserName="@usuarioNombre"
+                   UserEmail="@usuarioEmail"
+                   IsAdmin="@AuthState.EsAdministrador"
+                   RecentOrdersCount="@pedidosCount"
+                   OnLogout="CerrarSesion" />
+
+
+    <div id="blazor-error-ui">
+
+        An unhandled error has occurred.
+
+        <a href="" class="reload">
+            Reload
+        </a>
+
+        <a class="dismiss">
+            🗙
+        </a>
+
+    </div>
+
 </div>
 
-<!-- COMPONENTE CARRITO FLOTANTE -->
-<Carrito @ref="carritoRef" @bind-IsOpen="isCartOpen" />
-
-<!-- COMPONENTE PERFIL FLOTANTE -->
-<ProfileDrawer @bind-IsOpen="isProfileOpen"
-               UserName="@usuarioNombre"
-               UserEmail="@usuarioEmail"
-               RecentOrdersCount="@pedidosCount"
-               OnLogout="CerrarSesion" />
-
-<div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
-    <a class="dismiss">🗙</a>
-</div>
 
 @code {
-    private Carrito? carritoRef;
+
     private bool isCartOpen = false;
+
     private bool isProfileOpen = false;
 
     private string usuarioNombre = string.Empty;
+
     private string usuarioEmail = string.Empty;
+
     private int pedidosCount = 0;
 
-    private int cantidadTotal => carritoRef?.Count ?? 0;
+
+    // Cantidad real compartida del carrito.
+    private int cantidadTotal =>
+        CarritoState.CantidadTotal;
+
+
+    protected override void OnInitialized()
+    {
+        CarritoState.OnChange += ActualizarCarrito;
+    }
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await CargarDatosUsuario();
-            StateHasChanged();
-        }
+        if (!firstRender)
+            return;
+
+        await CargarDatosUsuario();
+
+        await InvokeAsync(
+            StateHasChanged);
     }
+
+
+    private void ActualizarCarrito()
+    {
+        _ = InvokeAsync(
+            StateHasChanged);
+    }
+
 
     private async Task CargarDatosUsuario()
     {
         try
         {
-            var email = await JS.InvokeAsync<string>("localStorage.getItem", "userEmail");
-            var name = await JS.InvokeAsync<string>("localStorage.getItem", "userName");
+            /*
+             * AuthStateService utiliza localStorage,
+             * por eso esta carga se hace después
+             * del primer render interactivo.
+             */
 
-            if (!string.IsNullOrEmpty(email))
+            await AuthState.InicializarAsync();
+
+
+            usuarioEmail =
+                AuthState.Correo;
+
+            usuarioNombre =
+                AuthState.Nombre;
+
+
+            if (string.IsNullOrWhiteSpace(usuarioNombre) &&
+                !string.IsNullOrWhiteSpace(usuarioEmail))
             {
-                usuarioEmail = email;
-                usuarioNombre = string.IsNullOrEmpty(name) ? email.Split('@')[0] : name;
-            }
-            else
-            {
-                usuarioEmail = string.Empty;
-                usuarioNombre = string.Empty;
+                usuarioNombre =
+                    usuarioEmail.Split('@')[0];
             }
         }
         catch
         {
-            usuarioEmail = string.Empty;
-            usuarioNombre = string.Empty;
+            usuarioEmail =
+                string.Empty;
+
+            usuarioNombre =
+                string.Empty;
         }
     }
+
 
     private void AbrirCarrito()
     {
         isCartOpen = true;
     }
 
+
     private async Task AbrirPerfil()
     {
-        // Verificar en tiempo real si existe sesión en localStorage
-        await CargarDatosUsuario();
+        await AuthState.InicializarAsync();
 
-        // Si no hay correo guardado, mandarlo al login
-        if (string.IsNullOrEmpty(usuarioEmail))
+
+        usuarioEmail =
+            AuthState.Correo;
+
+        usuarioNombre =
+            AuthState.Nombre;
+
+
+        if (!AuthState.EstaAutenticado)
         {
-            Navigation.NavigateTo("/login");
+            Navigation.NavigateTo(
+                "/login");
+
+            return;
         }
-        else
-        {
-            isProfileOpen = true;
-        }
+
+
+        isProfileOpen = true;
     }
+
 
     private void CerrarSesion()
     {
         isProfileOpen = false;
-        usuarioNombre = string.Empty;
-        usuarioEmail = string.Empty;
+
+        usuarioNombre =
+            string.Empty;
+
+        usuarioEmail =
+            string.Empty;
+    }
+
+
+    public void Dispose()
+    {
+        CarritoState.OnChange -=
+            ActualizarCarrito;
     }
 }

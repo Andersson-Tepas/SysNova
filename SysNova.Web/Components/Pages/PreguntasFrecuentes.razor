@@ -1,140 +1,340 @@
 ﻿@page "/preguntas-frecuentes"
 @using SysNova.DTO
-@using Microsoft.AspNetCore.Components.Authorization
 @inject HttpClient Http
+@inject IJSRuntime JS
 
-<div class="main-container py-4">
-    <div class="container">
-        <!-- Encabezado y Acción de Administrador -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="text-gold fw-bold m-0">Preguntas Frecuentes</h2>
-                <p class="text-muted mb-0">Resuelve tus dudas más comunes</p>
-            </div>
-            <AuthorizeView Roles="Administrador">
-                <Authorized>
-                    <button class="btn btn-warning text-dark fw-bold shadow-sm" @onclick="AbrirModalCrear">
-                        <i class="bi bi-plus-lg me-1"></i> Nueva Pregunta
-                    </button>
-                </Authorized>
-            </AuthorizeView>
+<PageTitle>Preguntas Frecuentes - SysNova Tech</PageTitle>
+
+<div class="container-fluid min-vh-100 p-4 main-container">
+
+    <!-- ENCABEZADO DE LA SECCIÓN -->
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom border-secondary border-opacity-25">
+        <div>
+            <h1 class="h2 fw-bold text-white mb-1">Preguntas Frecuentes</h1>
+            <p class="text-secondary small mb-0">Gestión del centro de ayuda, dudas comunes y soporte</p>
         </div>
 
-        <!-- Carga de datos -->
-        @if (cargando)
-        {
-            <div class="d-flex justify-content-center align-items-center py-5">
-                <div class="spinner-border text-gold" role="status">
-                    <span class="visually-hidden">Cargando preguntas...</span>
-                </div>
+        <div class="d-flex flex-wrap align-items-center gap-3">
+            <!-- SIMULADOR DE ROL -->
+            <div class="form-check form-switch bg-dark bg-opacity-50 p-2 px-3 rounded border border-secondary border-opacity-25 mb-0">
+                <input class="form-check-input ms-0 me-2" type="checkbox" role="switch" id="switchRolFaq" @bind="esAdmin" style="cursor: pointer;" />
+                <label class="form-check-label text-white small" for="switchRolFaq" style="cursor: pointer;">
+                    Vista: <strong>@(esAdmin ? "👑 Administrador" : "👤 Público / Cliente")</strong>
+                </label>
             </div>
-        }
-        else if (preguntasVisibles == null || !preguntasVisibles.Any())
-        {
-            <div class="text-center py-5 text-muted">
-                <p class="fs-5">No hay preguntas frecuentes disponibles en este momento.</p>
-            </div>
-        }
-        else
-        {
-            <!-- Acordeón de Preguntas -->
-            <div class="accordion accordion-flush" id="faqAccordion">
-                @foreach (var faq in preguntasVisibles)
-                {
-                    <div class="accordion-item bg-slate-800 text-light border border-secondary mb-3 rounded-3 overflow-hidden shadow-custom">
-                        <h2 class="accordion-header" id="@($"heading-{faq.PreguntaFrecuenteId}")">
-                            <button class="accordion-button collapsed bg-slate-800 text-gold fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#@($"collapse-{faq.PreguntaFrecuenteId}")" aria-expanded="false" aria-controls="@($"collapse-{faq.PreguntaFrecuenteId}")">
-                                @faq.Pregunta
-                            </button>
-                        </h2>
-                        <div id="@($"collapse-{faq.PreguntaFrecuenteId}")" class="accordion-collapse collapse" aria-labelledby="@($"heading-{faq.PreguntaFrecuenteId}")" data-bs-parent="#faqAccordion">
-                            <div class="accordion-body bg-slate-900 text-slate-300 border-top border-secondary">
-                                <p class="m-0 mb-3">@faq.Respuesta</p>
 
-                                <AuthorizeView Roles="Administrador">
-                                    <Authorized>
-                                        <div class="d-flex justify-content-end gap-2 pt-2 border-top border-secondary">
-                                            <button class="btn btn-sm btn-outline-warning" @onclick="() => AbrirModalEditar(faq)">Editar</button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarPregunta(faq.PreguntaFrecuenteId)">Eliminar</button>
-                                        </div>
-                                    </Authorized>
-                                </AuthorizeView>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-        }
-    </div>
+            <!-- BOTÓN CREAR -->
+            @if (esAdmin)
+            {
+                <button class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3 py-2" @onclick="AbrirModalCrear">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14" /></svg>
+                    Nueva Pregunta
+                </button>
+            }
+        </div>
+    </header>
 
-    <!-- Modal CRUD (Administrador) -->
-    @if (mostrarModal)
+    <!-- BARRA DE ACCIÓN / ESTADÍSTICAS ADMIN -->
+    @if (esAdmin)
     {
-        <div class="custom-modal-backdrop">
-            <div class="custom-modal-dialog">
-                <div class="modal-dark-content p-4 rounded-3 border border-secondary shadow-custom">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="modal-title text-gold fw-bold">
-                            @(faqForm.PreguntaFrecuenteId == 0 ? "Nueva Pregunta" : "Editar Pregunta")
-                        </h4>
-                        <button type="button" class="btn-close btn-close-custom" @onclick="CerrarModal"></button>
-                    </div>
-
-                    <EditForm Model="faqForm" OnValidSubmit="GuardarPregunta">
-                        <DataAnnotationsValidator />
-
-                        <div class="custom-modal-body pe-2">
-                            <div class="mb-3">
-                                <label class="form-label text-light">Pregunta</label>
-                                <InputText @bind-Value="faqForm.Pregunta" class="form-control input-dark" placeholder="¿Cómo realizo un pedido?" required />
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label text-light">Respuesta</label>
-                                <InputTextArea @bind-Value="faqForm.Respuesta" class="form-control input-dark" rows="4" placeholder="Detalle la respuesta aquí..." required />
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label text-light">Orden</label>
-                                    <InputNumber @bind-Value="faqForm.Orden" class="form-control input-dark" />
-                                </div>
-                                <div class="col-md-4 mb-3 d-flex align-items-end">
-                                    <div class="form-check form-switch mb-2">
-                                        <InputCheckbox @bind-Value="faqForm.Mostrar" class="form-check-input" id="checkFaqMostrar" />
-                                        <label class="form-check-label text-light" for="checkFaqMostrar">Mostrar</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3 d-flex align-items-end">
-                                    <div class="form-check form-switch mb-2">
-                                        <InputCheckbox @bind-Value="faqForm.Activo" class="form-check-input" id="checkFaqActivo" />
-                                        <label class="form-check-label text-light" for="checkFaqActivo">Activo</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top border-secondary">
-                            <button type="button" class="btn btn-outline-light" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-warning text-dark fw-bold">Guardar</button>
-                        </div>
-                    </EditForm>
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 mb-4 text-white">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3">
+                <h6 class="mb-0 text-white-50">Panel de Control de Preguntas Frecuentes</h6>
+                <div class="small">
+                    Total preguntas: <strong class="text-info">@listaPreguntas.Count</strong>
+                    <span class="mx-2 text-secondary">|</span>
+                    Visibles: <strong class="text-success">@listaPreguntas.Count(p => p.Mostrar && p.Activo)</strong>
                 </div>
             </div>
         </div>
     }
+
+    <!-- LAYOUT PRINCIPAL (FILTROS Y PREGUNTAS) -->
+    <div class="row g-4">
+
+        <!-- SIDEBAR FILTROS -->
+        <aside class="col-12 col-lg-3">
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">Búsqueda</h6>
+                <input type="text" class="form-control input-dark" placeholder="Buscar en pregunta o respuesta..." @bind="busquedaTexto" @bind:event="oninput" />
+            </div>
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">Filtros Rápidos</h6>
+                <div class="d-flex flex-column gap-2">
+                    <div class="form-check">
+                        <input class="form-check-input input-dark" type="checkbox" id="chkFavoritosFaq" @bind="soloFavoritos" />
+                        <label class="form-check-label small" for="chkFavoritosFaq">Guardadas (❤️ @idsFavoritos.Count)</label>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn btn-outline-secondary w-100 btn-sm text-white" @onclick="LimpiarFiltros">Limpiar Filtros</button>
+        </aside>
+
+        <!-- MAIN DE PREGUNTAS FRECUENTES -->
+        <main class="col-12 col-lg-9">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
+                <span class="text-secondary small">Mostrando <strong class="text-white">@PreguntasFiltradas.Count()</strong> preguntas</span>
+
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small text-secondary mb-0 text-nowrap">Ordenar por:</label>
+                    <select class="form-select form-select-sm input-dark w-auto" @bind="criterioOrden">
+                        <option value="orden">Orden de prioridad</option>
+                        <option value="pregunta">Pregunta A-Z</option>
+                        <option value="recientes">Más recientes</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <p class="text-secondary mb-0">Cargando preguntas frecuentes...</p>
+                </div>
+            }
+            else if (!PreguntasFiltradas.Any())
+            {
+                <div class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-25">
+                    <p class="fs-5 mb-3">🔍 No se encontraron preguntas con los criterios seleccionados.</p>
+                    <div>
+                        <button class="btn btn-outline-primary btn-sm" @onclick="LimpiarFiltros">Restablecer filtros</button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="accordion d-flex flex-column gap-3" id="accordionFaq">
+                    @foreach (var item in PreguntasFiltradas)
+                    {
+                        var esFav = idsFavoritos.Contains(item.PreguntaFrecuenteId);
+                        var collapseId = $"faq-collapse-{item.PreguntaFrecuenteId}";
+
+                        <div class="card border-secondary border-opacity-25 bg-dark bg-opacity-50 shadow-sm text-white overflow-hidden" style="opacity: @(!item.Activo || !item.Mostrar ? "0.6" : "1");">
+
+                            <!-- ENCABEZADO DE PREGUNTA -->
+                            <div class="card-header border-bottom-0 bg-transparent p-3 d-flex align-items-center justify-content-between gap-3 position-relative">
+
+                                <div class="d-flex align-items-center gap-3 flex-grow-1 overflow-hidden">
+                                    <button class="btn btn-link text-decoration-none text-white fw-semibold text-start p-0 flex-grow-1 d-flex align-items-center gap-2"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#@collapseId"
+                                            aria-expanded="false"
+                                            aria-controls="@collapseId">
+                                        <span class="text-primary fs-5">❓</span>
+                                        <span class="text-truncate fs-6">@item.Pregunta</span>
+                                    </button>
+                                </div>
+
+                                <!-- BADGES Y ACCIONES -->
+                                <div class="d-flex align-items-center gap-2 ms-auto flex-shrink-0">
+                                    <span class="badge bg-dark border border-secondary text-info">#@item.Orden</span>
+
+                                    @if (!item.Activo)
+                                    {
+                                        <span class="badge bg-secondary">INACTIVA</span>
+                                    }
+                                    @if (!item.Mostrar)
+                                    {
+                                        <span class="badge bg-warning text-dark">OCULTA</span>
+                                    }
+
+                                    <!-- BOTÓN FAVORITO -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-dark rounded-circle p-1 d-flex align-items-center justify-content-center border border-secondary border-opacity-50 ms-1"
+                                            style="width: 32px; height: 32px;"
+                                            @onclick="() => ToggleFavorito(item.PreguntaFrecuenteId)"
+                                            title="@(esFav ? "Quitar de guardados" : "Guardar pregunta")">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="@(esFav ? "#dc3545" : "none")" stroke="@(esFav ? "#dc3545" : "currentColor")" stroke-width="2">
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                        </svg>
+                                    </button>
+
+                                    @if (esAdmin)
+                                    {
+                                        <button class="btn btn-sm btn-outline-warning py-0 px-2 ms-1" @onclick="() => AbrirModalEditar(item)">✏️</button>
+                                        <button class="btn btn-sm btn-outline-danger py-0 px-2" @onclick="() => EliminarPregunta(item.PreguntaFrecuenteId)">🗑️</button>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- CONTENIDO DE RESPUESTA -->
+                            <div id="@collapseId" class="collapse" data-bs-parent="#accordionFaq">
+                                <div class="card-body border-top border-secondary border-opacity-25 bg-black bg-opacity-25 p-3 text-white-50">
+                                    <p class="mb-2 text-white style-whitespace-pre-line">@item.Respuesta</p>
+                                    <div class="d-flex justify-content-end align-items-center pt-2 border-top border-secondary border-opacity-10">
+                                        <small class="text-secondary fs-7">📅 Registrada el @item.FechaCreacion.ToString("dd MMM yyyy")</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    }
+                </div>
+            }
+        </main>
+    </div>
 </div>
+
+<!-- MODAL FORMULARIO ADMIN (CREAR / EDITAR) -->
+@if (mostrarModal)
+{
+    <div class="custom-modal-backdrop">
+        <div class="custom-modal-dialog">
+            <div class="modal-content border-secondary border-opacity-25 shadow-lg text-white modal-dark-content">
+
+                <div class="modal-header border-secondary border-opacity-25 pb-3">
+                    <h5 class="modal-title text-white">@(esEdicion ? "Editar Pregunta Frecuente" : "Nueva Pregunta Frecuente")</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+
+                <EditForm Model="@formModel" OnValidSubmit="GuardarPregunta">
+                    <DataAnnotationsValidator />
+
+                    <div class="modal-body py-3">
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary">Pregunta</label>
+                            <InputText class="form-control input-dark" @bind-Value="formModel.Pregunta" placeholder="Ej: ¿Cuáles son los métodos de pago aceptados?" />
+                            <ValidationMessage For="@(() => formModel.Pregunta)" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary">Respuesta Detallada</label>
+                            <InputTextArea class="form-control input-dark" rows="5" @bind-Value="formModel.Respuesta" placeholder="Escribe la respuesta detallada aquí..." />
+                            <ValidationMessage For="@(() => formModel.Respuesta)" class="text-danger small" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small text-secondary">Orden de Visualización</label>
+                            <InputNumber class="form-control input-dark" @bind-Value="formModel.Orden" min="0" />
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-4 pt-2">
+                            <div class="form-check form-switch">
+                                <InputCheckbox class="form-check-input" type="checkbox" role="switch" @bind-Value="formModel.Mostrar" id="chkMostrarFaq" />
+                                <label class="form-check-label small" for="chkMostrarFaq">Visible en Web</label>
+                            </div>
+                            <div class="form-check form-switch ms-auto">
+                                <InputCheckbox class="form-check-input" type="checkbox" role="switch" @bind-Value="formModel.Activo" id="chkActivoFaq" />
+                                <label class="form-check-label small" for="chkActivoFaq">Activa</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-secondary border-opacity-25 pt-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" @onclick="CerrarModal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-3" disabled="@guardando">
+                            @(guardando ? "Guardando..." : "Guardar")
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private List<PreguntaFrecuenteDTO> listaPreguntas = new();
-    private List<PreguntaFrecuenteDTO> preguntasVisibles = new();
-    private PreguntaFrecuenteDTO faqForm = new();
+    private PreguntaFrecuenteDTO formModel = new();
+    private HashSet<int> idsFavoritos = new();
+
+    private bool esAdmin = true;
     private bool cargando = true;
+    private bool guardando = false;
     private bool mostrarModal = false;
+    private bool esEdicion = false;
+
+    // FILTROS
+    private string busquedaTexto = "";
+    private bool soloFavoritos = false;
+    private string criterioOrden = "orden";
 
     protected override async Task OnInitializedAsync()
     {
         await CargarPreguntas();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await CargarFavoritos();
+            await VerificarRol();
+            StateHasChanged();
+        }
+    }
+
+    private async Task AplicarTokenAutorizacion()
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "authToken");
+            if (!string.IsNullOrEmpty(token))
+            {
+                Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al obtener token: {ex.Message}");
+        }
+    }
+
+    private async Task VerificarRol()
+    {
+        try
+        {
+            var rol = await JS.InvokeAsync<string>("localStorage.getItem", "userRol");
+            var correo = await JS.InvokeAsync<string>("localStorage.getItem", "userEmail");
+
+            if (!string.IsNullOrEmpty(rol))
+            {
+                esAdmin = rol.Equals("Administrador", StringComparison.OrdinalIgnoreCase);
+            }
+            else if (!string.IsNullOrEmpty(correo))
+            {
+                esAdmin = correo.Equals("admin@sysnova.com", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+        catch { }
+    }
+
+    private async Task CargarFavoritos()
+    {
+        try
+        {
+            var favsJson = await JS.InvokeAsync<string>("localStorage.getItem", "sysnova_faq_favoritos");
+            if (!string.IsNullOrEmpty(favsJson))
+            {
+                var lista = System.Text.Json.JsonSerializer.Deserialize<List<int>>(favsJson);
+                if (lista != null) idsFavoritos = new HashSet<int>(lista);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al cargar favoritos: {ex.Message}");
+        }
+    }
+
+    private async Task ToggleFavorito(int id)
+    {
+        if (idsFavoritos.Contains(id))
+            idsFavoritos.Remove(id);
+        else
+            idsFavoritos.Add(id);
+
+        try
+        {
+            var json = System.Text.Json.JsonSerializer.Serialize(idsFavoritos);
+            await JS.InvokeVoidAsync("localStorage.setItem", "sysnova_faq_favoritos", json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error al guardar favorito: {ex.Message}");
+        }
     }
 
     private async Task CargarPreguntas()
@@ -142,19 +342,13 @@
         cargando = true;
         try
         {
-            var resultado = await Http.GetFromJsonAsync<List<PreguntaFrecuenteDTO>>("api/PreguntaFrecuente");
-            if (resultado != null)
-            {
-                listaPreguntas = resultado;
-                preguntasVisibles = listaPreguntas
-                    .Where(p => p.Activo && p.Mostrar)
-                    .OrderBy(p => p.Orden)
-                    .ToList();
-            }
+            await AplicarTokenAutorizacion();
+            var res = await Http.GetFromJsonAsync<List<PreguntaFrecuenteDTO>>("api/preguntafrecuente");
+            if (res != null) listaPreguntas = res;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al cargar preguntas: {ex.Message}");
+            Console.WriteLine($"Error al consultar API: {ex.Message}");
         }
         finally
         {
@@ -162,78 +356,145 @@
         }
     }
 
-    private void AbrirModalCrear()
+    private IEnumerable<PreguntaFrecuenteDTO> PreguntasFiltradas
     {
-        faqForm = new PreguntaFrecuenteDTO
+        get
         {
-            Activo = true,
-            Mostrar = true,
-            Orden = listaPreguntas.Count + 1,
-            FechaCreacion = DateTime.Now
-        };
-        mostrarModal = true;
+            var res = listaPreguntas.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(busquedaTexto))
+            {
+                res = res.Where(p => (p.Pregunta != null && p.Pregunta.Contains(busquedaTexto, StringComparison.OrdinalIgnoreCase)) ||
+                                     (p.Respuesta != null && p.Respuesta.Contains(busquedaTexto, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (soloFavoritos) res = res.Where(p => idsFavoritos.Contains(p.PreguntaFrecuenteId));
+
+            return criterioOrden switch
+            {
+                "pregunta" => res.OrderBy(p => p.Pregunta),
+                "recientes" => res.OrderByDescending(p => p.FechaCreacion),
+                _ => res.OrderBy(p => p.Orden)
+            };
+        }
     }
 
-    private void AbrirModalEditar(PreguntaFrecuenteDTO faq)
+    private void LimpiarFiltros()
     {
-        faqForm = new PreguntaFrecuenteDTO
-        {
-            PreguntaFrecuenteId = faq.PreguntaFrecuenteId,
-            Pregunta = faq.Pregunta,
-            Respuesta = faq.Respuesta,
-            Orden = faq.Orden,
-            Mostrar = faq.Mostrar,
-            Activo = faq.Activo,
-            FechaCreacion = faq.FechaCreacion
-        };
-        mostrarModal = true;
+        busquedaTexto = "";
+        soloFavoritos = false;
+        criterioOrden = "orden";
     }
 
-    private void CerrarModal() => mostrarModal = false;
-
-    private async Task GuardarPregunta()
+    private async Task BloquearScrollFondo(bool bloquear)
     {
         try
         {
-            if (faqForm.PreguntaFrecuenteId == 0)
+            var style = bloquear ? "hidden" : "auto";
+            await JS.InvokeVoidAsync("eval", $"document.body.style.overflow = '{style}'");
+        }
+        catch { }
+    }
+
+    private async Task AbrirModalCrear()
+    {
+        formModel = new PreguntaFrecuenteDTO
+        {
+            Activo = true,
+            Mostrar = true,
+            Orden = 1,
+            FechaCreacion = DateTime.Now
+        };
+        esEdicion = false;
+        mostrarModal = true;
+        await BloquearScrollFondo(true);
+    }
+
+    private async Task AbrirModalEditar(PreguntaFrecuenteDTO item)
+    {
+        formModel = new PreguntaFrecuenteDTO
+        {
+            PreguntaFrecuenteId = item.PreguntaFrecuenteId,
+            Pregunta = item.Pregunta,
+            Respuesta = item.Respuesta,
+            Orden = item.Orden,
+            Mostrar = item.Mostrar,
+            Activo = item.Activo,
+            FechaCreacion = item.FechaCreacion,
+            FechaModificacion = DateTime.Now
+        };
+        esEdicion = true;
+        mostrarModal = true;
+        await BloquearScrollFondo(true);
+    }
+
+    private async Task CerrarModal()
+    {
+        mostrarModal = false;
+        await BloquearScrollFondo(false);
+    }
+
+    private async Task GuardarPregunta()
+    {
+        guardando = true;
+        try
+        {
+            await AplicarTokenAutorizacion();
+            HttpResponseMessage response;
+
+            if (esEdicion)
             {
-                var response = await Http.PostAsJsonAsync("api/PreguntaFrecuente", faqForm);
-                if (response.IsSuccessStatusCode)
-                {
-                    await CargarPreguntas();
-                    CerrarModal();
-                }
+                formModel.FechaModificacion = DateTime.Now;
+                response = await Http.PutAsJsonAsync("api/preguntafrecuente", formModel);
             }
             else
             {
-                faqForm.FechaModificacion = DateTime.Now;
-                var response = await Http.PutAsJsonAsync("api/PreguntaFrecuente", faqForm);
-                if (response.IsSuccessStatusCode)
-                {
-                    await CargarPreguntas();
-                    CerrarModal();
-                }
+                formModel.FechaCreacion = DateTime.Now;
+                response = await Http.PostAsJsonAsync("api/preguntafrecuente", formModel);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CerrarModal();
+                await CargarPreguntas();
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", $"Error al guardar ({response.StatusCode}).");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al guardar pregunta: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", $"Error de conexión: {ex.Message}");
+        }
+        finally
+        {
+            guardando = false;
         }
     }
 
     private async Task EliminarPregunta(int id)
     {
+        bool confirmado = await JS.InvokeAsync<bool>("confirm", "¿Estás seguro de eliminar esta pregunta frecuente?");
+        if (!confirmado) return;
+
         try
         {
-            var response = await Http.DeleteAsync($"api/PreguntaFrecuente/{id}");
+            await AplicarTokenAutorizacion();
+            var response = await Http.DeleteAsync($"api/preguntafrecuente/{id}");
+
             if (response.IsSuccessStatusCode)
             {
                 await CargarPreguntas();
             }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", $"No se pudo eliminar la pregunta. Código: {response.StatusCode}");
+            }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al eliminar pregunta: {ex.Message}");
+            Console.WriteLine($"Error al eliminar: {ex.Message}");
         }
     }
 }

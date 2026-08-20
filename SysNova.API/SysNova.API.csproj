@@ -32,4 +32,8 @@
     <ProjectReference Include="..\SysNova.Repository\SysNova.Repository.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\" />
+  </ItemGroup>
+
 </Project>

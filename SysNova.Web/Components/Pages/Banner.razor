@@ -1,223 +1,888 @@
-﻿@page "/banner"
+﻿@page "/banners"
+
+@using Microsoft.AspNetCore.Components.Forms
+
 @using SysNova.DTO
-@using Microsoft.AspNetCore.Components.Authorization
+@using SysNova.Web.Services
+
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject AuthStateService AuthState
 
-<div class="main-container py-4 position-relative">
-    <!-- Panel de Administración (Visible solo para rol Administrador) -->
-    <AuthorizeView Roles="Administrador">
-        <Authorized>
-            <div class="container mb-3 text-end">
-                <button class="btn btn-warning text-dark fw-bold shadow-sm" @onclick="AbrirModalCrear">
-                    <i class="bi bi-plus-lg me-1"></i> Agregar Banner
-                </button>
-            </div>
-        </Authorized>
-    </AuthorizeView>
+<PageTitle>Banners - SysNova Tech</PageTitle>
 
-    <!-- Estado: Cargando -->
-    @if (cargando)
-    {
-        <div class="d-flex justify-content-center align-items-center py-5">
-            <div class="spinner-border text-gold" role="status">
-                <span class="visually-hidden">Cargando promociones...</span>
-            </div>
+<div class="container-fluid min-vh-100 p-4 main-container">
+
+    <!-- ========================================================= -->
+    <!-- ENCABEZADO -->
+    <!-- ========================================================= -->
+
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom border-secondary border-opacity-25">
+
+        <div>
+            <h1 class="h2 fw-bold text-white mb-1">
+                Banners Promocionales
+            </h1>
+
+            <p class="text-secondary small mb-0">
+                Gestión de carruseles, avisos y promociones en la página principal
+            </p>
         </div>
-    }
-    <!-- Estado: Sin Banners -->
-    else if (bannersVisibles == null || !bannersVisibles.Any())
-    {
-    <div class="text-center py-5 text-muted">
-        <p class="fs-5">No hay promociones activas en este momento.</p>
-    </div>
-    }
-    <!-- Estado: Carrusel Hero -->
-    else
-    {
-    <div class="container">
-        <div id="bannerHeroCarousel" class="carousel slide carousel-fade shadow-custom rounded-4 overflow-hidden" data-bs-ride="carousel">
-            <!-- Indicadores -->
-            <div class="carousel-indicators">
-                @for (int i = 0; i < bannersVisibles.Count; i++)
-                {
-                    var index = i;
-                    <button type="button"
-                            data-bs-target="#bannerHeroCarousel"
-                            data-bs-slide-to="@index"
-                            class="@(index == 0 ? "active" : "")"
-                            aria-current="@(index == 0 ? "true" : "false")"
-                            aria-label="Slide @(index + 1)">
-                    </button>
-                }
-            </div>
 
-            <!-- Diapositivas -->
-            <div class="carousel-inner">
-                @for (int i = 0; i < bannersVisibles.Count; i++)
-                {
-                    var banner = bannersVisibles[i];
-                    var index = i;
-                    <div class="carousel-item @(index == 0 ? "active" : "")" data-bs-interval="6000">
-                        <div class="position-relative product-img-container" style="height: 480px;">
-                            <img src="@banner.Imagen" class="d-block w-100 h-100 object-fit-cover" alt="@banner.Titulo">
-                            <div class="position-absolute top-0 start-0 w-100 h-100 bg-slate-900 opacity-50"></div>
-                        </div>
+        @if (esAdmin)
+        {
+            <button class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3 py-2"
+                    @onclick="AbrirModalCrear">
 
-                        <!-- Contenido del Banner -->
-                        <div class="carousel-caption text-start p-4 p-md-5 rounded-3 modal-dark-content bg-opacity-75 shadow-lg mb-4 ms-2 me-2 ms-md-5 me-md-5">
-                            <h1 class="display-5 fw-bold text-gold">@banner.Titulo</h1>
+                <svg width="18"
+                     height="18"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
 
-                            @if (!string.IsNullOrEmpty(banner.SubTitulo))
-                            {
-                                <p class="fs-5 text-light my-3 line-clamp-2">@banner.SubTitulo</p>
-                            }
+                    <path d="M12 5v14M5 12h14" />
 
-                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-4">
-                                @if (!string.IsNullOrEmpty(banner.BotonUrl) && !string.IsNullOrEmpty(banner.BotonTexto))
-                                {
-                                    <a href="@banner.BotonUrl" class="btn btn-warning btn-lg text-dark fw-bold px-4 transition-all">
-                                        @banner.BotonTexto
-                                    </a>
-                                }
+                </svg>
 
-                                <!-- Acciones Rápidas del Administrador en la Slide -->
-                                <AuthorizeView Roles="Administrador">
-                                    <Authorized>
-                                        <div class="btn-group ms-auto">
-                                            <button class="btn btn-sm btn-outline-warning" @onclick="() => AbrirModalEditar(banner)">
-                                                Editar
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" @onclick="() => EliminarBanner(banner.BannerId)">
-                                                Eliminar
-                                            </button>
-                                        </div>
-                                    </Authorized>
-                                </AuthorizeView>
-                            </div>
-                        </div>
-                    </div>
-                }
-            </div>
-
-            <!-- Controles Prev/Next -->
-            <button class="carousel-control-prev" type="button" data-bs-target="#bannerHeroCarousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Anterior</span>
+                Nuevo Banner
             </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#bannerHeroCarousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                <span class="visually-hidden">Siguiente</span>
-            </button>
-        </div>
-    </div>
-    }
+        }
 
-    <!-- Modal CRUD (Administrador) -->
-    @if (mostrarModal)
+    </header>
+
+
+    <!-- ========================================================= -->
+    <!-- PANEL ADMIN -->
+    <!-- ========================================================= -->
+    @if (esAdmin)
     {
-        <div class="custom-modal-backdrop">
-            <div class="custom-modal-dialog">
-                <div class="modal-dark-content p-4 rounded-3 border border-secondary shadow-custom">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="modal-title text-gold fw-bold">
-                            @(bannerForm.BannerId == 0 ? "Nuevo Banner" : "Editar Banner")
-                        </h4>
-                        <button type="button" class="btn-close btn-close-custom" @onclick="CerrarModal"></button>
-                    </div>
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 mb-4 text-white">
 
-                    <EditForm Model="bannerForm" OnValidSubmit="GuardarBanner">
-                        <DataAnnotationsValidator />
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3">
 
-                        <div class="custom-modal-body pe-2">
-                            <div class="mb-3">
-                                <label class="form-label text-light">Título</label>
-                                <InputText @bind-Value="bannerForm.Titulo" class="form-control input-dark" placeholder="Ej: Oferta de Verano" required />
-                            </div>
+                <h6 class="mb-0 text-white-50">
+                    Panel de Control de Banners
+                </h6>
 
-                            <div class="mb-3">
-                                <label class="form-label text-light">Subtítulo</label>
-                                <InputText @bind-Value="bannerForm.SubTitulo" class="form-control input-dark" placeholder="Ej: Hasta 50% de descuento" />
-                            </div>
+                <div class="small">
 
-                            <div class="mb-3">
-                                <label class="form-label text-light">URL de la Imagen</label>
-                                <InputText @bind-Value="bannerForm.Imagen" class="form-control input-dark" placeholder="https://..." required />
-                            </div>
+                    Total banners:
 
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-light">Texto Botón (CTA)</label>
-                                    <InputText @bind-Value="bannerForm.BotonTexto" class="form-control input-dark" placeholder="Ej: Comprar Ahora" />
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label text-light">URL Botón (CTA)</label>
-                                    <InputText @bind-Value="bannerForm.BotonUrl" class="form-control input-dark" placeholder="Ej: /productos" />
-                                </div>
-                            </div>
+                    <strong class="text-info">
+                        @listaBanners.Count
+                    </strong>
 
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <label class="form-label text-light">Orden</label>
-                                    <InputNumber @bind-Value="bannerForm.Orden" class="form-control input-dark" />
-                                </div>
-                                <div class="col-md-4 mb-3 d-flex align-items-end">
-                                    <div class="form-check form-switch mb-2">
-                                        <InputCheckbox @bind-Value="bannerForm.Mostrar" class="form-check-input" id="checkMostrar" />
-                                        <label class="form-check-label text-light" for="checkMostrar">Mostrar</label>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3 d-flex align-items-end">
-                                    <div class="form-check form-switch mb-2">
-                                        <InputCheckbox @bind-Value="bannerForm.Activo" class="form-check-input" id="checkActivo" />
-                                        <label class="form-check-label text-light" for="checkActivo">Activo</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <span class="mx-2 text-secondary">
+                        |
+                    </span>
 
-                        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top border-secondary">
-                            <button type="button" class="btn btn-outline-light" @onclick="CerrarModal">Cancelar</button>
-                            <button type="submit" class="btn btn-warning text-dark fw-bold">Guardar</button>
-                        </div>
-                    </EditForm>
+                    Visibles:
+
+                    <strong class="text-success">
+                        @listaBanners.Count(b => b.Mostrar && b.Activo)
+                    </strong>
+
                 </div>
+
             </div>
+
         </div>
     }
+
+
+    <!-- ========================================================= -->
+    <!-- LAYOUT PRINCIPAL -->
+    <!-- ========================================================= -->
+
+    <div class="row g-4">
+
+        <!-- ===================================================== -->
+        <!-- SIDEBAR -->
+        <!-- ===================================================== -->
+
+        <aside class="col-12 col-lg-3">
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Búsqueda
+                </h6>
+
+                <input type="text"
+                       class="form-control input-dark"
+                       placeholder="Título, subtítulo o texto de botón..."
+                       @bind="busquedaTexto"
+                       @bind:event="oninput" />
+
+            </div>
+
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Filtros Rápidos
+                </h6>
+
+                <div class="d-flex flex-column gap-2">
+
+                    <div class="form-check">
+
+                        <input class="form-check-input input-dark"
+                               type="checkbox"
+                               id="chkFavoritosBanner"
+                               @bind="soloFavoritos" />
+
+                        <label class="form-check-label small"
+                               for="chkFavoritosBanner">
+
+                            Guardados (❤️ @idsFavoritos.Count)
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button class="btn btn-outline-secondary w-100 btn-sm text-white"
+                    @onclick="LimpiarFiltros">
+
+                Limpiar Filtros
+
+            </button>
+
+        </aside>
+
+
+        <!-- ===================================================== -->
+        <!-- MAIN -->
+        <!-- ===================================================== -->
+
+        <main class="col-12 col-lg-9">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
+
+                <span class="text-secondary small">
+
+                    Mostrando
+
+                    <strong class="text-white">
+                        @BannersFiltrados.Count()
+                    </strong>
+
+                    banners
+
+                </span>
+
+
+                <div class="d-flex align-items-center gap-2">
+
+                    <label class="small text-secondary mb-0 text-nowrap">
+                        Ordenar por:
+                    </label>
+
+                    <select class="form-select form-select-sm input-dark w-auto"
+                            @bind="criterioOrden">
+
+                        <option value="orden">
+                            Orden de prioridad
+                        </option>
+
+                        <option value="titulo">
+                            Título A-Z
+                        </option>
+
+                        <option value="recientes">
+                            Más recientes
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- CARGANDO -->
+            <!-- ================================================= -->
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+
+                    <div class="spinner-border text-primary mb-3"
+                         role="status">
+                    </div>
+
+                    <p class="text-secondary mb-0">
+                        Cargando banners...
+                    </p>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- SIN RESULTADOS -->
+            <!-- ================================================= -->
+            @if (!cargando && !BannersFiltrados.Any())
+            {
+                <div class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-25">
+
+                    <p class="fs-5 mb-3">
+                        🔍 No se encontraron banners con los criterios seleccionados.
+                    </p>
+
+                    <button class="btn btn-outline-primary btn-sm"
+                            @onclick="LimpiarFiltros">
+
+                        Restablecer filtros
+
+                    </button>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- LISTADO -->
+            <!-- ================================================= -->
+            @if (!cargando && BannersFiltrados.Any())
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+
+                    @foreach (var item in BannersFiltrados)
+                    {
+                        var esFav = idsFavoritos.Contains(item.BannerId);
+
+                        <div class="col">
+
+                            <div class="card h-100 border-secondary border-opacity-25 shadow-sm overflow-hidden text-white position-relative banner-card"
+                                 style="opacity: @(!item.Activo || !item.Mostrar ? "0.6" : "1");">
+
+
+                                <!-- FAVORITO -->
+
+                                <button type="button"
+                                        class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle p-1 d-flex align-items-center justify-content-center z-3 border border-secondary border-opacity-50"
+                                        style="width:34px;height:34px;"
+                                        @onclick="() => ToggleFavorito(item.BannerId)"
+                                        title="@(esFav ? "Quitar de guardados" : "Guardar banner")">
+
+                                    <svg width="18"
+                                         height="18"
+                                         viewBox="0 0 24 24"
+                                         fill="@(esFav ? "#dc3545" : "none")"
+                                         stroke="@(esFav ? "#dc3545" : "currentColor")"
+                                         stroke-width="2">
+
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+
+                                    </svg>
+
+                                </button>
+
+
+                                <!-- BADGES -->
+
+                                <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 z-2">
+
+                                    @if (!item.Activo)
+                                    {
+                                        <span class="badge bg-secondary">
+                                            INACTIVO
+                                        </span>
+                                    }
+
+                                    @if (!item.Mostrar)
+                                    {
+                                        <span class="badge bg-warning text-dark">
+                                            OCULTO
+                                        </span>
+                                    }
+
+                                    @if (esAdmin)
+                                    {
+                                        <span class="badge bg-dark border border-secondary text-info">
+                                            Orden: #@item.Orden
+                                        </span>
+                                    }
+
+                                </div>
+
+
+                                <!-- IMAGEN -->
+
+                                <div class="position-relative bg-dark bg-opacity-50 text-center p-3 border-bottom border-secondary border-opacity-25"
+                                     style="height:180px;">
+
+                                    <img src="@(string.IsNullOrEmpty(item.Imagen)
+                                                                                         ? "images/banner-default.png"
+                                                                                         : item.Imagen)"
+                                 alt="@item.Titulo"
+                                 class="img-fluid h-100 object-fit-cover w-100 rounded" />
+
+
+                                    <!-- ACCIONES ADMIN -->
+                            @if (esAdmin)
+                                    {
+                                        <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 d-flex justify-content-center gap-2">
+
+                                            <button class="btn btn-sm btn-outline-warning py-0 px-2"
+                                                    @onclick="() => AbrirModalEditar(item)">
+
+                                                ✏️ Editar
+
+                                            </button>
+
+
+                                            <button class="btn btn-sm btn-outline-danger py-0 px-2"
+                                                    @onclick="() => EliminarBanner(item.BannerId)">
+
+                                                🗑️ Eliminar
+
+                                            </button>
+
+                                        </div>
+                                    }
+
+                            </div>
+
+
+                            <!-- INFORMACIÓN -->
+
+                            <div class="card-body d-flex flex-column justify-content-between p-3">
+
+                                <div>
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+
+                                        <small class="text-secondary">
+                                            📅 @item.FechaCreacion.ToString("dd MMM yyyy")
+                                        </small>
+
+                                    </div>
+
+
+                                    <h5 class="card-title h6 text-white text-truncate mb-2"
+                                        title="@item.Titulo">
+
+                                        @item.Titulo
+
+                                    </h5>
+
+
+                                    <p class="card-text text-secondary small line-clamp-2 mb-3">
+
+                                        @(string.IsNullOrEmpty(item.SubTitulo)
+                                                                            ? "Sin subtítulo descriptivo."
+                                                                            : item.SubTitulo)
+
+                                </p>
+
+                                    </div>
+
+
+                                    <!-- BOTÓN CON ACCIÓN -->
+                            @if (!string.IsNullOrEmpty(item.BotonTexto) &&
+                                                        !string.IsNullOrEmpty(item.BotonUrl))
+                                    {
+                                        <a href="@item.BotonUrl"
+                                           target="_blank"
+                                           class="btn btn-outline-primary w-100 btn-sm">
+
+                                            @item.BotonTexto
+
+                                        </a>
+                                    }
+
+
+                                    <!-- SIN ACCIÓN -->
+                                    <!-- También independiente, SIN ELSE -->
+                                    @if (string.IsNullOrEmpty(item.BotonTexto) ||
+                                                                string.IsNullOrEmpty(item.BotonUrl))
+                                    {
+                                        <button class="btn btn-outline-secondary w-100 btn-sm"
+                                                disabled>
+
+                                            Sin Acción
+
+                                        </button>
+                                    }
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </main>
+
+    </div>
+
 </div>
 
+
+<!-- ============================================================= -->
+<!-- MODAL ADMIN -->
+<!-- ============================================================= -->
+@if (mostrarModal && esAdmin)
+{
+    <div class="custom-modal-backdrop">
+
+        <div class="custom-modal-dialog">
+
+            <div class="modal-content border-secondary border-opacity-25 shadow-lg text-white modal-dark-content">
+
+
+                <div class="modal-header border-secondary border-opacity-25 pb-3">
+
+                    <h5 class="modal-title text-white">
+
+                        @(esEdicion
+                                            ? "Editar Banner"
+                                            : "Nuevo Banner")
+
+                </h5>
+
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            @onclick="CerrarModal">
+                    </button>
+
+                </div>
+
+
+                <EditForm Model="@formModel"
+                          OnValidSubmit="GuardarBanner">
+
+                    <DataAnnotationsValidator />
+
+
+                    <div class="modal-body py-3">
+
+                        <!-- TÍTULO -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Título Principal
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="formModel.Titulo"
+                                       placeholder="Ej: Gran Remate de Laptops" />
+
+                            <ValidationMessage For="@(() => formModel.Titulo)"
+                                               class="text-danger small" />
+
+                        </div>
+
+
+                        <!-- SUBTÍTULO -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Subtítulo / Mensaje
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="formModel.SubTitulo"
+                                       placeholder="Ej: Hasta 30% de descuento en equipos seleccionados" />
+
+                        </div>
+
+
+                        <!-- IMAGEN / ORDEN -->
+
+                        <div class="row g-3 mb-3">
+
+                            <div class="col-8">
+
+                                <label class="form-label small text-secondary">
+                                    Imagen del Banner
+                                </label>
+
+                                <InputFile OnChange="SubirImagenBanner"
+                                           accept=".png,.jpg,.jpeg,.webp"
+                                           class="form-control input-dark"
+                                           disabled="@subiendoImagen" />
+
+                                <small class="text-secondary d-block mt-1">
+                                    PNG, JPG o WEBP · máximo 8 MB
+                                </small>
+
+                            @if (subiendoImagen)
+                                {
+                                    <div class="d-flex align-items-center gap-2 text-info small mt-2">
+                                        <span class="spinner-border spinner-border-sm"></span>
+                                        Subiendo imagen...
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(formModel.Imagen))
+                                {
+                                    <div class="border border-secondary border-opacity-25 rounded p-2 bg-dark bg-opacity-50 text-center mt-2">
+
+                                        <img src="@formModel.Imagen"
+                                             alt="Vista previa del banner"
+                                             style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;" />
+
+                                    </div>
+                                }
+
+                            <ValidationMessage For="@(() => formModel.Imagen)"
+                                               class="text-danger small" />
+
+                        </div>
+
+
+                        <div class="col-4">
+
+                            <label class="form-label small text-secondary">
+                                Orden
+                            </label>
+
+                            <InputNumber class="form-control input-dark"
+                                         @bind-Value="formModel.Orden"
+                                         min="0" />
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- BOTÓN -->
+
+                    <div class="row g-3 mb-3">
+
+                        <div class="col-6">
+
+                            <label class="form-label small text-secondary">
+                                Texto del Botón
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="formModel.BotonTexto"
+                                       placeholder="Ej: Ver Ofertas" />
+
+                        </div>
+
+
+                        <div class="col-6">
+
+                            <label class="form-label small text-secondary">
+                                Enlace (URL Botón)
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="formModel.BotonUrl"
+                                       placeholder="Ej: /catalogo/ofertas" />
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ESTADOS -->
+
+                    <div class="d-flex flex-wrap gap-4 pt-2">
+
+                        <div class="form-check form-switch">
+
+                            <InputCheckbox class="form-check-input"
+                                           type="checkbox"
+                                           role="switch"
+                                           @bind-Value="formModel.Mostrar"
+                                           id="chkMostrarBanner" />
+
+                            <label class="form-check-label small"
+                                   for="chkMostrarBanner">
+
+                                Visible en Web
+
+                            </label>
+
+                        </div>
+
+
+                        <div class="form-check form-switch ms-auto">
+
+                            <InputCheckbox class="form-check-input"
+                                           type="checkbox"
+                                           role="switch"
+                                           @bind-Value="formModel.Activo"
+                                           id="chkActivoBanner" />
+
+                            <label class="form-check-label small"
+                                   for="chkActivoBanner">
+
+                                Activo
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FOOTER -->
+
+                <div class="modal-footer border-secondary border-opacity-25 pt-2">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            @onclick="CerrarModal">
+
+                        Cancelar
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn btn-primary btn-sm px-3"
+                            disabled="@guardando">
+
+                        @(guardando
+                                                ? "Guardando..."
+                                                : "Guardar")
+
+                    </button>
+
+                    </div>
+
+                </EditForm>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+
 @code {
+
+    // =========================================================
+    // DATOS
+    // =========================================================
+
     private List<BannerDTO> listaBanners = new();
-    private List<BannerDTO> bannersVisibles = new();
-    private BannerDTO bannerForm = new();
+
+    private BannerDTO formModel = new();
+
+    private HashSet<int> idsFavoritos = new();
+
+
+    // =========================================================
+    // ESTADO
+    // =========================================================
+
+    private bool esAdmin = false;
+
     private bool cargando = true;
+
+    private bool guardando = false;
+
     private bool mostrarModal = false;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await CargarBanners();
-    }
+    private bool esEdicion = false;
 
-    private async Task CargarBanners()
+    private bool subiendoImagen = false;
+
+
+    // =========================================================
+    // FILTROS
+    // =========================================================
+
+    private string busquedaTexto = "";
+
+    private bool soloFavoritos = false;
+
+    private string criterioOrden = "orden";
+
+
+    // =========================================================
+    // PRIMER RENDER
+    // =========================================================
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        cargando = true;
+        if (!firstRender)
+            return;
+
         try
         {
-            var resultado = await Http.GetFromJsonAsync<List<BannerDTO>>("api/Banner");
-            if (resultado != null)
+            /*
+             * AuthStateService utiliza localStorage,
+             * por eso lo inicializamos después
+             * del primer render interactivo.
+             */
+
+            await AuthState.InicializarAsync();
+
+            esAdmin = AuthState.EsAdministrador;
+
+            await CargarFavoritos();
+
+            await CargarBanners();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error inicializando Banners: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    // =========================================================
+    // TOKEN JWT
+    // =========================================================
+
+    private async Task AplicarTokenAutorizacion()
+    {
+        try
+        {
+            var token =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "authToken");
+
+
+            if (!string.IsNullOrWhiteSpace(token))
             {
-                listaBanners = resultado;
-                // Público y Cliente solo ven banners con Mostrar = true y Activo = true, ordenados
-                bannersVisibles = listaBanners
-                    .Where(b => b.Activo && b.Mostrar)
-                    .OrderBy(b => b.Orden)
-                    .ToList();
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization = null;
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al cargar banners: {ex.Message}");
+            Console.WriteLine(
+                $"Error al obtener token: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // FAVORITOS
+    // =========================================================
+
+    private async Task CargarFavoritos()
+    {
+        try
+        {
+            var favsJson =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "sysnova_banner_favoritos");
+
+
+            if (!string.IsNullOrWhiteSpace(favsJson))
+            {
+                var lista =
+                    System.Text.Json.JsonSerializer
+                        .Deserialize<List<int>>(favsJson);
+
+
+                if (lista != null)
+                {
+                    idsFavoritos =
+                        new HashSet<int>(lista);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al cargar favoritos: {ex.Message}");
+        }
+    }
+
+
+    private async Task ToggleFavorito(int id)
+    {
+        if (idsFavoritos.Contains(id))
+        {
+            idsFavoritos.Remove(id);
+        }
+        else
+        {
+            idsFavoritos.Add(id);
+        }
+
+
+        try
+        {
+            var json =
+                System.Text.Json.JsonSerializer
+                    .Serialize(idsFavoritos);
+
+
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "sysnova_banner_favoritos",
+                json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al guardar favorito: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // CARGAR BANNERS
+    // =========================================================
+
+    private async Task CargarBanners()
+    {
+        cargando = true;
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            var res =
+                await Http.GetFromJsonAsync<List<BannerDTO>>(
+                    "api/banner");
+
+
+            if (res != null)
+            {
+                listaBanners = res;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al consultar API: {ex.Message}");
         }
         finally
         {
@@ -225,84 +890,480 @@
         }
     }
 
-    private void AbrirModalCrear()
+
+    // =========================================================
+    // BANNERS FILTRADOS
+    // =========================================================
+
+    private IEnumerable<BannerDTO> BannersFiltrados
     {
-        bannerForm = new BannerDTO
+        get
+        {
+            IEnumerable<BannerDTO> res =
+                listaBanners;
+
+
+            /*
+             * ADMIN:
+             * puede ver activos, inactivos,
+             * visibles y ocultos.
+             *
+             * CLIENTE / PÚBLICO:
+             * solamente banners activos y visibles.
+             */
+
+            if (!esAdmin)
+            {
+                res =
+                    res.Where(b =>
+                        b.Activo &&
+                        b.Mostrar);
+            }
+
+
+            // BÚSQUEDA
+
+            if (!string.IsNullOrWhiteSpace(busquedaTexto))
+            {
+                res =
+                    res.Where(b =>
+
+                        (b.Titulo != null &&
+                         b.Titulo.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (b.SubTitulo != null &&
+                         b.SubTitulo.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (b.BotonTexto != null &&
+                         b.BotonTexto.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase)));
+            }
+
+
+            // FAVORITOS
+
+            if (soloFavoritos)
+            {
+                res =
+                    res.Where(b =>
+                        idsFavoritos.Contains(
+                            b.BannerId));
+            }
+
+
+            // ORDENAMIENTO
+
+            if (criterioOrden == "titulo")
+            {
+                return res.OrderBy(
+                    b => b.Titulo);
+            }
+
+
+            if (criterioOrden == "recientes")
+            {
+                return res.OrderByDescending(
+                    b => b.FechaCreacion);
+            }
+
+
+            return res.OrderBy(
+                b => b.Orden);
+        }
+    }
+
+
+    // =========================================================
+    // LIMPIAR FILTROS
+    // =========================================================
+
+    private void LimpiarFiltros()
+    {
+        busquedaTexto = "";
+
+        soloFavoritos = false;
+
+        criterioOrden = "orden";
+    }
+
+
+    // =========================================================
+    // SCROLL MODAL
+    // =========================================================
+
+    private async Task BloquearScrollFondo(
+        bool bloquear)
+    {
+        try
+        {
+            var style =
+                bloquear
+                    ? "hidden"
+                    : "auto";
+
+
+            await JS.InvokeVoidAsync(
+                "eval",
+                $"document.body.style.overflow = '{style}'");
+        }
+        catch
+        {
+        }
+    }
+
+
+    // =========================================================
+    // CREAR
+    // =========================================================
+
+    private async Task AbrirModalCrear()
+    {
+        if (!esAdmin)
+            return;
+
+
+        formModel = new BannerDTO
         {
             Activo = true,
+
             Mostrar = true,
-            Orden = listaBanners.Count + 1,
-            FechaCreacion = DateTime.Now
+
+            Orden = 1,
+
+            FechaCreacion =
+                DateTime.Now
         };
+
+
+        esEdicion = false;
+
         mostrarModal = true;
+
+
+        await BloquearScrollFondo(true);
     }
 
-    private void AbrirModalEditar(BannerDTO banner)
+
+    // =========================================================
+    // EDITAR
+    // =========================================================
+
+    private async Task AbrirModalEditar(
+        BannerDTO item)
     {
-        bannerForm = new BannerDTO
+        if (!esAdmin)
+            return;
+
+
+        formModel = new BannerDTO
         {
-            BannerId = banner.BannerId,
-            Titulo = banner.Titulo,
-            SubTitulo = banner.SubTitulo,
-            Imagen = banner.Imagen,
-            BotonTexto = banner.BotonTexto,
-            BotonUrl = banner.BotonUrl,
-            Orden = banner.Orden,
-            Mostrar = banner.Mostrar,
-            Activo = banner.Activo,
-            FechaCreacion = banner.FechaCreacion
+            BannerId = item.BannerId,
+
+            Titulo = item.Titulo,
+
+            SubTitulo = item.SubTitulo,
+
+            Imagen = item.Imagen,
+
+            BotonTexto = item.BotonTexto,
+
+            BotonUrl = item.BotonUrl,
+
+            Orden = item.Orden,
+
+            Mostrar = item.Mostrar,
+
+            Activo = item.Activo,
+
+            FechaCreacion =
+                item.FechaCreacion,
+
+            FechaModificacion =
+                DateTime.Now
         };
+
+
+        esEdicion = true;
+
         mostrarModal = true;
+
+
+        await BloquearScrollFondo(true);
     }
 
-    private void CerrarModal()
+
+    // =========================================================
+    // CERRAR MODAL
+    // =========================================================
+
+    private async Task CerrarModal()
     {
         mostrarModal = false;
+
+        await BloquearScrollFondo(false);
     }
+
+
+    // =========================================================
+    // SUBIR IMAGEN
+    // =========================================================
+
+    private async Task SubirImagenBanner(
+        InputFileChangeEventArgs e)
+    {
+        if (!esAdmin)
+            return;
+
+        var archivo = e.File;
+
+        if (archivo == null)
+            return;
+
+        const long maxFileSize =
+            8 * 1024 * 1024;
+
+        var extensionesPermitidas =
+            new[]
+            {
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".webp"
+            };
+
+        var extension =
+            Path.GetExtension(archivo.Name)
+                .ToLowerInvariant();
+
+        if (!extensionesPermitidas.Contains(extension))
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "Formato no permitido. Usa PNG, JPG, JPEG o WEBP.");
+
+            return;
+        }
+
+        if (archivo.Size > maxFileSize)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "La imagen no puede superar los 8 MB.");
+
+            return;
+        }
+
+        subiendoImagen = true;
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+            using var contenido =
+                new MultipartFormDataContent();
+
+            await using var stream =
+                archivo.OpenReadStream(maxFileSize);
+
+            using var archivoContent =
+                new StreamContent(stream);
+
+            archivoContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    string.IsNullOrWhiteSpace(archivo.ContentType)
+                        ? "application/octet-stream"
+                        : archivo.ContentType);
+
+            contenido.Add(
+                archivoContent,
+                "archivo",
+                archivo.Name);
+
+            var response =
+                await Http.PostAsync(
+                    "api/banner/upload-imagen",
+                    contenido);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detalle =
+                    await response.Content.ReadAsStringAsync();
+
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    $"No se pudo subir la imagen. {detalle}");
+
+                return;
+            }
+
+            var resultado =
+                await response.Content
+                    .ReadFromJsonAsync<ImagenUploadResponse>();
+
+            if (resultado == null ||
+                string.IsNullOrWhiteSpace(resultado.Url))
+            {
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    "La API no devolvió la URL de la imagen.");
+
+                return;
+            }
+
+            formModel.Imagen =
+                resultado.Url;
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al subir la imagen: {ex.Message}");
+        }
+        finally
+        {
+            subiendoImagen = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private sealed class ImagenUploadResponse
+    {
+        public string Url { get; set; } =
+            string.Empty;
+
+        public string NombreArchivo { get; set; } =
+            string.Empty;
+    }
+
+
+    // =========================================================
+    // GUARDAR
+    // =========================================================
 
     private async Task GuardarBanner()
     {
+        if (!esAdmin)
+            return;
+
+
+        guardando = true;
+
         try
         {
-            if (bannerForm.BannerId == 0)
+            await AplicarTokenAutorizacion();
+
+
+            HttpResponseMessage response;
+
+
+            if (esEdicion)
             {
-                var response = await Http.PostAsJsonAsync("api/Banner", bannerForm);
-                if (response.IsSuccessStatusCode)
-                {
-                    await CargarBanners();
-                    CerrarModal();
-                }
+                formModel.FechaModificacion =
+                    DateTime.Now;
+
+
+                response =
+                    await Http.PutAsJsonAsync(
+                        "api/banner",
+                        formModel);
             }
             else
             {
-                bannerForm.FechaModificacion = DateTime.Now;
-                var response = await Http.PutAsJsonAsync("api/Banner", bannerForm);
-                if (response.IsSuccessStatusCode)
-                {
-                    await CargarBanners();
-                    CerrarModal();
-                }
+                formModel.FechaCreacion =
+                    DateTime.Now;
+
+
+                response =
+                    await Http.PostAsJsonAsync(
+                        "api/banner",
+                        formModel);
             }
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CerrarModal();
+
+                await CargarBanners();
+
+                return;
+            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al guardar ({response.StatusCode}).");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al guardar banner: {ex.Message}");
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error de conexión: {ex.Message}");
+        }
+        finally
+        {
+            guardando = false;
         }
     }
 
-    private async Task EliminarBanner(int bannerId)
+
+    // =========================================================
+    // ELIMINAR
+    // =========================================================
+
+    private async Task EliminarBanner(int id)
     {
+        if (!esAdmin)
+            return;
+
+
+        bool confirmado =
+            await JS.InvokeAsync<bool>(
+                "confirm",
+                "¿Estás seguro de eliminar este banner?");
+
+
+        if (!confirmado)
+            return;
+
+
         try
         {
-            var response = await Http.DeleteAsync($"api/Banner/{bannerId}");
+            await AplicarTokenAutorizacion();
+
+
+            var response =
+                await Http.DeleteAsync(
+                    $"api/banner/{id}");
+
+
             if (response.IsSuccessStatusCode)
             {
                 await CargarBanners();
+
+                return;
             }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"No se pudo eliminar el banner. Código: {response.StatusCode}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al eliminar banner: {ex.Message}");
+            Console.WriteLine(
+                $"Error al eliminar: {ex.Message}");
         }
     }
 }

@@ -16,7 +16,6 @@ body {
     color: var(--text-dark);
 }
 
-/* SECTION HERO */
 .hero-section {
     background-color: var(--bg-main);
     padding: 60px 80px;
@@ -110,7 +109,6 @@ body {
     margin: 4px 0 0 0;
 }
 
-/* HERO MEDIA / CARDS */
 .hero-media {
     position: relative;
     display: flex;
@@ -162,7 +160,6 @@ body {
         right: -20px;
     }
 
-/* BANNER PROMO / SLIDER */
 .promo-slider-section {
     padding: 60px 80px;
     display: flex;
@@ -236,7 +233,6 @@ body {
         right: 16px;
     }
 
-/* SECTION CATEGORIES */
 .categories-section {
     padding: 40px 80px 80px 80px;
     text-align: center;
@@ -267,9 +263,6 @@ body {
     background-color: var(--bg-dark);
 }
 
-/* ===================================
-   SECCIONES GENERALES (HEADERS)
-   =================================== */
 .section-header {
     text-align: center;
     margin-bottom: 24px;
@@ -316,9 +309,6 @@ body {
     margin: 0;
 }
 
-/* ===================================
-   SECCIÓN CATEGORÍAS
-   =================================== */
 .categories-section {
     max-width: 1200px;
     margin: 0 auto 80px auto;
@@ -368,16 +358,12 @@ body {
     margin: 0;
 }
 
-/* ===================================
-   SECCIÓN PRODUCTOS DESTACADOS
-   =================================== */
 .featured-section {
     max-width: 1200px;
     margin: 0 auto 80px auto;
     padding: 0 20px;
 }
 
-/* Pills de filtros */
 .filter-pills {
     display: flex;
     justify-content: center;
@@ -409,7 +395,6 @@ body {
         font-weight: 600;
     }
 
-/* Grid productos */
 .products-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -563,7 +548,6 @@ body {
         background-color: #e2e2e2;
     }
 
-/* Responsive */
 @media (max-width: 992px) {
     .categories-grid,
     .products-grid {
@@ -578,9 +562,6 @@ body {
     }
 }
 
-/* ===================================
-   BOTÓN VER TODO EL CATÁLOGO
-   =================================== */
 .catalog-action {
     display: flex;
     justify-content: center;
@@ -604,53 +585,128 @@ body {
         border-color: rgba(255, 255, 255, 0.5);
     }
 
-/* ===================================
-   SECCIÓN DE MARCAS
-   =================================== */
 .brands-section {
     width: 100%;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 40px 20px;
-    text-align: center;
     margin-top: 60px;
+    padding: 40px 20px;
+    overflow: hidden;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
 }
 
 .brands-tag {
     display: block;
+    margin-bottom: 28px;
+    color: #555555;
     font-size: 0.65rem;
     font-weight: 700;
     letter-spacing: 0.2em;
-    color: #555555;
-    margin-bottom: 28px;
 }
 
-.brands-logos {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 36px;
+.brands-status {
+    margin: 0;
+    color: #666666;
+    font-size: 0.9rem;
+}
+
+.brands-carousel {
+    width: 100%;
     max-width: 1100px;
     margin: 0 auto;
+    overflow: hidden;
 }
 
-    .brands-logos span {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #666666;
-        letter-spacing: -0.02em;
+.brands-track {
+    display: flex;
+    width: max-content;
+    animation: brands-scroll 28s linear infinite;
+    will-change: transform;
+}
+
+.brands-group {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    padding-right: 36px;
+    flex-shrink: 0;
+}
+
+.brand-item {
+    width: 150px;
+    min-width: 150px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+    .brand-item img {
+        max-width: 125px;
+        max-height: 52px;
+        object-fit: contain;
         opacity: 0.7;
-        transition: opacity 0.2s ease, color 0.2s ease;
+        transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
-        .brands-logos span:hover {
-            opacity: 1;
-            color: #999999;
+    .brand-item span {
+        color: #666666;
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+        opacity: 0.7;
+        transition: opacity 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    }
+
+    .brand-item:hover img,
+    .brand-item:hover span {
+        opacity: 1;
+        transform: scale(1.06);
+    }
+
+    .brand-item:hover span {
+        color: #999999;
+    }
+
+.brands-carousel:hover .brands-track {
+    animation-play-state: paused;
+}
+
+@keyframes brands-scroll {
+    to {
+        transform: translateX(-50%);
+    }
+}
+
+@media (max-width: 768px) {
+    .brands-group {
+        gap: 24px;
+        padding-right: 24px;
+    }
+
+    .brand-item {
+        width: 120px;
+        min-width: 120px;
+        height: 60px;
+    }
+
+        .brand-item img {
+            max-width: 100px;
+            max-height: 44px;
         }
 
-/* ===================================
-   SECCIÓN OFERTA RELÁMPAGO (REPLICADO)
-   =================================== */
+    .brands-track {
+        animation-duration: 22s;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brands-track {
+        animation: none;
+    }
+}
+
 .flash-offer-section {
     max-width: 900px;
     margin: 60px auto 100px auto;
@@ -789,9 +845,6 @@ body {
         object-fit: contain;
     }
 
-/* ===================================
-   SECCIÓN DE BENEFICIOS (REPLICADO)
-   =================================== */
 .features-section {
     max-width: 900px;
     margin: 0 auto 100px auto;
@@ -852,7 +905,6 @@ body {
     margin: 0;
 }
 
-/* Adaptación responsiva para estas secciones */
 @media (max-width: 900px) {
     .flash-card {
         grid-template-columns: 1fr;
@@ -870,9 +922,6 @@ body {
     }
 }
 
-/* ===================================
-   SECCIÓN TESTIMONIOS
-   =================================== */
 .testimonials-section {
     max-width: 1100px;
     margin: 80px auto;
@@ -910,7 +959,7 @@ body {
 }
 
 .testimonial-stars {
-    color: #444444; /* Color tenue igual a la imagen */
+    color: #444444;
     font-size: 0.75rem;
     letter-spacing: 2px;
     margin-bottom: 16px;
@@ -956,9 +1005,6 @@ body {
     margin: 2px 0 0 0;
 }
 
-/* ===================================
-   SECCIÓN FAQ (PREGUNTAS FRECUENTES)
-   =================================== */
 .faq-section {
     max-width: 680px;
     margin: 0 auto 100px auto;
@@ -993,7 +1039,7 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    list-style: none; /* Elimina la flecha por defecto */
+    list-style: none;
 }
 
     .faq-question::-webkit-details-marker {
@@ -1007,7 +1053,6 @@ body {
     font-weight: 400;
 }
 
-/* Estado cuando el acordeón está abierto */
 .faq-item[open] .faq-icon::after {
     content: '✕';
     font-size: 0.85rem;
@@ -1025,23 +1070,18 @@ body {
         margin: 0;
     }
 
-/* Adaptación responsiva */
 @media (max-width: 850px) {
     .testimonials-grid {
         grid-template-columns: 1fr;
     }
 }
 
-/* ===================================
-   SECCIÓN BLOG DE TECNOLOGÍA
-   =================================== */
 .blog-section {
     max-width: 1100px;
     margin: 80px auto;
     padding: 0 20px;
 }
 
-/* Header con distribución flex (título a la izq, botón a la der) */
 .blog-header {
     display: flex;
     justify-content: space-between;
@@ -1082,7 +1122,6 @@ body {
         border-color: rgba(255, 255, 255, 0.4);
     }
 
-/* Grid de los 3 artículos */
 .blog-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1104,7 +1143,6 @@ body {
         transform: translateY(-3px);
     }
 
-/* Imagen y Badge flotante */
 .blog-img-wrapper {
     position: relative;
     width: 100%;
@@ -1139,7 +1177,6 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Contenido de la tarjeta */
 .blog-content {
     padding: 20px;
     display: flex;
@@ -1188,7 +1225,6 @@ body {
         opacity: 0.8;
     }
 
-/* Adaptación responsiva */
 @media (max-width: 850px) {
     .blog-header {
         flex-direction: column;
@@ -1201,9 +1237,6 @@ body {
     }
 }
 
-/* ===================================
-   SECCIÓN CONTACTO (HABLEMOS DE TECNOLOGÍA)
-   =================================== */
 .contact-section {
     max-width: 1100px;
     margin: 80px auto 100px auto;
@@ -1304,7 +1337,6 @@ body {
         background-color: #e2e2e2;
     }
 
-/* Grid de información inferior (Teléfono, Correo, Horario) */
 .contact-info-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1360,17 +1392,12 @@ body {
     white-space: nowrap;
 }
 
-/* Responsivo */
 @media (max-width: 768px) {
     .form-row,
     .contact-info-grid {
         grid-template-columns: 1fr;
     }
 }
-
-/* =========================================================
-   PERFIL DRAWER - REPLICA EXACTA
-   ========================================================= */
 
 .profile-backdrop {
     position: fixed;
@@ -1415,7 +1442,6 @@ body {
         transform: translateX(0);
     }
 
-/* Header */
 .profile-header {
     display: flex;
     align-items: center;
@@ -1456,7 +1482,6 @@ body {
         opacity: 1;
     }
 
-/* Body */
 .profile-body {
     flex: 1;
     padding: 0 1.75rem 1.5rem 1.75rem;
@@ -1466,7 +1491,6 @@ body {
     gap: 1.25rem;
 }
 
-/* Tarjeta Gris de Usuario */
 .user-hero-card {
     background-color: #e5e5e7;
     color: #000000;
@@ -1501,7 +1525,6 @@ body {
     margin: 0;
 }
 
-/* Lista de Tarjetas de Info */
 .profile-info-list {
     display: flex;
     flex-direction: column;
@@ -1551,7 +1574,6 @@ body {
     color: #ffffff;
 }
 
-/* Status Card */
 .info-card-status {
     background-color: #121214;
     border: 1px solid #1c1c1e;
@@ -1575,7 +1597,6 @@ body {
     color: #e5e5e7;
 }
 
-/* Footer / Logout Button */
 .profile-footer {
     padding: 1.5rem 1.75rem 2rem 1.75rem;
 }
@@ -1607,11 +1628,6 @@ body {
         height: 16px;
     }
 
-/* =========================================================
-   MODAL DETALLE PRODUCTO
-   FIJO, CENTRADO Y SIN SCROLL
-   ========================================================= */
-
 .producto-detalle-backdrop {
     background-color: rgba(15, 23, 42, 0.80);
     backdrop-filter: blur(8px);
@@ -1625,66 +1641,33 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    /*
-       BLOQUEA CUALQUIER SCROLL
-       EN EL FONDO DEL MODAL
-    */
     overflow: hidden !important;
-    /*
-       Evita que el navegador agregue
-       desplazamiento horizontal.
-    */
     overscroll-behavior: none !important;
 }
-
-
-/* =========================================================
-   MODAL PRINCIPAL
-   ========================================================= */
 
 .producto-detalle-modal {
     position: relative;
     width: 95%;
     max-width: 1048px;
-    /*
-       Altura fija como en el diseño.
-    */
     height: 720px;
     max-height: 90vh;
     margin: auto !important;
     background-color: #111111;
     border-radius: 28px;
-    /*
-       MUY IMPORTANTE:
-       NUNCA MOSTRAR SCROLL
-    */
     overflow: hidden !important;
     overscroll-behavior: none !important;
     box-shadow: 0 30px 80px rgba(0, 0, 0, 0.65), 0 10px 30px rgba(0, 0, 0, 0.35);
     color: #ffffff;
 }
 
-
-/* =========================================================
-   GRID DEL MODAL
-   ========================================================= */
-
 .producto-detalle-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     width: 100%;
     height: 100%;
-    /*
-       BLOQUEA SCROLL INTERNO
-    */
     overflow: hidden !important;
     overscroll-behavior: none !important;
 }
-
-
-/* =========================================================
-   PANEL IZQUIERDO
-   ========================================================= */
 
 .producto-detalle-imagen-panel {
     position: relative;
@@ -1693,16 +1676,8 @@ body {
     justify-content: center;
     padding: 40px;
     background-color: #171717;
-    /*
-       SIN SCROLL
-    */
     overflow: hidden !important;
 }
-
-
-/* =========================================================
-   IMAGEN
-   ========================================================= */
 
 .producto-detalle-image-box {
     width: 420px;
@@ -1713,7 +1688,6 @@ body {
     overflow: hidden !important;
 }
 
-
     .producto-detalle-image-box img {
         width: 100%;
         height: 100%;
@@ -1722,11 +1696,6 @@ body {
         max-width: 100%;
         max-height: 100%;
     }
-
-
-/* =========================================================
-   TOP VENTAS
-   ========================================================= */
 
 .producto-detalle-top {
     position: absolute;
@@ -1741,11 +1710,6 @@ body {
     backdrop-filter: blur(5px);
     z-index: 5;
 }
-
-
-/* =========================================================
-   BOTÓN X
-   ========================================================= */
 
 .producto-detalle-close {
     position: absolute;
@@ -1767,16 +1731,10 @@ body {
     transition: background-color 0.2s ease, opacity 0.2s ease;
 }
 
-
     .producto-detalle-close:hover {
         background-color: rgba(255, 255, 255, 0.08);
         opacity: 1;
     }
-
-
-/* =========================================================
-   INFORMACIÓN DERECHA
-   ========================================================= */
 
 .producto-detalle-info {
     display: flex;
@@ -1785,18 +1743,9 @@ body {
     min-width: 0;
     min-height: 0;
     background-color: #111111;
-    /*
-       ESTA ES LA PARTE IMPORTANTE.
-       NO PERMITIR SCROLL.
-    */
     overflow: hidden !important;
     overscroll-behavior: none !important;
 }
-
-
-/* =========================================================
-   CATEGORÍA
-   ========================================================= */
 
 .producto-detalle-categoria {
     margin-bottom: 12px;
@@ -1806,11 +1755,6 @@ body {
     letter-spacing: 3px;
 }
 
-
-/* =========================================================
-   TÍTULO
-   ========================================================= */
-
 .producto-detalle-titulo {
     margin: 0 0 18px 0;
     padding-right: 30px;
@@ -1819,17 +1763,8 @@ body {
     line-height: 1.08;
     font-weight: 800;
     letter-spacing: -1.4px;
-    /*
-       Si el nombre es demasiado largo,
-       no genera scroll.
-    */
     overflow: hidden;
 }
-
-
-/* =========================================================
-   RATING
-   ========================================================= */
 
 .producto-detalle-rating {
     display: flex;
@@ -1839,7 +1774,6 @@ body {
     font-size: 14px;
 }
 
-
 .producto-detalle-stars {
     display: flex;
     gap: 2px;
@@ -1847,21 +1781,14 @@ body {
     font-size: 15px;
 }
 
-
 .producto-detalle-rating strong {
     color: #ffffff;
     font-size: 15px;
 }
 
-
 .producto-detalle-rating span {
     color: #858585;
 }
-
-
-/* =========================================================
-   PRECIO
-   ========================================================= */
 
 .producto-detalle-precio {
     display: flex;
@@ -1871,7 +1798,6 @@ body {
     margin-bottom: 28px;
 }
 
-
 .producto-detalle-precio-actual {
     color: #ffffff;
     font-size: 31px;
@@ -1879,13 +1805,11 @@ body {
     letter-spacing: -0.8px;
 }
 
-
 .producto-detalle-precio-anterior {
     color: #777777;
     font-size: 16px;
     text-decoration: line-through;
 }
-
 
 .producto-detalle-descuento {
     padding: 5px 9px;
@@ -1896,30 +1820,16 @@ body {
     font-weight: 800;
 }
 
-
-/* =========================================================
-   DESCRIPCIÓN
-   ========================================================= */
-
 .producto-detalle-descripcion {
     margin: 0;
     color: #9a9a9a;
     font-size: 16px;
     line-height: 1.6;
-    /*
-       NO GENERAR SCROLL.
-       Si es demasiado larga, se corta.
-    */
     overflow: hidden !important;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 4;
 }
-
-
-/* =========================================================
-   SEPARADOR
-   ========================================================= */
 
 .producto-detalle-separador {
     width: 100%;
@@ -1928,11 +1838,6 @@ body {
     background-color: #2a2a2a;
     flex-shrink: 0;
 }
-
-
-/* =========================================================
-   BENEFICIOS
-   ========================================================= */
 
 .producto-detalle-beneficios {
     display: flex;
@@ -1944,33 +1849,21 @@ body {
     flex-shrink: 0;
 }
 
-
     .producto-detalle-beneficios > div {
         display: flex;
         align-items: center;
         gap: 10px;
     }
 
-
     .producto-detalle-beneficios i {
         font-size: 20px;
     }
-
-
-/* =========================================================
-   SECCIÓN COMPRA
-   ========================================================= */
 
 .producto-detalle-compra {
     margin-top: auto;
     flex-shrink: 0;
     overflow: hidden !important;
 }
-
-
-/* =========================================================
-   CANTIDAD
-   ========================================================= */
 
 .producto-detalle-cantidad {
     display: flex;
@@ -1982,11 +1875,6 @@ body {
     font-weight: 600;
 }
 
-
-/* =========================================================
-   SELECTOR DE CANTIDAD
-   ========================================================= */
-
 .producto-detalle-selector {
     display: flex;
     align-items: center;
@@ -1996,7 +1884,6 @@ body {
     background-color: #171717;
     overflow: hidden !important;
 }
-
 
     .producto-detalle-selector button {
         width: 45px;
@@ -2009,17 +1896,14 @@ body {
         transition: background-color 0.2s ease;
     }
 
-
         .producto-detalle-selector button:hover {
             background-color: rgba(255, 255, 255, 0.06);
         }
-
 
         .producto-detalle-selector button:disabled {
             opacity: 0.3;
             cursor: not-allowed;
         }
-
 
     .producto-detalle-selector span {
         min-width: 28px;
@@ -2028,11 +1912,6 @@ body {
         font-size: 15px;
         font-weight: 600;
     }
-
-
-/* =========================================================
-   BOTÓN AÑADIR AL CARRITO
-   ========================================================= */
 
 .producto-detalle-carrito {
     width: 100%;
@@ -2051,12 +1930,10 @@ body {
     transition: transform 0.18s ease, background-color 0.18s ease;
 }
 
-
     .producto-detalle-carrito:hover {
         background-color: #ffffff;
         transform: translateY(-1px);
     }
-
 
     .producto-detalle-carrito:disabled {
         opacity: 0.5;
@@ -2064,15 +1941,9 @@ body {
         transform: none;
     }
 
-
     .producto-detalle-carrito i {
         font-size: 20px;
     }
-
-
-/* =========================================================
-   COMPRA SEGURA
-   ========================================================= */
 
 .producto-detalle-seguridad {
     display: flex;
@@ -2084,15 +1955,9 @@ body {
     font-size: 12px;
 }
 
-
     .producto-detalle-seguridad i {
         color: #ffffff;
     }
-
-
-/* =========================================================
-   TABLET
-   ========================================================= */
 
 @media (max-width: 900px) {
 
@@ -2103,7 +1968,6 @@ body {
         overflow: hidden !important;
     }
 
-
     .producto-detalle-modal {
         width: 94vw;
         height: calc(100vh - 30px);
@@ -2112,13 +1976,11 @@ body {
         overflow: hidden !important;
     }
 
-
     .producto-detalle-grid {
         grid-template-columns: 1fr;
         height: 100%;
         overflow: hidden !important;
     }
-
 
     .producto-detalle-imagen-panel {
         height: 42%;
@@ -2127,13 +1989,11 @@ body {
         overflow: hidden !important;
     }
 
-
     .producto-detalle-image-box {
         width: min(300px, 70%);
         height: 100%;
         overflow: hidden !important;
     }
-
 
     .producto-detalle-info {
         height: 58%;
@@ -2141,21 +2001,14 @@ body {
         overflow: hidden !important;
     }
 
-
     .producto-detalle-titulo {
         font-size: 30px;
     }
-
 
     .producto-detalle-precio-actual {
         font-size: 28px;
     }
 }
-
-
-/* =========================================================
-   MÓVIL
-   ========================================================= */
 
 @media (max-width: 576px) {
 
@@ -2163,7 +2016,6 @@ body {
         padding: 10px;
         overflow: hidden !important;
     }
-
 
     .producto-detalle-modal {
         width: 100%;
@@ -2173,7 +2025,6 @@ body {
         overflow: hidden !important;
     }
 
-
     .producto-detalle-close {
         top: 14px;
         right: 14px;
@@ -2182,7 +2033,6 @@ body {
         font-size: 16px;
     }
 
-
     .producto-detalle-imagen-panel {
         height: 38%;
         min-height: 0;
@@ -2190,13 +2040,11 @@ body {
         overflow: hidden !important;
     }
 
-
     .producto-detalle-image-box {
         width: 230px;
         height: 100%;
         overflow: hidden !important;
     }
-
 
     .producto-detalle-top {
         top: 15px;
@@ -2205,13 +2053,11 @@ body {
         font-size: 11px;
     }
 
-
     .producto-detalle-info {
         height: 62%;
         padding: 20px 25px;
         overflow: hidden !important;
     }
-
 
     .producto-detalle-categoria {
         margin-bottom: 7px;
@@ -2219,13 +2065,11 @@ body {
         letter-spacing: 2px;
     }
 
-
     .producto-detalle-titulo {
         margin-bottom: 12px;
         font-size: 25px;
         line-height: 1.08;
     }
-
 
     .producto-detalle-rating {
         gap: 6px;
@@ -2233,33 +2077,27 @@ body {
         font-size: 12px;
     }
 
-
     .producto-detalle-stars {
         font-size: 12px;
     }
-
 
     .producto-detalle-precio {
         gap: 8px;
         margin-bottom: 15px;
     }
 
-
     .producto-detalle-precio-actual {
         font-size: 25px;
     }
-
 
     .producto-detalle-precio-anterior {
         font-size: 13px;
     }
 
-
     .producto-detalle-descuento {
         padding: 4px 7px;
         font-size: 10px;
     }
-
 
     .producto-detalle-descripcion {
         font-size: 13px;
@@ -2268,22 +2106,18 @@ body {
         overflow: hidden !important;
     }
 
-
     .producto-detalle-separador {
         margin: 15px 0;
     }
-
 
     .producto-detalle-beneficios {
         gap: 15px;
         font-size: 11px;
     }
 
-
         .producto-detalle-beneficios i {
             font-size: 16px;
         }
-
 
     .producto-detalle-cantidad {
         gap: 12px;
@@ -2291,35 +2125,29 @@ body {
         font-size: 13px;
     }
 
-
     .producto-detalle-selector {
         height: 40px;
         overflow: hidden !important;
     }
-
 
         .producto-detalle-selector button {
             width: 38px;
             font-size: 18px;
         }
 
-
         .producto-detalle-selector span {
             min-width: 24px;
             font-size: 13px;
         }
-
 
     .producto-detalle-carrito {
         height: 48px;
         font-size: 13px;
     }
 
-
         .producto-detalle-carrito i {
             font-size: 17px;
         }
-
 
     .producto-detalle-seguridad {
         margin-top: 10px;

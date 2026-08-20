@@ -1,5 +1,865 @@
-﻿<h3>Contacto</h3>
+﻿@page "/contacto"
+
+@using SysNova.DTO
+@using SysNova.Web.Services
+
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject AuthStateService AuthState
+
+<PageTitle>Contacto y Mensajes - SysNova Tech</PageTitle>
+
+<div class="container-fluid min-vh-100 p-4 main-container">
+
+    <!-- ========================================================= -->
+    <!-- ENCABEZADO -->
+    <!-- ========================================================= -->
+
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom border-secondary border-opacity-25">
+
+        <div>
+
+            <h1 class="h2 fw-bold text-white mb-1">
+                Contacto & Mensajes
+            </h1>
+
+            <p class="text-secondary small mb-0">
+                Atención al cliente y gestión administrativa de mensajes recibidos
+            </p>
+
+        </div>
+
+    </header>
+
+
+    <!-- ========================================================= -->
+    <!-- PANEL ADMIN -->
+    <!-- ========================================================= -->
+
+    @if (esAdmin)
+    {
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 mb-4 text-white">
+
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3">
+
+                <h6 class="mb-0 text-white-50">
+                    Buzón de Mensajes de Soporte
+                </h6>
+
+                <div class="small">
+
+                    Total recibidos:
+
+                    <strong class="text-info">
+                        @listaContactos.Count
+                    </strong>
+
+                    <span class="mx-2 text-secondary">
+                        |
+                    </span>
+
+                    Pendientes:
+
+                    <strong class="text-warning">
+                        @listaContactos.Count(c => !c.Leido)
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- ========================================================= -->
+    <!-- PÚBLICO / CLIENTE -->
+    <!-- ========================================================= -->
+
+    @if (!esAdmin)
+    {
+        <div class="row justify-content-center">
+
+            <div class="col-12 col-lg-8 col-xl-7">
+
+                <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-4 shadow-sm">
+
+                    <div class="mb-4">
+
+                        <h5 class="fw-bold mb-2">
+                            Envíanos un mensaje
+                        </h5>
+
+                        <p class="text-secondary small mb-0">
+                            Escríbenos tus dudas o sugerencias y nuestro equipo te responderá pronto.
+                        </p>
+
+                    </div>
+
+
+                    <EditForm Model="@nuevoMensaje"
+                              OnValidSubmit="EnviarFormularioContacto">
+
+                        <DataAnnotationsValidator />
+
+
+                        <!-- NOMBRE -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Nombre Completo
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="nuevoMensaje.NombreCompleto"
+                                       placeholder="Tu nombre" />
+
+                            <ValidationMessage For="@(() => nuevoMensaje.NombreCompleto)"
+                                               class="text-danger small" />
+
+                        </div>
+
+
+                        <!-- CORREO -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Correo Electrónico
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="nuevoMensaje.Correo"
+                                       placeholder="tu@email.com" />
+
+                            <ValidationMessage For="@(() => nuevoMensaje.Correo)"
+                                               class="text-danger small" />
+
+                        </div>
+
+
+                        <!-- TELÉFONO -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Teléfono (Opcional)
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="nuevoMensaje.Telefono"
+                                       placeholder="+503 0000-0000" />
+
+                        </div>
+
+
+                        <!-- ASUNTO -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Asunto
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="nuevoMensaje.Asunto"
+                                       placeholder="Motivo de contacto" />
+
+                        </div>
+
+
+                        <!-- MENSAJE -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Mensaje
+                            </label>
+
+                            <InputTextArea class="form-control input-dark"
+                                           rows="5"
+                                           @bind-Value="nuevoMensaje.Mensaje"
+                                           placeholder="Describe tu consulta..." />
+
+                            <ValidationMessage For="@(() => nuevoMensaje.Mensaje)"
+                                               class="text-danger small" />
+
+                        </div>
+
+
+                        <!-- BOTÓN -->
+
+                        <button type="submit"
+                                class="btn btn-primary w-100 fw-semibold"
+                                disabled="@enviando">
+
+                            @(enviando
+                                ? "Enviando..."
+                                : "Enviar Mensaje")
+
+                        </button>
+
+                    </EditForm>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- ========================================================= -->
+    <!-- ADMINISTRADOR - BUZÓN -->
+    <!-- ========================================================= -->
+
+    @if (esAdmin)
+    {
+        <div class="row">
+
+            <main class="col-12">
+
+                <!-- ============================================= -->
+                <!-- BUSCADOR -->
+                <!-- ============================================= -->
+
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
+
+                    <span class="text-secondary small">
+
+                        Mensajes recibidos:
+
+                        <strong class="text-white">
+                            @ContactosFiltrados.Count()
+                        </strong>
+
+                    </span>
+
+
+                    <div class="d-flex align-items-center gap-2">
+
+                        <input type="text"
+                               class="form-control form-control-sm input-dark"
+                               placeholder="Buscar por nombre, correo o asunto..."
+                               @bind="busquedaTexto"
+                               @bind:event="oninput" />
+
+                    </div>
+
+                </div>
+
+
+                <!-- ============================================= -->
+                <!-- CARGANDO -->
+                <!-- ============================================= -->
+
+                @if (cargando)
+                {
+                    <div class="text-center py-5">
+
+                        <div class="spinner-border text-primary mb-3"
+                             role="status">
+                        </div>
+
+                        <p class="text-secondary mb-0">
+                            Cargando lista de mensajes...
+                        </p>
+
+                    </div>
+                }
+
+
+                <!-- ============================================= -->
+                <!-- SIN RESULTADOS -->
+                <!-- ============================================= -->
+
+                @if (!cargando && !ContactosFiltrados.Any())
+                {
+                    <div class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-25">
+
+                        <p class="fs-5 mb-0">
+                            📬 No hay mensajes para mostrar.
+                        </p>
+
+                    </div>
+                }
+
+
+                <!-- ============================================= -->
+                <!-- MENSAJES -->
+                <!-- ============================================= -->
+
+                @if (!cargando && ContactosFiltrados.Any())
+                {
+                    <div class="row row-cols-1 g-3">
+
+                        @foreach (var item in ContactosFiltrados)
+                        {
+                            <div class="col">
+
+                                <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 shadow-sm position-relative">
+
+
+                                    <!-- CABECERA DEL MENSAJE -->
+
+                                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+
+                                        <div>
+
+                                            <h6 class="mb-0 text-white fw-bold">
+                                                @item.NombreCompleto
+                                            </h6>
+
+
+                                            <span class="small text-info">
+                                                @item.Correo
+                                            </span>
+
+
+                                            @if (!string.IsNullOrWhiteSpace(item.Telefono))
+                                            {
+                                                <span class="small text-secondary ms-2">
+                                                    | 📞 @item.Telefono
+                                                </span>
+                                            }
+
+                                        </div>
+
+
+                                        <div class="d-flex align-items-center gap-2">
+
+                                            @if (item.Leido)
+                                            {
+                                                <span class="badge bg-secondary">
+                                                    Leído
+                                                </span>
+                                            }
+
+
+                                            @if (!item.Leido)
+                                            {
+                                                <span class="badge bg-warning text-dark">
+                                                    Nuevo
+                                                </span>
+                                            }
+
+
+                                            <small class="text-secondary">
+
+                                                @((item.FechaContacto ?? item.FechaCreacion)
+                                                    .ToString("dd/MM/yyyy HH:mm"))
+
+                                            </small>
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <!-- ASUNTO -->
+
+                                    <div class="fw-semibold text-light small mb-1">
+
+                                        Asunto:
+
+                                        @if (!string.IsNullOrWhiteSpace(item.Asunto))
+                                        {
+                                            <span>
+                                                @item.Asunto
+                                            </span>
+                                        }
+
+                                        @if (string.IsNullOrWhiteSpace(item.Asunto))
+                                        {
+                                            <span class="text-secondary">
+                                                Sin asunto
+                                            </span>
+                                        }
+
+                                    </div>
+
+
+                                    <!-- MENSAJE -->
+
+                                    <p class="text-secondary small mb-3">
+                                        @item.Mensaje
+                                    </p>
+
+
+                                    <!-- ACCIONES ADMIN -->
+
+                                    <div class="d-flex justify-content-end gap-2 border-top border-secondary border-opacity-25 pt-2">
+
+                                        <button class="btn btn-sm btn-outline-info py-0 px-2"
+                                                @onclick="() => ToggleEstadoLeido(item)">
+
+                                            @(item.Leido
+                                                ? "Marcar no leído"
+                                                : "Marcar leído")
+
+                                        </button>
+
+
+                                        <button class="btn btn-sm btn-outline-danger py-0 px-2"
+                                                @onclick="() => EliminarContacto(item.ContactoId)">
+
+                                            🗑️ Eliminar
+
+                                        </button>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+
+            </main>
+
+        </div>
+    }
+
+</div>
+
 
 @code {
 
+    // =========================================================
+    // DATOS
+    // =========================================================
+
+    private List<ContactoDTO> listaContactos = new();
+
+    private ContactoDTO nuevoMensaje = new();
+
+
+    // =========================================================
+    // ESTADO
+    // =========================================================
+
+    private bool esAdmin = false;
+
+    private bool cargando = true;
+
+    private bool enviando = false;
+
+
+    // =========================================================
+    // FILTROS
+    // =========================================================
+
+    private string busquedaTexto = "";
+
+
+    // =========================================================
+    // PRIMER RENDER
+    // =========================================================
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+
+        try
+        {
+            /*
+             * AuthStateService utiliza localStorage.
+             * Por eso esperamos al primer render
+             * interactivo.
+             */
+
+            await AuthState.InicializarAsync();
+
+
+            esAdmin =
+                AuthState.EsAdministrador;
+
+
+            /*
+             * Si hay usuario autenticado,
+             * aprovechamos los datos disponibles
+             * para completar el formulario.
+             */
+
+            if (!esAdmin)
+            {
+                PrepararFormularioUsuario();
+            }
+
+
+            /*
+             * El buzón completo únicamente
+             * lo necesita el administrador.
+             */
+
+            if (esAdmin)
+            {
+                await CargarContactos();
+            }
+
+
+            if (!esAdmin)
+            {
+                cargando = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error inicializando Contacto: {ex.Message}");
+
+            cargando = false;
+        }
+        finally
+        {
+            await InvokeAsync(
+                StateHasChanged);
+        }
+    }
+
+
+    // =========================================================
+    // PREPARAR FORMULARIO
+    // =========================================================
+
+    private void PrepararFormularioUsuario()
+    {
+        nuevoMensaje =
+            new ContactoDTO
+            {
+                NombreCompleto =
+                    AuthState.Nombre,
+
+                Correo =
+                    AuthState.Correo,
+
+                Leido = false,
+
+                Activo = true,
+
+                FechaContacto =
+                    DateTime.Now,
+
+                FechaCreacion =
+                    DateTime.Now
+            };
+    }
+
+
+    // =========================================================
+    // TOKEN JWT
+    // =========================================================
+
+    private async Task AplicarTokenAutorizacion()
+    {
+        try
+        {
+            var token =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "authToken");
+
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error token: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // CARGAR CONTACTOS
+    // =========================================================
+
+    private async Task CargarContactos()
+    {
+        if (!esAdmin)
+            return;
+
+
+        cargando = true;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            var res =
+                await Http.GetFromJsonAsync<List<ContactoDTO>>(
+                    "api/contacto");
+
+
+            if (res != null)
+            {
+                listaContactos = res;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error consulta API: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+
+    // =========================================================
+    // CONTACTOS FILTRADOS
+    // =========================================================
+
+    private IEnumerable<ContactoDTO> ContactosFiltrados
+    {
+        get
+        {
+            IEnumerable<ContactoDTO> res =
+                listaContactos;
+
+
+            if (!string.IsNullOrWhiteSpace(busquedaTexto))
+            {
+                res =
+                    res.Where(c =>
+
+                        (c.NombreCompleto != null &&
+                         c.NombreCompleto.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (c.Correo != null &&
+                         c.Correo.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (c.Asunto != null &&
+                         c.Asunto.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase)));
+            }
+
+
+            return res.OrderByDescending(
+                c => c.FechaContacto ??
+                     c.FechaCreacion);
+        }
+    }
+
+
+    // =========================================================
+    // ENVIAR MENSAJE
+    // =========================================================
+
+    private async Task EnviarFormularioContacto()
+    {
+        if (esAdmin)
+            return;
+
+
+        enviando = true;
+
+
+        try
+        {
+            nuevoMensaje.FechaContacto =
+                DateTime.Now;
+
+            nuevoMensaje.FechaCreacion =
+                DateTime.Now;
+
+            nuevoMensaje.Leido =
+                false;
+
+            nuevoMensaje.Activo =
+                true;
+
+
+            /*
+             * Si existe JWT se agrega.
+             * Si es público simplemente
+             * la petición continúa sin token.
+             */
+
+            await AplicarTokenAutorizacion();
+
+
+            var response =
+                await Http.PostAsJsonAsync(
+                    "api/contacto",
+                    nuevoMensaje);
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    "¡Mensaje enviado con éxito!");
+
+
+                /*
+                 * Limpiamos el formulario.
+                 */
+
+                nuevoMensaje =
+                    new ContactoDTO
+                    {
+                        NombreCompleto =
+                            AuthState.Nombre,
+
+                        Correo =
+                            AuthState.Correo,
+
+                        Leido =
+                            false,
+
+                        Activo =
+                            true
+                    };
+
+
+                return;
+            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al enviar mensaje ({response.StatusCode}).");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error: {ex.Message}");
+        }
+        finally
+        {
+            enviando = false;
+        }
+    }
+
+
+    // =========================================================
+    // MARCAR LEÍDO / NO LEÍDO
+    // =========================================================
+
+    private async Task ToggleEstadoLeido(
+        ContactoDTO item)
+    {
+        if (!esAdmin)
+            return;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            item.Leido =
+                !item.Leido;
+
+
+            item.FechaModificacion =
+                DateTime.Now;
+
+
+            var response =
+                await Http.PutAsJsonAsync(
+                    "api/contacto",
+                    item);
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarContactos();
+
+                return;
+            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"No se pudo actualizar el mensaje ({response.StatusCode}).");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al actualizar leído: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // ELIMINAR
+    // =========================================================
+
+    private async Task EliminarContacto(int id)
+    {
+        if (!esAdmin)
+            return;
+
+
+        bool confirmado =
+            await JS.InvokeAsync<bool>(
+                "confirm",
+                "¿Deseas eliminar este mensaje?");
+
+
+        if (!confirmado)
+            return;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            var response =
+                await Http.DeleteAsync(
+                    $"api/contacto/{id}");
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarContactos();
+
+                return;
+            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"No se pudo eliminar el mensaje ({response.StatusCode}).");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al eliminar: {ex.Message}");
+        }
+    }
 }

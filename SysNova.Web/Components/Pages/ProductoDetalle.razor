@@ -1,4 +1,9 @@
 ﻿@using SysNova.DTO
+@using SysNova.Web.Services
+
+@inject AuthStateService AuthState
+@inject CarritoService CarritoState
+
 
 @if (mostrarModal && producto != null)
 {
@@ -13,14 +18,18 @@
                     class="producto-detalle-close"
                     @onclick="CerrarModal"
                     aria-label="Cerrar">
+
                 <i class="bi bi-x-lg"></i>
+
             </button>
+
 
             <div class="producto-detalle-grid">
 
                 <!-- ================================================= -->
                 <!-- IZQUIERDA -->
                 <!-- ================================================= -->
+
                 <div class="producto-detalle-imagen-panel">
 
                     @if (producto.Destacado)
@@ -30,12 +39,15 @@
                         </span>
                     }
 
+
                     <div class="producto-detalle-image-box">
+
                         <img src="@(string.IsNullOrWhiteSpace(producto.ImagenPrincipal)
                                                          ? "images/laptop-hero.png"
                                                          : producto.ImagenPrincipal)"
                          alt="@producto.Nombre" />
-                </div>
+
+                    </div>
 
                 </div>
 
@@ -43,30 +55,43 @@
                 <!-- ================================================= -->
                 <!-- DERECHA -->
                 <!-- ================================================= -->
+
                 <div class="producto-detalle-info">
 
+
                     <!-- CATEGORÍA -->
+
                     <div class="producto-detalle-categoria">
                         LAPTOPS
                     </div>
 
+
                     <!-- NOMBRE -->
+
                     <h2 class="producto-detalle-titulo">
                         @producto.Nombre
                     </h2>
 
+
                     <!-- ESTRELLAS -->
+
                     <div class="producto-detalle-rating">
 
                         <div class="producto-detalle-stars">
+
                             <i class="bi bi-star-fill"></i>
                             <i class="bi bi-star-fill"></i>
                             <i class="bi bi-star-fill"></i>
                             <i class="bi bi-star-fill"></i>
                             <i class="bi bi-star-fill"></i>
+
                         </div>
 
-                        <strong>4.9</strong>
+
+                        <strong>
+                            4.9
+                        </strong>
+
 
                         <span>
                             (312 reseñas)
@@ -76,11 +101,13 @@
 
 
                     <!-- PRECIO -->
+
                     <div class="producto-detalle-precio">
 
                         <span class="producto-detalle-precio-actual">
                             US$ @producto.Precio.ToString("N0")
                         </span>
+
 
                     @if (producto.PrecioAnterior.HasValue &&
                                         producto.PrecioAnterior.Value > 0)
@@ -90,6 +117,7 @@
                             </span>
                         }
 
+
                         @if (producto.PorcentajeDescuento.HasValue &&
                                             producto.PorcentajeDescuento.Value > 0)
                         {
@@ -98,159 +126,235 @@
                             </span>
                         }
 
-                </div>
-
-
-                <!-- DESCRIPCIÓN -->
-                <p class="producto-detalle-descripcion">
-                    @producto.Descripcion
-                </p>
-
-
-                <!-- SEPARADOR -->
-                <div class="producto-detalle-separador"></div>
-
-
-                <!-- INFORMACIÓN -->
-                <div class="producto-detalle-beneficios">
-
-                    <div>
-                        <i class="bi bi-shield-check"></i>
-                        <span>Garantía oficial</span>
                     </div>
 
-                    <div>
-                        <i class="bi bi-truck"></i>
-                        <span>Envío gratis +$99</span>
+
+                    <!-- DESCRIPCIÓN -->
+
+                    <p class="producto-detalle-descripcion">
+                        @producto.Descripcion
+                    </p>
+
+
+                    <!-- SEPARADOR -->
+
+                    <div class="producto-detalle-separador">
                     </div>
 
-                </div>
 
+                    <!-- INFORMACIÓN -->
 
-                <!-- PARTE INFERIOR -->
-                <div class="producto-detalle-compra">
+                    <div class="producto-detalle-beneficios">
 
-                    <!-- CANTIDAD -->
-                    <div class="producto-detalle-cantidad">
+                        <div>
+                            <i class="bi bi-shield-check"></i>
+                            <span>Garantía oficial</span>
+                        </div>
 
-                        <span>
-                            Cantidad
-                        </span>
-
-                        <div class="producto-detalle-selector">
-
-                            <button type="button"
-                                    @onclick="DecrementarCantidad"
-                                    disabled="@(cantidad <= 1)">
-                                −
-                            </button>
-
-                            <span>
-                                @cantidad
-                            </span>
-
-                            <button type="button"
-                                    @onclick="IncrementarCantidad"
-                                    disabled="@(cantidad >= producto.Stock)">
-                                +
-                            </button>
-
+                        <div>
+                            <i class="bi bi-truck"></i>
+                            <span>Envío gratis +$99</span>
                         </div>
 
                     </div>
 
 
-                    <!-- BOTÓN CARRITO -->
-                    <button type="button"
-                            class="producto-detalle-carrito"
-                            disabled="@(producto.Stock <= 0)"
-                            @onclick="AgregarAlCarrito">
+                    <!-- ================================================= -->
+                    <!-- PARTE INFERIOR -->
+                    <!-- ================================================= -->
+                    @if (!AuthState.EsAdministrador)
+                    {
+                        <div class="producto-detalle-compra">
 
-                        <i class="bi bi-cart3"></i>
 
-                        <span>
-                            @(producto.Stock <= 0
-                                                        ? "Agotado"
-                                                        : $"Añadir al carrito · US$ {(producto.Precio * cantidad).ToString("N0")}")
+                            <!-- CANTIDAD -->
+
+                            <div class="producto-detalle-cantidad">
+
+                                <span>
+                                    Cantidad
+                                </span>
+
+
+                                <div class="producto-detalle-selector">
+
+                                    <button type="button"
+                                            @onclick="DecrementarCantidad"
+                                            disabled="@(cantidad <= 1)">
+                                        −
+                                    </button>
+
+
+                                    <span>
+                                        @cantidad
+                                    </span>
+
+
+                                    <button type="button"
+                                            @onclick="IncrementarCantidad"
+                                            disabled="@(cantidad >= producto.Stock)">
+                                        +
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+
+                            <!-- BOTÓN CARRITO -->
+
+                            <button type="button"
+                                    class="producto-detalle-carrito"
+                                    disabled="@(producto.Stock <= 0)"
+                                    @onclick="AgregarAlCarrito">
+
+                                <i class="bi bi-cart3"></i>
+
+
+                                <span>
+                                    @(producto.Stock <= 0
+                                                                ? "Agotado"
+                                                                : $"Añadir al carrito · US$ {(producto.Precio * cantidad).ToString("N0")}")
                         </span>
 
-                        </button>
+                            </button>
 
 
-                        <!-- TEXTO FINAL -->
-                        <div class="producto-detalle-seguridad">
+                            <!-- TEXTO FINAL -->
 
-                            <i class="bi bi-check-lg"></i>
+                            <div class="producto-detalle-seguridad">
+
+                                <i class="bi bi-check-lg"></i>
+
+                                <span>
+                                    Compra segura y soporte NEXO incluido
+                                </span>
+
+                            </div>
+
+                        </div>
+                                }
+
+
+                    @if (AuthState.EsAdministrador)
+                    {
+                        <div class="producto-detalle-admin-message">
+
+                            <i class="bi bi-shield-lock"></i>
 
                             <span>
-                                Compra segura y soporte NEXO incluido
+                                Vista de administración del producto.
                             </span>
 
                         </div>
-
-                    </div>
+                    }
 
                 </div>
 
             </div>
 
         </div>
+
     </div>
 }
+
 
 @code {
 
     [Parameter]
     public bool mostrarModal { get; set; }
 
+
     [Parameter]
     public EventCallback<bool> mostrarModalChanged { get; set; }
+
 
     [Parameter]
     public ProductoDTO producto { get; set; } = new();
 
+
     private int cantidad = 1;
 
-    protected override void OnParametersSet()
+
+    protected override async Task OnParametersSetAsync()
     {
-        if (mostrarModal)
-        {
-            cantidad = 1;
-        }
+        if (!mostrarModal)
+            return;
+
+
+        cantidad = 1;
+
+
+        await AuthState.InicializarAsync();
     }
+
 
     private void IncrementarCantidad()
     {
-        if (producto.Stock > 0 && cantidad < producto.Stock)
-        {
-            cantidad++;
-        }
+        if (producto.Stock <= 0)
+            return;
+
+
+        if (cantidad >= producto.Stock)
+            return;
+
+
+        cantidad++;
     }
+
 
     private void DecrementarCantidad()
     {
-        if (cantidad > 1)
-        {
-            cantidad--;
-        }
+        if (cantidad <= 1)
+            return;
+
+
+        cantidad--;
     }
+
 
     private async Task CerrarModal()
     {
         mostrarModal = false;
 
-        await mostrarModalChanged.InvokeAsync(false);
+
+        await mostrarModalChanged.InvokeAsync(
+            false);
     }
+
 
     private async Task AgregarAlCarrito()
     {
+        if (AuthState.EsAdministrador)
+            return;
+
+
         if (producto.Stock <= 0)
             return;
 
-        Console.WriteLine(
-            $"Agregado: {producto.Nombre} | Cantidad: {cantidad}"
-        );
 
+        if (cantidad <= 0)
+            cantidad = 1;
+
+
+        if (cantidad > producto.Stock)
+        {
+            cantidad =
+                producto.Stock;
+        }
+
+
+        // Agregamos exactamente la cantidad elegida.
+        CarritoState.AgregarProducto(
+            producto,
+            cantidad);
+
+
+        // Cerramos primero el modal del producto.
         await CerrarModal();
+
+
+        // Y abrimos inmediatamente el drawer del carrito.
+        CarritoState.SolicitarAbrirCarrito();
     }
 }

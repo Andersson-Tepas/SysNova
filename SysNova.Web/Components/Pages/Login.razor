@@ -4,6 +4,8 @@
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
 @using SysNova.DTO
+@using SysNova.Web.Services
+@inject AuthStateService AuthState
 
 <div class="auth-page">
     <div class="auth-card">
@@ -145,9 +147,14 @@
     private string mensajeError = string.Empty;
     private bool cargando = false;
     private bool mostrarPassword = false;
-    private string tipoPassword => mostrarPassword ? "text" : "password";
 
-    private void TogglePassword() => mostrarPassword = !mostrarPassword;
+    private string tipoPassword =>
+        mostrarPassword ? "text" : "password";
+
+    private void TogglePassword()
+    {
+        mostrarPassword = !mostrarPassword;
+    }
 
     private async Task ProcesarLogin()
     {
@@ -156,46 +163,113 @@
 
         try
         {
-            var response = await Http.PostAsJsonAsync("api/Auth/login", loginModel);
+            var response = await Http.PostAsJsonAsync(
+                "api/Auth/login",
+                loginModel);
 
             if (response.IsSuccessStatusCode)
             {
-                var resultado = await response.Content.ReadFromJsonAsync<AuthResponseDTO>();
+                var resultado =
+                    await response.Content
+                        .ReadFromJsonAsync<AuthResponseDTO>();
 
-                string nombreUsuario = loginModel.Correo.Contains("@")
-                    ? loginModel.Correo.Split('@')[0]
-                    : loginModel.Correo;
+                // ==========================================
+                // VALIDAR TOKEN
+                // ==========================================
 
-                // 1. Guardar Correo y Nombre
-                await JS.InvokeVoidAsync("localStorage.setItem", "userEmail", loginModel.Correo);
-                await JS.InvokeVoidAsync("localStorage.setItem", "userName", nombreUsuario);
-
-                // 2. Guardar Token JWT
-                if (!string.IsNullOrEmpty(resultado?.Token))
+                if (string.IsNullOrWhiteSpace(resultado?.Token))
                 {
-                    await JS.InvokeVoidAsync("localStorage.setItem", "authToken", resultado.Token);
+                    mensajeError =
+                        "El servidor no devolvió un token válido.";
+
+                    return;
                 }
 
-                // 3. Asignar Rol: Si es el correo admin@sysnova.com asignamos 'Administrador'
-                string rolUsuario = loginModel.Correo.Equals("admin@sysnova.com", StringComparison.OrdinalIgnoreCase)
-                    ? "Administrador"
-                    : "Cliente";
+                // ==========================================
+                // GUARDAR JWT
+                // ==========================================
 
-                await JS.InvokeVoidAsync("localStorage.setItem", "userRol", rolUsuario);
+                await JS.InvokeVoidAsync(
+                    "localStorage.setItem",
+                    "authToken",
+                    resultado.Token);
 
-                // Redirigir al Inicio
-                Navigation.NavigateTo("/", forceLoad: true);
+                // ==========================================
+                // GUARDAR CORREO
+                // ==========================================
+
+                await JS.InvokeVoidAsync(
+                    "localStorage.setItem",
+                    "userEmail",
+                    loginModel.Correo);
+
+                // ==========================================
+                // GUARDAR NOMBRE
+                // ==========================================
+
+                string nombreUsuario =
+                    loginModel.Correo.Contains("@")
+                        ? loginModel.Correo.Split('@')[0]
+                        : loginModel.Correo;
+
+                await JS.InvokeVoidAsync(
+                    "localStorage.setItem",
+                    "userName",
+                    nombreUsuario);
+
+                // ==========================================
+                // YA NO GUARDAMOS userRol
+                // ==========================================
+                //
+                // El rol REAL está dentro del JWT.
+                //
+                // El AuthStateService lo leerá desde:
+                //
+                // ClaimTypes.Role
+                //
+                // Por lo tanto NO hacemos:
+                //
+                // admin@sysnova.com = Administrador
+                // cualquier otro = Cliente
+                //
+                // ==========================================
+
+                await JS.InvokeVoidAsync(
+                    "localStorage.removeItem",
+                    "userRol");
+
+                // ==========================================
+                // INICIALIZAR ESTADO DE AUTENTICACIÓN
+                // ==========================================
+
+                await AuthState.InicializarAsync();
+
+                // ==========================================
+                // REDIRIGIR AL INICIO
+                // ==========================================
+
+                Navigation.NavigateTo(
+                    "/",
+                    forceLoad: true);
             }
             else
             {
-                var error = await response.Content.ReadFromJsonAsync<AuthResponseDTO>();
-                mensajeError = error?.Mensaje ?? "Error al iniciar sesión. Revisa tus credenciales.";
+                var error =
+                    await response.Content
+                        .ReadFromJsonAsync<AuthResponseDTO>();
+
+                mensajeError =
+                    error?.Mensaje
+                    ?? "Error al iniciar sesión. Revisa tus credenciales.";
             }
         }
         catch (Exception ex)
         {
-            mensajeError = "No se pudo conectar con el servidor.";
-            Console.WriteLine($"Error Login: {ex.Message}");
+            mensajeError =
+                "No se pudo conectar con el servidor.";
+
+            Console.WriteLine(
+                $"Error Login: {ex.Message}");
         }
         finally
         {

@@ -126,21 +126,23 @@ builder.Services
     })
     .AddJwtBearer(options =>
     {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
+        options.TokenValidationParameters =
+            new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
 
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
+                ValidIssuer = jwtIssuer,
+                ValidAudience = jwtAudience,
 
-            IssuerSigningKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(jwtKey)),
+                IssuerSigningKey =
+                    new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(jwtKey)),
 
-            ClockSkew = TimeSpan.Zero
-        };
+                ClockSkew = TimeSpan.Zero
+            };
     });
 
 // ==========================================
@@ -163,37 +165,43 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new OpenApiInfo
-    {
-        Title = "SysNova API",
-        Version = "v1"
-    });
-
-    // Configuración JWT para Swagger
-    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Escribe: Bearer {tu token JWT}"
-    });
-
-    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    options.SwaggerDoc(
+        "v1",
+        new OpenApiInfo
         {
-            new OpenApiSecurityScheme
+            Title = "SysNova API",
+            Version = "v1"
+        });
+
+    options.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Escribe: Bearer {tu token JWT}"
+        });
+
+    options.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
             {
-                Reference = new OpenApiReference
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+                    Reference =
+                        new OpenApiReference
+                        {
+                            Type =
+                                ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        }
+                },
+                Array.Empty<string>()
+            }
+        });
 });
 
 var app = builder.Build();
@@ -211,11 +219,29 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // ==========================================
+// ARCHIVOS ESTÁTICOS
+// ==========================================
+//
+// Permite acceder desde el navegador a:
+// wwwroot/images/marcas/
+// wwwroot/images/categorias/
+// wwwroot/images/banners/
+// wwwroot/images/blogs/
+// wwwroot/images/productos/
+//
+
+app.UseStaticFiles();
+
+// ==========================================
 // AUTHENTICATION & AUTHORIZATION
 // ==========================================
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+// ==========================================
+// CONTROLLERS
+// ==========================================
 
 app.MapControllers();
 

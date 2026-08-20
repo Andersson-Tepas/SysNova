@@ -1,5 +1,1395 @@
-﻿<h3>Blog</h3>
+﻿@page "/blog"
+
+@using Microsoft.AspNetCore.Components.Forms
+
+@using SysNova.DTO
+@using SysNova.Web.Services
+
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject AuthStateService AuthState
+
+<PageTitle>Blog & Noticias - SysNova Tech</PageTitle>
+
+<div class="container-fluid min-vh-100 p-4 main-container">
+
+    <!-- ========================================================= -->
+    <!-- ENCABEZADO -->
+    <!-- ========================================================= -->
+
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom border-secondary border-opacity-25">
+
+        <div>
+
+            <h1 class="h2 fw-bold text-white mb-1">
+                Blog & Artículos
+            </h1>
+
+            <p class="text-secondary small mb-0">
+                Gestión y publicaciones de artículos de tecnología y novedades
+            </p>
+
+        </div>
+
+
+        <!-- SOLO ADMINISTRADOR -->
+        @if (esAdmin)
+        {
+            <button class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3 py-2"
+                    @onclick="AbrirModalCrear">
+
+                <svg width="18"
+                     height="18"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <path d="M12 5v14M5 12h14" />
+
+                </svg>
+
+                Nuevo Artículo
+
+            </button>
+        }
+
+    </header>
+
+
+    <!-- ========================================================= -->
+    <!-- PANEL ADMIN -->
+    <!-- ========================================================= -->
+    @if (esAdmin)
+    {
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 mb-4 text-white">
+
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3">
+
+                <h6 class="mb-0 text-white-50">
+                    Panel de Control de Publicaciones
+                </h6>
+
+
+                <div class="small">
+
+                    Total artículos:
+
+                    <strong class="text-info">
+                        @listaBlogs.Count
+                    </strong>
+
+
+                    <span class="mx-2 text-secondary">
+                        |
+                    </span>
+
+
+                    Activos:
+
+                    <strong class="text-success">
+                        @listaBlogs.Count(b => b.Activo)
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- ========================================================= -->
+    <!-- LAYOUT PRINCIPAL -->
+    <!-- ========================================================= -->
+
+    <div class="row g-4">
+
+
+        <!-- ===================================================== -->
+        <!-- SIDEBAR -->
+        <!-- ===================================================== -->
+
+        <aside class="col-12 col-lg-3">
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Búsqueda
+                </h6>
+
+
+                <input type="text"
+                       class="form-control input-dark"
+                       placeholder="Título, autor o contenido..."
+                       @bind="busquedaTexto"
+                       @bind:event="oninput" />
+
+            </div>
+
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Filtros Rápidos
+                </h6>
+
+
+                <div class="d-flex flex-column gap-2">
+
+                    <div class="form-check">
+
+                        <input class="form-check-input input-dark"
+                               type="checkbox"
+                               id="chkFavoritosBlog"
+                               @bind="soloFavoritos" />
+
+
+                        <label class="form-check-label small"
+                               for="chkFavoritosBlog">
+
+                            Guardados
+                            (❤️ @idsFavoritos.Count)
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button class="btn btn-outline-secondary w-100 btn-sm text-white"
+                    @onclick="LimpiarFiltros">
+
+                Limpiar Filtros
+
+            </button>
+
+        </aside>
+
+
+        <!-- ===================================================== -->
+        <!-- MAIN -->
+        <!-- ===================================================== -->
+
+        <main class="col-12 col-lg-9">
+
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
+
+                <span class="text-secondary small">
+
+                    Mostrando
+
+                    <strong class="text-white">
+                        @BlogsFiltrados.Count()
+                    </strong>
+
+                    artículos
+
+                </span>
+
+
+                <div class="d-flex align-items-center gap-2">
+
+                    <label class="small text-secondary mb-0 text-nowrap">
+                        Ordenar por:
+                    </label>
+
+
+                    <select class="form-select form-select-sm input-dark w-auto"
+                            @bind="criterioOrden">
+
+                        <option value="recientes">
+                            Más recientes
+                        </option>
+
+                        <option value="visitas">
+                            Más vistos
+                        </option>
+
+                        <option value="titulo">
+                            Título A-Z
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- CARGANDO -->
+            <!-- ================================================= -->
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+
+                    <div class="spinner-border text-primary mb-3"
+                         role="status">
+                    </div>
+
+                    <p class="text-secondary mb-0">
+                        Cargando artículos del blog...
+                    </p>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- SIN RESULTADOS -->
+            <!-- ================================================= -->
+            @if (!cargando && !BlogsFiltrados.Any())
+            {
+                <div class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-25">
+
+                    <p class="fs-5 mb-3">
+                        🔍 No se encontraron artículos con los criterios seleccionados.
+                    </p>
+
+
+                    <div>
+
+                        <button class="btn btn-outline-primary btn-sm"
+                                @onclick="LimpiarFiltros">
+
+                            Restablecer filtros
+
+                        </button>
+
+                    </div>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- RESULTADOS -->
+            <!-- ================================================= -->
+            @if (!cargando && BlogsFiltrados.Any())
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+
+                    @foreach (var item in BlogsFiltrados)
+                    {
+                        var esFav = idsFavoritos.Contains(item.BlogId);
+
+
+                        <div class="col">
+
+                            <div class="card h-100 border-secondary border-opacity-25 shadow-sm overflow-hidden text-white position-relative blog-card"
+                                 style="opacity: @(!item.Activo ? "0.6" : "1");">
+
+
+                                <!-- FAVORITO -->
+
+                                <button type="button"
+                                        class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle p-1 d-flex align-items-center justify-content-center z-3 border border-secondary border-opacity-50"
+                                        style="width:34px;height:34px;"
+                                        @onclick="() => ToggleFavorito(item.BlogId)"
+                                        title="@(esFav ? "Quitar de guardados" : "Guardar artículo")">
+
+                                    <svg width="18"
+                                         height="18"
+                                         viewBox="0 0 24 24"
+                                         fill="@(esFav ? "#dc3545" : "none")"
+                                         stroke="@(esFav ? "#dc3545" : "currentColor")"
+                                         stroke-width="2">
+
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+
+                                    </svg>
+
+                                </button>
+
+
+                                <!-- ESTADO -->
+                                @if (!item.Activo)
+                                {
+                                    <div class="position-absolute top-0 start-0 m-2 d-flex flex-column gap-1 z-2">
+
+                                        <span class="badge bg-secondary">
+                                            INACTIVO
+                                        </span>
+
+                                    </div>
+                                }
+
+
+                                <!-- IMAGEN -->
+
+                                <div class="position-relative bg-dark bg-opacity-50 text-center p-3 border-bottom border-secondary border-opacity-25 product-img-container"
+                                     style="height:180px;">
+
+                                    <img src="@(string.IsNullOrEmpty(item.Imagen)
+                                                                                                                                  ? "images/blog-default.png"
+                                                                                                                                  : item.Imagen)"
+                                 alt="@item.Titulo"
+                                 class="img-fluid h-100 object-fit-cover w-100 rounded" />
+
+
+                                    <!-- ACCIONES ADMIN -->
+                            @if (esAdmin)
+                                    {
+                                        <div class="position-absolute bottom-0 start-0 end-0 p-2 bg-dark bg-opacity-75 d-flex justify-content-center gap-2">
+
+                                            <button class="btn btn-sm btn-outline-warning py-0 px-2"
+                                                    @onclick="() => AbrirModalEditar(item)">
+
+                                                ✏️ Editar
+
+                                            </button>
+
+
+                                            <button class="btn btn-sm btn-outline-danger py-0 px-2"
+                                                    @onclick="() => EliminarBlog(item.BlogId)">
+
+                                                🗑️ Eliminar
+
+                                            </button>
+
+                                        </div>
+                                    }
+
+                            </div>
+
+
+                            <!-- INFORMACIÓN -->
+
+                            <div class="card-body d-flex flex-column justify-content-between p-3">
+
+                                <div>
+
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+
+
+                                        <span class="badge bg-dark border border-secondary border-opacity-25 text-info fw-normal">
+
+                                            @(string.IsNullOrWhiteSpace(item.Autor)
+                                                                                    ? "SysNova"
+                                                                                    : item.Autor)
+
+                                        </span>
+
+
+                                        <small class="text-secondary">
+
+                                            👁️ @item.Visitas
+                                            |
+                                            @item.FechaPublicacion.ToString("dd MMM yyyy")
+
+                                        </small>
+
+                                    </div>
+
+
+                                    <h5 class="card-title h6 text-white text-truncate mb-2"
+                                        title="@item.Titulo">
+
+                                        @item.Titulo
+
+                                    </h5>
+
+
+                                    <p class="card-text text-secondary small line-clamp-2 mb-3">
+
+                                        @(string.IsNullOrEmpty(item.Resumen)
+                                                                            ? item.Contenido
+                                                                            : item.Resumen)
+
+                                </p>
+
+                                    </div>
+
+
+                                    <button class="btn btn-outline-primary w-100 btn-sm"
+                                            @onclick="() => LeerArticulo(item)">
+
+                                        Leer Artículo
+
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                                }
+
+                </div>
+            }
+
+        </main>
+
+    </div>
+
+</div>
+
+
+<!-- ============================================================= -->
+<!-- MODAL ADMIN -->
+<!-- ============================================================= -->
+@if (mostrarModal && esAdmin)
+{
+    <div class="custom-modal-backdrop">
+
+        <div class="custom-modal-dialog">
+
+            <div class="modal-content border-secondary border-opacity-25 shadow-lg text-white modal-dark-content">
+
+
+                <!-- HEADER -->
+
+                <div class="modal-header border-secondary border-opacity-25 pb-3">
+
+                    <h5 class="modal-title text-white">
+
+                        @(esEdicion
+                                            ? "Editar Artículo"
+                                            : "Nuevo Artículo")
+
+                </h5>
+
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            @onclick="CerrarModal">
+                    </button>
+
+                </div>
+
+
+                <!-- FORMULARIO -->
+
+                <EditForm Model="@formModel"
+                          OnValidSubmit="GuardarBlog">
+
+                    <DataAnnotationsValidator />
+
+
+                    <div class="modal-body py-3">
+
+
+                        <!-- TÍTULO -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Título del Artículo
+                            </label>
+
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="formModel.Titulo"
+                                       placeholder="Ej: Tendencias de tecnología 2026" />
+
+
+                            <ValidationMessage For="@(() => formModel.Titulo)"
+                                               class="text-danger small" />
+
+                        </div>
+
+
+                        <!-- AUTOR / IMAGEN -->
+
+                        <div class="row g-3 mb-3">
+
+
+                            <div class="col-6">
+
+                                <label class="form-label small text-secondary">
+                                    Autor
+                                </label>
+
+
+                                <InputText class="form-control input-dark"
+                                           @bind-Value="formModel.Autor"
+                                           placeholder="Ej: Equipo SysNova" />
+
+                            </div>
+
+
+                            <div class="col-6">
+
+                                <label class="form-label small text-secondary">
+                                    Imagen del Artículo
+                                </label>
+
+                                <InputFile OnChange="SubirImagenBlog"
+                                           accept=".png,.jpg,.jpeg,.webp"
+                                           class="form-control input-dark"
+                                           disabled="@subiendoImagen" />
+
+                                <small class="text-secondary d-block mt-1">
+                                    PNG, JPG o WEBP · máximo 8 MB
+                                </small>
+
+                            @if (subiendoImagen)
+                                {
+                                    <div class="d-flex align-items-center gap-2 text-info small mt-2">
+                                        <span class="spinner-border spinner-border-sm"></span>
+                                        Subiendo imagen...
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrWhiteSpace(formModel.Imagen))
+                                {
+                                    <div class="border border-secondary border-opacity-25 rounded p-2 bg-dark bg-opacity-50 text-center mt-2">
+
+                                        <img src="@formModel.Imagen"
+                                             alt="Vista previa del artículo"
+                                             style="width:100%;max-height:140px;object-fit:cover;border-radius:8px;" />
+
+                                    </div>
+                                }
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- RESUMEN -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label small text-secondary">
+                            Resumen
+                        </label>
+
+
+                        <InputText class="form-control input-dark"
+                                   @bind-Value="formModel.Resumen"
+                                   placeholder="Breve introducción del artículo..." />
+
+                    </div>
+
+
+                    <!-- CONTENIDO -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label small text-secondary">
+                            Contenido Completo
+                        </label>
+
+
+                        <InputTextArea class="form-control input-dark"
+                                       rows="5"
+                                       @bind-Value="formModel.Contenido"
+                                       placeholder="Escribe el contenido..." />
+
+                    </div>
+
+
+                    <!-- ESTADO -->
+
+                    <div class="d-flex flex-wrap gap-4 pt-2">
+
+                        <div class="form-check form-switch ms-auto">
+
+                            <InputCheckbox class="form-check-input"
+                                           type="checkbox"
+                                           role="switch"
+                                           @bind-Value="formModel.Activo"
+                                           id="chkActivoBlog" />
+
+
+                            <label class="form-check-label small"
+                                   for="chkActivoBlog">
+
+                                Activo / Publicado
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FOOTER -->
+
+                <div class="modal-footer border-secondary border-opacity-25 pt-2">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            @onclick="CerrarModal">
+
+                        Cancelar
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn btn-primary btn-sm px-3"
+                            disabled="@guardando">
+
+                        @(guardando
+                                                ? "Guardando..."
+                                                : "Guardar")
+
+                    </button>
+
+                    </div>
+
+                </EditForm>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
 
 @code {
 
+    // =========================================================
+    // DATOS
+    // =========================================================
+
+    private List<BlogDTO> listaBlogs = new();
+
+    private BlogDTO formModel = new();
+
+    private HashSet<int> idsFavoritos = new();
+
+
+    // =========================================================
+    // ESTADO
+    // =========================================================
+
+    private bool esAdmin = false;
+
+    private bool cargando = true;
+
+    private bool guardando = false;
+
+    private bool mostrarModal = false;
+
+    private bool esEdicion = false;
+
+    private bool subiendoImagen = false;
+
+
+    // =========================================================
+    // FILTROS
+    // =========================================================
+
+    private string busquedaTexto = "";
+
+    private bool soloFavoritos = false;
+
+    private string criterioOrden = "recientes";
+
+
+    // =========================================================
+    // PRIMER RENDER
+    // =========================================================
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+
+        try
+        {
+            /*
+             * AuthStateService lee localStorage,
+             * por eso lo inicializamos después
+             * del primer render interactivo.
+             */
+
+            await AuthState.InicializarAsync();
+
+
+            esAdmin =
+                AuthState.EsAdministrador;
+
+
+            await CargarFavoritos();
+
+
+            await CargarBlogs();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error inicializando Blog: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+
+            await InvokeAsync(
+                StateHasChanged);
+        }
+    }
+
+
+    // =========================================================
+    // TOKEN JWT
+    // =========================================================
+
+    private async Task AplicarTokenAutorizacion()
+    {
+        try
+        {
+            var token =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "authToken");
+
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error obteniendo token: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // FAVORITOS
+    // =========================================================
+
+    private async Task CargarFavoritos()
+    {
+        try
+        {
+            var favsJson =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "sysnova_blog_favoritos");
+
+
+            if (!string.IsNullOrWhiteSpace(favsJson))
+            {
+                var lista =
+                    System.Text.Json.JsonSerializer
+                        .Deserialize<List<int>>(
+                            favsJson);
+
+
+                if (lista != null)
+                {
+                    idsFavoritos =
+                        new HashSet<int>(
+                            lista);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al cargar favoritos: {ex.Message}");
+        }
+    }
+
+
+    private async Task ToggleFavorito(int id)
+    {
+        if (idsFavoritos.Contains(id))
+        {
+            idsFavoritos.Remove(id);
+        }
+        else
+        {
+            idsFavoritos.Add(id);
+        }
+
+
+        try
+        {
+            var json =
+                System.Text.Json.JsonSerializer
+                    .Serialize(
+                        idsFavoritos);
+
+
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "sysnova_blog_favoritos",
+                json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al guardar favorito: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // CARGAR BLOGS
+    // =========================================================
+
+    private async Task CargarBlogs()
+    {
+        cargando = true;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            var res =
+                await Http.GetFromJsonAsync<List<BlogDTO>>(
+                    "api/blog");
+
+
+            if (res != null)
+            {
+                listaBlogs = res;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al consultar API: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+
+    // =========================================================
+    // BLOGS FILTRADOS
+    // =========================================================
+
+    private IEnumerable<BlogDTO> BlogsFiltrados
+    {
+        get
+        {
+            IEnumerable<BlogDTO> res =
+                listaBlogs;
+
+
+            /*
+             * ADMIN:
+             * ve artículos activos e inactivos.
+             *
+             * CLIENTE / PÚBLICO:
+             * solamente artículos activos.
+             */
+
+            if (!esAdmin)
+            {
+                res =
+                    res.Where(
+                        b => b.Activo);
+            }
+
+
+            // BÚSQUEDA
+
+            if (!string.IsNullOrWhiteSpace(busquedaTexto))
+            {
+                res =
+                    res.Where(b =>
+
+                        (b.Titulo != null &&
+                         b.Titulo.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (b.Autor != null &&
+                         b.Autor.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (b.Resumen != null &&
+                         b.Resumen.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (b.Contenido != null &&
+                         b.Contenido.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase)));
+            }
+
+
+            // FAVORITOS
+
+            if (soloFavoritos)
+            {
+                res =
+                    res.Where(
+                        b => idsFavoritos.Contains(
+                            b.BlogId));
+            }
+
+
+            // ORDENAMIENTO
+
+            if (criterioOrden == "titulo")
+            {
+                return res.OrderBy(
+                    b => b.Titulo);
+            }
+
+
+            if (criterioOrden == "visitas")
+            {
+                return res.OrderByDescending(
+                    b => b.Visitas);
+            }
+
+
+            return res.OrderByDescending(
+                b => b.FechaPublicacion);
+        }
+    }
+
+
+    // =========================================================
+    // LIMPIAR FILTROS
+    // =========================================================
+
+    private void LimpiarFiltros()
+    {
+        busquedaTexto = "";
+
+        soloFavoritos = false;
+
+        criterioOrden = "recientes";
+    }
+
+
+    // =========================================================
+    // SCROLL MODAL
+    // =========================================================
+
+    private async Task BloquearScrollFondo(
+        bool bloquear)
+    {
+        try
+        {
+            var style =
+                bloquear
+                    ? "hidden"
+                    : "auto";
+
+
+            await JS.InvokeVoidAsync(
+                "eval",
+                $"document.body.style.overflow = '{style}'");
+        }
+        catch
+        {
+        }
+    }
+
+
+    // =========================================================
+    // CREAR
+    // =========================================================
+
+    private async Task AbrirModalCrear()
+    {
+        if (!esAdmin)
+            return;
+
+
+        formModel =
+            new BlogDTO
+            {
+                Activo = true,
+
+                FechaPublicacion =
+                    DateTime.Now,
+
+                FechaCreacion =
+                    DateTime.Now,
+
+                Visitas = 0
+            };
+
+
+        esEdicion = false;
+
+        mostrarModal = true;
+
+
+        await BloquearScrollFondo(
+            true);
+    }
+
+
+    // =========================================================
+    // EDITAR
+    // =========================================================
+
+    private async Task AbrirModalEditar(
+        BlogDTO item)
+    {
+        if (!esAdmin)
+            return;
+
+
+        formModel =
+            new BlogDTO
+            {
+                BlogId =
+                    item.BlogId,
+
+                Titulo =
+                    item.Titulo,
+
+                Resumen =
+                    item.Resumen,
+
+                Contenido =
+                    item.Contenido,
+
+                Autor =
+                    item.Autor,
+
+                Imagen =
+                    item.Imagen,
+
+                Activo =
+                    item.Activo,
+
+                Visitas =
+                    item.Visitas,
+
+                FechaPublicacion =
+                    item.FechaPublicacion,
+
+                FechaCreacion =
+                    item.FechaCreacion,
+
+                FechaModificacion =
+                    DateTime.Now
+            };
+
+
+        esEdicion = true;
+
+        mostrarModal = true;
+
+
+        await BloquearScrollFondo(
+            true);
+    }
+
+
+    // =========================================================
+    // CERRAR MODAL
+    // =========================================================
+
+    private async Task CerrarModal()
+    {
+        mostrarModal = false;
+
+
+        await BloquearScrollFondo(
+            false);
+    }
+
+
+    // =========================================================
+    // SUBIR IMAGEN
+    // =========================================================
+
+    private async Task SubirImagenBlog(
+        InputFileChangeEventArgs e)
+    {
+        if (!esAdmin)
+            return;
+
+        var archivo = e.File;
+
+        if (archivo == null)
+            return;
+
+        const long maxFileSize =
+            8 * 1024 * 1024;
+
+        var extensionesPermitidas =
+            new[]
+            {
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".webp"
+            };
+
+        var extension =
+            Path.GetExtension(archivo.Name)
+                .ToLowerInvariant();
+
+        if (!extensionesPermitidas.Contains(extension))
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "Formato no permitido. Usa PNG, JPG, JPEG o WEBP.");
+
+            return;
+        }
+
+        if (archivo.Size > maxFileSize)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "La imagen no puede superar los 8 MB.");
+
+            return;
+        }
+
+        subiendoImagen = true;
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+            using var contenido =
+                new MultipartFormDataContent();
+
+            await using var stream =
+                archivo.OpenReadStream(maxFileSize);
+
+            using var archivoContent =
+                new StreamContent(stream);
+
+            archivoContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(
+                    string.IsNullOrWhiteSpace(archivo.ContentType)
+                        ? "application/octet-stream"
+                        : archivo.ContentType);
+
+            contenido.Add(
+                archivoContent,
+                "archivo",
+                archivo.Name);
+
+            var response =
+                await Http.PostAsync(
+                    "api/blog/upload-imagen",
+                    contenido);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detalle =
+                    await response.Content.ReadAsStringAsync();
+
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    $"No se pudo subir la imagen. {detalle}");
+
+                return;
+            }
+
+            var resultado =
+                await response.Content
+                    .ReadFromJsonAsync<ImagenUploadResponse>();
+
+            if (resultado == null ||
+                string.IsNullOrWhiteSpace(resultado.Url))
+            {
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    "La API no devolvió la URL de la imagen.");
+
+                return;
+            }
+
+            formModel.Imagen =
+                resultado.Url;
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al subir la imagen: {ex.Message}");
+        }
+        finally
+        {
+            subiendoImagen = false;
+
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+
+    private sealed class ImagenUploadResponse
+    {
+        public string Url { get; set; } =
+            string.Empty;
+
+        public string NombreArchivo { get; set; } =
+            string.Empty;
+    }
+
+
+    // =========================================================
+    // GUARDAR
+    // =========================================================
+
+    private async Task GuardarBlog()
+    {
+        if (!esAdmin)
+            return;
+
+
+        guardando = true;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            HttpResponseMessage response;
+
+
+            if (esEdicion)
+            {
+                formModel.FechaModificacion =
+                    DateTime.Now;
+
+
+                response =
+                    await Http.PutAsJsonAsync(
+                        "api/blog",
+                        formModel);
+            }
+            else
+            {
+                formModel.FechaCreacion =
+                    DateTime.Now;
+
+
+                if (formModel.FechaPublicacion == default)
+                {
+                    formModel.FechaPublicacion =
+                        DateTime.Now;
+                }
+
+
+                response =
+                    await Http.PostAsJsonAsync(
+                        "api/blog",
+                        formModel);
+            }
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CerrarModal();
+
+                await CargarBlogs();
+
+                return;
+            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al guardar ({response.StatusCode}).");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error de conexión: {ex.Message}");
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+
+    // =========================================================
+    // ELIMINAR
+    // =========================================================
+
+    private async Task EliminarBlog(int id)
+    {
+        if (!esAdmin)
+            return;
+
+
+        bool confirmado =
+            await JS.InvokeAsync<bool>(
+                "confirm",
+                "¿Estás seguro de eliminar este artículo?");
+
+
+        if (!confirmado)
+            return;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            var response =
+                await Http.DeleteAsync(
+                    $"api/blog/{id}");
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarBlogs();
+
+                return;
+            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"No se pudo eliminar el artículo. Código: {response.StatusCode}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al eliminar: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // LEER ARTÍCULO
+    // =========================================================
+
+    private void LeerArticulo(
+        BlogDTO item)
+    {
+        Console.WriteLine(
+            $"Leyendo: {item.Titulo}");
+    }
 }

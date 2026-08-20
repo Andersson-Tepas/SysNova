@@ -10,17 +10,34 @@ namespace SysNova.API.Controllers
     public class ProductoController : ControllerBase
     {
         private readonly IProductoService _service;
+        private readonly IWebHostEnvironment _environment;
 
-        public ProductoController(IProductoService service)
+        private const long MaxImagenSize =
+            10 * 1024 * 1024;
+
+        private static readonly string[] ExtensionesPermitidas =
+        {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webp"
+        };
+
+        public ProductoController(
+            IProductoService service,
+            IWebHostEnvironment environment)
         {
             _service = service;
+            _environment = environment;
         }
 
         [HttpGet]
         [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<ProductoDTO>>> GetAll()
         {
-            var productos = await _service.GetAllAsync();
+            var productos =
+                await _service.GetAllAsync();
+
             return Ok(productos);
         }
 
@@ -28,7 +45,8 @@ namespace SysNova.API.Controllers
         [AllowAnonymous]
         public async Task<ActionResult<ProductoDTO>> GetById(int id)
         {
-            var producto = await _service.GetByIdAsync(id);
+            var producto =
+                await _service.GetByIdAsync(id);
 
             if (producto == null)
                 return NotFound();
@@ -36,19 +54,118 @@ namespace SysNova.API.Controllers
             return Ok(producto);
         }
 
+        [HttpPost("upload-imagen")]
+        [Authorize(Roles = "Administrador")]
+        [RequestSizeLimit(MaxImagenSize)]
+        public async Task<IActionResult> UploadImagen(
+            IFormFile archivo)
+        {
+            if (archivo == null ||
+                archivo.Length == 0)
+            {
+                return BadRequest(
+                    "Debes seleccionar una imagen.");
+            }
+
+            if (archivo.Length > MaxImagenSize)
+            {
+                return BadRequest(
+                    "La imagen no puede superar los 10 MB.");
+            }
+
+            var extension =
+                Path.GetExtension(archivo.FileName)
+                    .ToLowerInvariant();
+
+            if (!ExtensionesPermitidas.Contains(extension))
+            {
+                return BadRequest(
+                    "Formato no permitido. Usa PNG, JPG, JPEG o WEBP.");
+            }
+
+            var contentTypesPermitidos =
+                new[]
+                {
+                    "image/png",
+                    "image/jpeg",
+                    "image/webp"
+                };
+
+            if (string.IsNullOrWhiteSpace(archivo.ContentType) ||
+                !contentTypesPermitidos.Contains(
+                    archivo.ContentType,
+                    StringComparer.OrdinalIgnoreCase))
+            {
+                return BadRequest(
+                    "El archivo seleccionado no es una imagen válida.");
+            }
+
+            var webRoot =
+                _environment.WebRootPath;
+
+            if (string.IsNullOrWhiteSpace(webRoot))
+            {
+                webRoot =
+                    Path.Combine(
+                        _environment.ContentRootPath,
+                        "wwwroot");
+            }
+
+            var carpeta =
+                Path.Combine(
+                    webRoot,
+                    "images",
+                    "productos");
+
+            Directory.CreateDirectory(carpeta);
+
+            var nombreArchivo =
+                $"{Guid.NewGuid():N}{extension}";
+
+            var rutaFisica =
+                Path.Combine(
+                    carpeta,
+                    nombreArchivo);
+
+            await using (
+                var stream =
+                    new FileStream(
+                        rutaFisica,
+                        FileMode.Create))
+            {
+                await archivo.CopyToAsync(stream);
+            }
+
+            var url =
+                $"{Request.Scheme}://{Request.Host}/images/productos/{nombreArchivo}";
+
+            return Ok(
+                new
+                {
+                    Url = url,
+                    NombreArchivo = nombreArchivo
+                });
+        }
+
         [HttpPost]
         [Authorize(Roles = "Administrador")]
-        public async Task<ActionResult<ProductoDTO>> Create(ProductoDTO productoDto)
+        public async Task<ActionResult<ProductoDTO>> Create(
+            ProductoDTO productoDto)
         {
-            var nuevoProducto = await _service.AddAsync(productoDto);
+            var nuevoProducto =
+                await _service.AddAsync(productoDto);
+
             return Ok(nuevoProducto);
         }
 
         [HttpPut]
         [Authorize(Roles = "Administrador")]
-        public async Task<IActionResult> Update(ProductoDTO productoDto)
+        public async Task<IActionResult> Update(
+            ProductoDTO productoDto)
         {
-            var existente = await _service.GetByIdAsync(productoDto.ProductoId);
+            var existente =
+                await _service.GetByIdAsync(
+                    productoDto.ProductoId);
 
             if (existente == null)
                 return NotFound();
@@ -62,7 +179,8 @@ namespace SysNova.API.Controllers
         [Authorize(Roles = "Administrador")]
         public async Task<IActionResult> Delete(int id)
         {
-            var producto = await _service.GetByIdAsync(id);
+            var producto =
+                await _service.GetByIdAsync(id);
 
             if (producto == null)
                 return NotFound();

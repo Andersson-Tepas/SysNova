@@ -1,296 +1,1051 @@
 ﻿@page "/categorias"
+
+@using Microsoft.AspNetCore.Components.Forms
+
 @using SysNova.DTO
 @using System.Net.Http.Json
 @using System.Text.Json
+@using System.Net.Http.Headers
+@using SysNova.Web.Services
+
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject AuthStateService AuthState
 
-<PageTitle>Categorías - NEXO Tech</PageTitle>
+<PageTitle>Categorías - SysNova Tech</PageTitle>
 
-<div class="container-fluid py-4 px-md-5" style="background-color: #0f172a; min-height: 90vh; color: #f8fafc;">
+<div class="container-fluid min-vh-100 p-4 main-container">
 
-    <!-- ENCABEZADO DE PÁGINA -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+    <!-- ========================================================= -->
+    <!-- ENCABEZADO -->
+    <!-- ========================================================= -->
+
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom border-secondary border-opacity-25">
+
         <div>
-            <h2 class="fw-bold text-white mb-1">
-                <i class="bi bi-grid-fill text-warning me-2"></i>Categorías
-            </h2>
+            <h1 class="h2 fw-bold text-white mb-1">
+                Categorías
+            </h1>
+
             <p class="text-secondary small mb-0">
-                @(esAdmin ? "Panel de administración y control de categorías" : "Explora los componentes y tecnología por categoría")
+                Gestión del catálogo, clasificación de productos y organización de tienda
             </p>
         </div>
 
-        @if (esAdmin)
-        {
-            <div class="mt-3 mt-md-0">
-                <button class="btn btn-warning fw-bold px-4 rounded-3 shadow-sm" @onclick="AbrirModalCrear">
-                    <i class="bi bi-plus-lg me-1"></i> Nueva Categoría
-                </button>
-            </div>
-        }
-    </div>
+        <div class="d-flex align-items-center gap-3">
 
-    <!-- MODO CARGANDO -->
-    @if (cargando)
+            <!-- SOLO ADMINISTRADOR -->
+            @if (AuthState.EsAdministrador)
+            {
+                <button class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3 py-2"
+                        @onclick="AbrirModalCrear">
+
+                    <svg width="18"
+                         height="18"
+                         viewBox="0 0 24 24"
+                         fill="none"
+                         stroke="currentColor"
+                         stroke-width="2">
+
+                        <path d="M12 5v14M5 12h14" />
+
+                    </svg>
+
+                    Nueva Categoría
+                </button>
+            }
+
+        </div>
+
+    </header>
+
+
+    <!-- ========================================================= -->
+    <!-- PANEL ADMINISTRADOR -->
+    <!-- ========================================================= -->
+    @if (AuthState.EsAdministrador)
     {
-        <div class="text-center py-5">
-            <div class="spinner-border text-warning" role="status">
-                <span class="visually-hidden">Cargando...</span>
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 mb-4 text-white">
+
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3">
+
+                <h6 class="mb-0 text-white-50">
+                    Panel de Control de Categorías
+                </h6>
+
+                <div class="small">
+
+                    Total registrados:
+                    <strong class="text-info">
+                        @listaCategorias.Count
+                    </strong>
+
+                    <span class="mx-2 text-secondary">
+                        |
+                    </span>
+
+                    Activas:
+                    <strong class="text-success">
+                        @listaCategorias.Count(c => c.Activo)
+                    </strong>
+
+                </div>
+
             </div>
-            <p class="text-secondary mt-2">Cargando categorías...</p>
+
         </div>
     }
-    else
-    {
-        <!-- VISTA ADMINISTRADOR (TABLA DE CONTROL) -->
-        @if (esAdmin)
-        {
-            <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4" style="background-color: #1e293b;">
-                <div class="card-body p-0">
+
+
+    <!-- ========================================================= -->
+    <!-- LAYOUT PRINCIPAL -->
+    <!-- ========================================================= -->
+
+    <div class="row g-4">
+
+        <!-- ===================================================== -->
+        <!-- SIDEBAR -->
+        <!-- ===================================================== -->
+
+        <aside class="col-12 col-lg-3">
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Búsqueda
+                </h6>
+
+                <input type="text"
+                       class="form-control input-dark"
+                       placeholder="Buscar por nombre o descripción..."
+                       @bind="busquedaTexto"
+                       @bind:event="oninput" />
+
+            </div>
+
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Filtros Rápidos
+                </h6>
+
+                <div class="d-flex flex-column gap-2">
+
+                    <div class="form-check">
+
+                        <input class="form-check-input input-dark"
+                               type="checkbox"
+                               id="chkFavoritosCat"
+                               @bind="soloFavoritos" />
+
+                        <label class="form-check-label small"
+                               for="chkFavoritosCat">
+
+                            Guardadas ❤️ (@idsFavoritos.Count)
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button class="btn btn-outline-secondary w-100 btn-sm text-white"
+                    @onclick="LimpiarFiltros">
+
+                Limpiar Filtros
+
+            </button>
+
+        </aside>
+
+
+        <!-- ===================================================== -->
+        <!-- CONTENIDO -->
+        <!-- ===================================================== -->
+
+        <main class="col-12 col-lg-9">
+
+            <!-- CONTADOR -->
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
+
+                <span class="text-secondary small">
+
+                    Mostrando
+
+                    <strong class="text-white">
+                        @CategoriasFiltradas.Count()
+                    </strong>
+
+                    categorías
+
+                </span>
+
+
+                <div class="d-flex align-items-center gap-2">
+
+                    <label class="small text-secondary mb-0 text-nowrap">
+                        Ordenar por:
+                    </label>
+
+                    <select class="form-select form-select-sm input-dark w-auto"
+                            @bind="criterioOrden">
+
+                        <option value="nombre">
+                            Nombre A-Z
+                        </option>
+
+                        <option value="recientes">
+                            Más recientes
+                        </option>
+
+                        <option value="id">
+                            ID
+                        </option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- CARGANDO -->
+            <!-- ================================================= -->
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+
+                    <div class="spinner-border text-primary mb-3"
+                         role="status">
+                    </div>
+
+                    <p class="text-secondary mb-0">
+                        Cargando categorías...
+                    </p>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- SIN RESULTADOS -->
+            <!-- ================================================= -->
+            @if (!cargando && !CategoriasFiltradas.Any())
+            {
+                <div class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-25">
+
+                    <p class="fs-5 mb-3">
+                        🔍 No se encontraron categorías con los criterios seleccionados.
+                    </p>
+
+                    <div>
+
+                        <button class="btn btn-outline-primary btn-sm"
+                                @onclick="LimpiarFiltros">
+
+                            Restablecer filtros
+
+                        </button>
+
+                    </div>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- TABLA ADMINISTRADOR -->
+            <!-- ================================================= -->
+            @if (!cargando &&
+                        CategoriasFiltradas.Any() &&
+                        AuthState.EsAdministrador)
+            {
+                <div class="card border-secondary border-opacity-25 bg-dark bg-opacity-50 shadow-sm text-white overflow-hidden">
+
                     <div class="table-responsive">
-                        <table class="table table-dark table-hover align-middle mb-0" style="background-color: #1e293b;">
-                            <thead class="bg-black bg-opacity-25 text-warning border-bottom border-secondary border-opacity-25">
+
+                        <table class="table table-dark table-hover align-middle mb-0 bg-transparent">
+
+                            <thead class="border-bottom border-secondary border-opacity-25 text-secondary fs-7 text-uppercase">
+
                                 <tr>
-                                    <th class="ps-4">ID</th>
-                                    <th>Categoría</th>
-                                    <th>Descripción</th>
-                                    <th class="text-center">Estado</th>
-                                    <th class="text-end pe-4">Acciones</th>
+
+                                    <th class="ps-3 py-3">
+                                        ID
+                                    </th>
+
+                                    <th class="py-3">
+                                        Categoría
+                                    </th>
+
+                                    <th class="py-3">
+                                        Descripción
+                                    </th>
+
+                                    <th class="text-center py-3">
+                                        Estado
+                                    </th>
+
+                                    <th class="text-end pe-3 py-3">
+                                        Acciones
+                                    </th>
+
                                 </tr>
+
                             </thead>
+
+
                             <tbody>
-                                @if (listaCategorias == null || !listaCategorias.Any())
+
+                                @foreach (var cat in CategoriasFiltradas)
                                 {
-                                    <tr>
-                                        <td colspan="5" class="text-center py-4 text-secondary">No hay categorías registradas.</td>
+                                    var esFav = idsFavoritos.Contains(cat.CategoriaId);
+
+                                    <tr style="opacity: @(!cat.Activo ? "0.6" : "1");">
+
+                                        <td class="ps-3 text-secondary font-monospace">
+                                            #@cat.CategoriaId
+                                        </td>
+
+
+                                        <td>
+
+                                            <div class="d-flex align-items-center gap-2">
+
+                                                <div class="p-2 rounded bg-dark border border-secondary border-opacity-25 d-flex align-items-center justify-content-center"
+                                                     style="width:36px;height:36px;">
+
+                                                    <i class="@(string.IsNullOrEmpty(cat.Icono)
+                                                                                                                                                                      ? "bi bi-tag-fill"
+                                                                                                                                                                      : cat.Icono) text-primary fs-5">
+                                                                                                                                                                               </i>
+
+                                                </div>
+
+
+                                                <span class="fw-semibold text-white">
+                                                    @cat.Nombre
+                                                </span>
+
+
+                                                <button type="button"
+                                                        class="btn btn-link p-0 text-decoration-none border-0 ms-1"
+                                                        @onclick="() => ToggleFavorito(cat.CategoriaId)">
+
+                                                    <small>
+                                                        @(esFav ? "❤️" : "🤍")
+                                                    </small>
+
+                                                </button>
+
+                                            </div>
+
+                                        </td>
+
+
+                                        <td class="text-white-50 small">
+
+                                            @(string.IsNullOrEmpty(cat.Descripcion)
+                                                                                ? "Sin descripción"
+                                                                                : cat.Descripcion)
+
+                                </td>
+
+
+                                        <td class="text-center">
+
+                                    @if (cat.Activo)
+                                            {
+                                                <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25">
+                                                    Activo
+                                                </span>
+                                            }
+
+                                            @if (!cat.Activo)
+                                            {
+                                                <span class="badge bg-secondary bg-opacity-25 text-secondary border border-secondary border-opacity-25">
+                                                    Inactivo
+                                                </span>
+                                            }
+
+                                        </td>
+
+
+                                        <td class="text-end pe-3">
+
+                                            <button class="btn btn-sm btn-outline-warning py-0 px-2 me-1"
+                                                    @onclick="() => AbrirModalEditar(cat)">
+
+                                                ✏️
+
+                                            </button>
+
+
+                                            <button class="btn btn-sm btn-outline-danger py-0 px-2"
+                                                    @onclick="() => EliminarCategoria(cat.CategoriaId)">
+
+                                                🗑️
+
+                                            </button>
+
+                                        </td>
+
                                     </tr>
                                 }
-                                else
-                                {
-                                    @foreach (var cat in listaCategorias)
-                                    {
-                                        <tr>
-                                            <td class="ps-4 text-secondary">#@cat.CategoriaId</td>
-                                            <td>
-                                                <div class="d-flex align-items-center">
-                                                    <div class="rounded-3 p-2 me-3 d-flex align-items-center justify-content-center"
-                                                         style="background-color: #0f172a; width: 42px; height: 42px;">
-                                                        <i class="@(string.IsNullOrEmpty(cat.Icono) ? "bi bi-tag-fill" : cat.Icono) text-warning fs-5"></i>
-                                                    </div>
-                                                    <span class="fw-bold text-white">@cat.Nombre</span>
-                                                </div>
-                                            </td>
-                                            <td class="text-secondary small">
-                                                @(string.IsNullOrEmpty(cat.Descripcion) ? "Sin descripción" : cat.Descripcion)
-                                            </td>
-                                            <td class="text-center">
-                                                @if (cat.Activo)
-                                                {
-                                                    <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 rounded-pill px-3 py-2">
-                                                        Activo
-                                                    </span>
-                                                }
-                                                else
-                                                {
-                                                    <span class="badge bg-danger bg-opacity-25 text-danger border border-danger border-opacity-25 rounded-pill px-3 py-2">
-                                                        Inactivo
-                                                    </span>
-                                                }
-                                            </td>
-                                            <td class="text-end pe-4">
-                                                <button class="btn btn-outline-warning btn-sm me-2 rounded-2" @onclick="() => AbrirModalEditar(cat)">
-                                                    <i class="bi bi-pencil-square"></i>
-                                                </button>
-                                                <button class="btn btn-outline-danger btn-sm rounded-2" @onclick="() => EliminarCategoria(cat.CategoriaId)">
-                                                    <i class="bi bi-trash-fill"></i>
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
+
                             </tbody>
+
                         </table>
+
                     </div>
+
                 </div>
-            </div>
-        }
-        else
-        {
-            <!-- VISTA PÚBLICO / CLIENTE (TARJETAS DE CATÁLOGO) -->
-            <div class="row g-4">
-                @if (listaCategorias == null || !listaCategorias.Where(c => c.Activo).Any())
-                {
-                    <div class="col-12 text-center py-5">
-                        <p class="text-secondary">No hay categorías disponibles por el momento.</p>
-                    </div>
-                }
-                else
-                {
-                    @foreach (var cat in listaCategorias.Where(c => c.Activo))
+            }
+
+
+            <!-- ================================================= -->
+            <!-- VISTA CLIENTE / PÚBLICO -->
+            <!-- ================================================= -->
+            @if (!cargando &&
+                        CategoriasFiltradas.Any() &&
+                        !AuthState.EsAdministrador)
+            {
+                <div class="row g-3">
+
+                    @foreach (var cat in CategoriasFiltradas)
                     {
-                        <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                            <div class="card h-100 border-0 rounded-4 shadow-sm text-center p-4 card-categoria"
-                                 style="background-color: #1e293b; transition: transform 0.2s ease, border-color 0.2s ease; cursor: pointer;">
-                                <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
-                                     style="background-color: #0f172a; width: 70px; height: 70px;">
-                                    <i class="@(string.IsNullOrEmpty(cat.Icono) ? "bi bi-laptop" : cat.Icono) text-warning fs-2"></i>
+                        var esFav = idsFavoritos.Contains(cat.CategoriaId);
+
+                        <div class="col-12 col-sm-6 col-md-4">
+
+                            <div class="card h-100 border-secondary border-opacity-25 bg-dark bg-opacity-50 text-white shadow-sm p-3 position-relative d-flex flex-column justify-content-between"
+                                 style="opacity: @(!cat.Activo ? "0.6" : "1");">
+
+
+                                <div class="d-flex justify-content-between align-items-start mb-3">
+
+                                    <div class="p-3 rounded-circle bg-black bg-opacity-40 border border-secondary border-opacity-25 d-flex align-items-center justify-content-center"
+                                         style="width:54px;height:54px;">
+
+                                        <i class="@(string.IsNullOrEmpty(cat.Icono)
+                                                                                                                                  ? "bi bi-laptop"
+                                                                                                                                  : cat.Icono) text-primary fs-3">
+                                                                                                                                           </i>
+
+                                    </div>
+
+
+                                    <button type="button"
+                                            class="btn btn-sm btn-dark rounded-circle p-1 d-flex align-items-center justify-content-center border border-secondary border-opacity-50"
+                                            style="width:32px;height:32px;"
+                                            @onclick="() => ToggleFavorito(cat.CategoriaId)"
+                                            title="@(esFav ? "Quitar de guardados" : "Guardar categoría")">
+
+                                        <svg width="16"
+                                             height="16"
+                                             viewBox="0 0 24 24"
+                                             fill="@(esFav ? "#dc3545" : "none")"
+                                             stroke="@(esFav ? "#dc3545" : "currentColor")"
+                                             stroke-width="2">
+
+                                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+
+                                        </svg>
+
+                                    </button>
+
                                 </div>
-                                <h5 class="fw-bold text-white mb-2">@cat.Nombre</h5>
-                                <p class="text-secondary small mb-3">@cat.Descripcion</p>
-                                <a href="/productos?categoriaId=@cat.CategoriaId" class="btn btn-outline-light btn-sm rounded-3 w-100 mt-auto">
-                                    Ver Productos <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
+
+
+                                <div>
+
+                                    <h5 class="fw-semibold text-white mb-1">
+                                        @cat.Nombre
+                                    </h5>
+
+
+                                    <p class="text-white-50 small mb-3">
+
+                                        @(string.IsNullOrEmpty(cat.Descripcion)
+                                                                        ? "Explora todos los productos y artículos disponibles bajo esta categoría."
+                                                                        : cat.Descripcion)
+
+                            </p>
+
+                                </div>
+
+
+                                <div class="pt-2 border-top border-secondary border-opacity-10 mt-auto">
+
+                                    <a href="/productos?categoriaId=@cat.CategoriaId"
+                                       class="btn btn-outline-primary btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+
+                                        <span>
+                                            Ver Productos
+                                        </span>
+
+                                        <svg width="14"
+                                             height="14"
+                                             viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="2">
+
+                                            <path d="M5 12h14M12 5l7 7-7 7" />
+
+                                        </svg>
+
+                                    </a>
+
+                                </div>
+
                             </div>
+
                         </div>
-                    }
-                }
-            </div>
-        }
-    }
+                                }
+
+                </div>
+            }
+
+        </main>
+
+    </div>
+
 </div>
 
-<!-- MODAL FORMULARIO (ADMIN) -->
-@if (mostrarModal)
-{
-    <div class="modal fade show d-block custom-modal-backdrop" tabindex="-1" role="dialog" aria-modal="true">
-        <div class="modal-dialog modal-dialog-centered custom-modal-dialog" role="document">
-            <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden" style="background-color: #1e293b; color: #f8fafc;">
 
-                <div class="modal-header border-bottom border-secondary border-opacity-25">
-                    <h5 class="modal-title fw-bold text-white">
-                        <i class="bi bi-tag-fill text-warning me-2"></i>
-                        @(categoriaActual.CategoriaId == 0 ? "Nueva Categoría" : "Editar Categoría")
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal" aria-label="Close"></button>
+<!-- ============================================================= -->
+<!-- MODAL ADMINISTRADOR -->
+<!-- ============================================================= -->
+@if (mostrarModal && AuthState.EsAdministrador)
+{
+    <div class="custom-modal-backdrop">
+
+        <div class="custom-modal-dialog">
+
+            <div class="modal-content border-secondary border-opacity-25 shadow-lg text-white modal-dark-content">
+
+
+                <div class="modal-header border-secondary border-opacity-25 pb-3">
+
+                    <h5 class="modal-title text-white">
+
+                        @(esEdicion
+                                            ? "Editar Categoría"
+                                            : "Nueva Categoría")
+
+                </h5>
+
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            @onclick="CerrarModal">
+                    </button>
+
                 </div>
 
-                <EditForm Model="categoriaActual" OnValidSubmit="GuardarCategoria">
+
+                <EditForm Model="@formModel"
+                          OnValidSubmit="GuardarCategoria">
+
                     <DataAnnotationsValidator />
 
-                    <div class="modal-body custom-modal-body p-4">
+
+                    <div class="modal-body py-3">
+
+                        <!-- NOMBRE -->
+
                         <div class="mb-3">
-                            <label class="form-label text-secondary small fw-bold">Nombre</label>
-                            <InputText @bind-Value="categoriaActual.Nombre" class="form-control input-dark w-100" placeholder="Ej: Procesadores" required />
+
+                            <label class="form-label small text-secondary">
+                                Nombre de la Categoría
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="formModel.Nombre"
+                                       placeholder="Ej: Procesadores, Laptops, Monitores..." />
+
+                            <ValidationMessage For="@(() => formModel.Nombre)"
+                                               class="text-danger small" />
+
                         </div>
+
+
+                        <!-- DESCRIPCIÓN -->
+
                         <div class="mb-3">
-                            <label class="form-label text-secondary small fw-bold">Descripción</label>
-                            <InputTextArea @bind-Value="categoriaActual.Descripcion" class="form-control input-dark w-100" rows="3" placeholder="Descripción breve..." />
+
+                            <label class="form-label small text-secondary">
+                                Descripción
+                            </label>
+
+                            <InputTextArea class="form-control input-dark"
+                                           rows="3"
+                                           @bind-Value="formModel.Descripcion"
+                                           placeholder="Breve descripción para orientar al cliente..." />
+
+                            <ValidationMessage For="@(() => formModel.Descripcion)"
+                                               class="text-danger small" />
+
                         </div>
+
+
+                        <!-- ICONO -->
+
                         <div class="mb-3">
-                            <label class="form-label text-secondary small fw-bold">Icono (Bootstrap Icons)</label>
-                            <InputText @bind-Value="categoriaActual.Icono" class="form-control input-dark w-100" placeholder="Ej: bi bi-cpu" />
+
+                            <label class="form-label small text-secondary">
+                                Icono (Clase Bootstrap Icons)
+                            </label>
+
+                            <InputText class="form-control input-dark"
+                                       @bind-Value="formModel.Icono"
+                                       placeholder="Ej: bi bi-cpu, bi bi-gpu-card..." />
+
                         </div>
-                        <div class="form-check form-switch mb-2">
-                            <InputCheckbox @bind-Value="categoriaActual.Activo" class="form-check-input" id="estadoCheck" />
-                            <label class="form-check-label text-white" for="estadoCheck">Categoría Activa</label>
-                        </div>
+
+
+                        <!-- IMAGEN -->
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Imagen de la Categoría (Opcional)
+                            </label>
+
+                            <InputFile OnChange="SubirImagenCategoria"
+                                       accept=".png,.jpg,.jpeg,.webp"
+                                       class="form-control input-dark"
+                                       disabled="@subiendoImagen" />
+
+                            <small class="text-secondary d-block mt-1">
+                                PNG, JPG o WEBP · máximo 5 MB
+                            </small>
+
+                        @if (subiendoImagen)
+                            {
+                                <div class="d-flex align-items-center gap-2 text-info small mt-2">
+                                    <span class="spinner-border spinner-border-sm"></span>
+                                    Subiendo imagen...
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrWhiteSpace(formModel.Imagen))
+                            {
+                                <div class="border border-secondary border-opacity-25 rounded p-2 bg-dark bg-opacity-50 text-center mt-2">
+
+                                    <img src="@formModel.Imagen"
+                                         alt="Vista previa de la categoría"
+                                         style="max-width:180px;max-height:100px;object-fit:contain;" />
+
+                                </div>
+                            }
+
                     </div>
 
-                    <div class="modal-footer border-top border-secondary border-opacity-25">
-                        <button type="button" class="btn btn-outline-secondary rounded-3" @onclick="CerrarModal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning fw-bold rounded-3 px-4" disabled="@guardando">
-                            @if (guardando)
-                            {
-                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
-                            }
-                            Guardar
-                        </button>
+
+                    <!-- ACTIVO -->
+
+                    <div class="form-check form-switch pt-2">
+
+                        <InputCheckbox class="form-check-input"
+                                       type="checkbox"
+                                       role="switch"
+                                       @bind-Value="formModel.Activo"
+                                       id="chkActivoCat" />
+
+                        <label class="form-check-label small"
+                               for="chkActivoCat">
+
+                            Categoría Activa
+
+                        </label>
+
                     </div>
+
+                </div>
+
+
+                <div class="modal-footer border-secondary border-opacity-25 pt-2">
+
+                    <button type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            @onclick="CerrarModal">
+
+                        Cancelar
+
+                    </button>
+
+
+                    <button type="submit"
+                            class="btn btn-primary btn-sm px-3"
+                            disabled="@guardando">
+
+                        @(guardando
+                                                ? "Guardando..."
+                                                : "Guardar")
+
+                    </button>
+
+                    </div>
+
                 </EditForm>
 
             </div>
+
         </div>
+
     </div>
 }
 
+
 @code {
+
+    // ============================================================
+    // DATOS
+    // ============================================================
+
     private List<CategoriaDTO> listaCategorias = new();
-    private CategoriaDTO categoriaActual = new();
+
+    private CategoriaDTO formModel = new();
+
+    private HashSet<int> idsFavoritos = new();
+
+
+    // ============================================================
+    // ESTADO
+    // ============================================================
+
     private bool cargando = true;
+
     private bool guardando = false;
+
     private bool mostrarModal = false;
-    private bool esAdmin = false;
+
+    private bool esEdicion = false;
+
+    private bool subiendoImagen = false;
+
+
+    // ============================================================
+    // FILTROS
+    // ============================================================
+
+    private string busquedaTexto = string.Empty;
+
+    private bool soloFavoritos = false;
+
+    private string criterioOrden = "nombre";
+
+
+    // ============================================================
+    // INICIALIZACIÓN
+    // ============================================================
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (!firstRender)
+            return;
+
+        try
         {
-            await VerificarRol();
+            // Inicializar JWT/AuthStateService
+            await AuthState.InicializarAsync();
+
+            // Cargar favoritos
+            await CargarFavoritos();
+
+            // Cargar categorías
             await CargarCategorias();
-            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al inicializar Categorias: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+
+            await InvokeAsync(StateHasChanged);
         }
     }
+
+
+    // ============================================================
+    // TOKEN JWT
+    // ============================================================
+
+    private async Task AplicarTokenAutorizacion()
+    {
+        try
+        {
+            var token = await JS.InvokeAsync<string?>(
+                "localStorage.getItem",
+                "authToken");
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+            else
+            {
+                Http.DefaultRequestHeaders.Authorization = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al obtener token: {ex.Message}");
+        }
+    }
+
+
+    // ============================================================
+    // FAVORITOS
+    // ============================================================
+
+    private async Task CargarFavoritos()
+    {
+        try
+        {
+            var favsJson =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "sysnova_categoria_favoritos");
+
+            if (string.IsNullOrWhiteSpace(favsJson))
+                return;
+
+            var lista =
+                JsonSerializer.Deserialize<List<int>>(
+                    favsJson);
+
+            if (lista != null)
+            {
+                idsFavoritos =
+                    new HashSet<int>(lista);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al cargar favoritos: {ex.Message}");
+        }
+    }
+
+
+    private async Task ToggleFavorito(int id)
+    {
+        if (idsFavoritos.Contains(id))
+        {
+            idsFavoritos.Remove(id);
+        }
+        else
+        {
+            idsFavoritos.Add(id);
+        }
+
+        try
+        {
+            var json =
+                JsonSerializer.Serialize(idsFavoritos);
+
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "sysnova_categoria_favoritos",
+                json);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al guardar favorito: {ex.Message}");
+        }
+    }
+
+
+    // ============================================================
+    // CARGAR CATEGORÍAS
+    // ============================================================
+
+    private async Task CargarCategorias()
+    {
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+            var response =
+                await Http.GetAsync("api/Categoria");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(
+                    $"Error API categorías: {response.StatusCode}");
+
+                listaCategorias.Clear();
+                return;
+            }
+
+            var resultado =
+                await response.Content
+                    .ReadFromJsonAsync<List<CategoriaDTO>>();
+
+            listaCategorias =
+                resultado ?? new List<CategoriaDTO>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al consultar API: {ex.Message}");
+
+            listaCategorias.Clear();
+        }
+    }
+
+
+    // ============================================================
+    // CATEGORÍAS FILTRADAS
+    // ============================================================
+
+    private IEnumerable<CategoriaDTO> CategoriasFiltradas
+    {
+        get
+        {
+            IEnumerable<CategoriaDTO> resultado =
+                listaCategorias;
+
+            // CLIENTE / PÚBLICO
+            // Solo puede visualizar categorías activas.
+
+            if (!AuthState.EsAdministrador)
+            {
+                resultado =
+                    resultado.Where(c => c.Activo);
+            }
+
+
+            // BUSCADOR
+
+            if (!string.IsNullOrWhiteSpace(busquedaTexto))
+            {
+                resultado =
+                    resultado.Where(c =>
+                        (!string.IsNullOrEmpty(c.Nombre) &&
+                         c.Nombre.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        (!string.IsNullOrEmpty(c.Descripcion) &&
+                         c.Descripcion.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase)));
+            }
+
+
+            // FAVORITOS
+
+            if (soloFavoritos)
+            {
+                resultado =
+                    resultado.Where(c =>
+                        idsFavoritos.Contains(c.CategoriaId));
+            }
+
+
+            // ORDEN
+
+            if (criterioOrden == "recientes")
+            {
+                return resultado.OrderByDescending(
+                    c => c.FechaCreacion);
+            }
+
+            if (criterioOrden == "id")
+            {
+                return resultado.OrderBy(
+                    c => c.CategoriaId);
+            }
+
+            return resultado.OrderBy(
+                c => c.Nombre);
+        }
+    }
+
+
+    // ============================================================
+    // LIMPIAR FILTROS
+    // ============================================================
+
+    private void LimpiarFiltros()
+    {
+        busquedaTexto = string.Empty;
+
+        soloFavoritos = false;
+
+        criterioOrden = "nombre";
+    }
+
+
+    // ============================================================
+    // MODAL
+    // ============================================================
 
     private async Task BloquearScrollFondo(bool bloquear)
     {
         try
         {
-            var overflowValue = bloquear ? "hidden" : "";
-            await JS.InvokeVoidAsync("eval", $"document.body.style.overflow = '{overflowValue}'");
+            var style =
+                bloquear
+                    ? "hidden"
+                    : "auto";
+
+            await JS.InvokeVoidAsync(
+                "eval",
+                $"document.body.style.overflow = '{style}'");
         }
         catch
         {
-            // Ignorar errores de JS durante prerendering
         }
     }
 
-    private async Task VerificarRol()
-    {
-        try
-        {
-            var rol = await JS.InvokeAsync<string>("localStorage.getItem", "userRol");
-            var correo = await JS.InvokeAsync<string>("localStorage.getItem", "userEmail");
-
-            esAdmin = (!string.IsNullOrEmpty(rol) && rol.Equals("Administrador", StringComparison.OrdinalIgnoreCase))
-                   || (!string.IsNullOrEmpty(correo) && correo.Equals("admin@sysnova.com", StringComparison.OrdinalIgnoreCase));
-        }
-        catch
-        {
-            esAdmin = false;
-        }
-    }
-
-    private async Task AplicarTokenAutorizacion()
-    {
-        var token = await JS.InvokeAsync<string>("localStorage.getItem", "authToken");
-        if (!string.IsNullOrEmpty(token))
-        {
-            Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-        }
-    }
-
-    private async Task CargarCategorias()
-    {
-        cargando = true;
-        try
-        {
-            await AplicarTokenAutorizacion();
-            var respuesta = await Http.GetFromJsonAsync<List<CategoriaDTO>>("api/Categoria");
-            if (respuesta != null)
-            {
-                listaCategorias = respuesta;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error al cargar categorías: {ex.Message}");
-        }
-        finally
-        {
-            cargando = false;
-        }
-    }
 
     private async Task AbrirModalCrear()
     {
-        categoriaActual = new CategoriaDTO { Activo = true, FechaCreacion = DateTime.Now };
+        if (!AuthState.EsAdministrador)
+            return;
+
+        formModel = new CategoriaDTO
+        {
+            Activo = true,
+            FechaCreacion = DateTime.Now
+        };
+
+        esEdicion = false;
+
         mostrarModal = true;
+
         await BloquearScrollFondo(true);
     }
 
-    private async Task AbrirModalEditar(CategoriaDTO cat)
+
+    private async Task AbrirModalEditar(
+        CategoriaDTO cat)
     {
-        categoriaActual = new CategoriaDTO
+        if (!AuthState.EsAdministrador)
+            return;
+
+        formModel = new CategoriaDTO
         {
             CategoriaId = cat.CategoriaId,
             Nombre = cat.Nombre,
@@ -298,54 +1053,220 @@
             Icono = cat.Icono,
             Imagen = cat.Imagen,
             Activo = cat.Activo,
-            FechaCreacion = cat.FechaCreacion
+            FechaCreacion = cat.FechaCreacion,
+            FechaModificacion = DateTime.Now
         };
+
+        esEdicion = true;
+
         mostrarModal = true;
+
         await BloquearScrollFondo(true);
     }
+
 
     private async Task CerrarModal()
     {
         mostrarModal = false;
+
         await BloquearScrollFondo(false);
     }
 
-    private async Task GuardarCategoria()
+
+    // ============================================================
+    // SUBIR IMAGEN
+    // ============================================================
+
+    private async Task SubirImagenCategoria(
+        InputFileChangeEventArgs e)
     {
-        guardando = true;
+        if (!AuthState.EsAdministrador)
+            return;
+
+        var archivo = e.File;
+
+        if (archivo == null)
+            return;
+
+        const long maxFileSize =
+            5 * 1024 * 1024;
+
+        var extensionesPermitidas =
+            new[]
+            {
+                ".png",
+                ".jpg",
+                ".jpeg",
+                ".webp"
+            };
+
+        var extension =
+            Path.GetExtension(archivo.Name)
+                .ToLowerInvariant();
+
+        if (!extensionesPermitidas.Contains(extension))
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "Formato no permitido. Usa PNG, JPG, JPEG o WEBP.");
+
+            return;
+        }
+
+        if (archivo.Size > maxFileSize)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "La imagen no puede superar los 5 MB.");
+
+            return;
+        }
+
+        subiendoImagen = true;
+
         try
         {
             await AplicarTokenAutorizacion();
+
+            using var contenido =
+                new MultipartFormDataContent();
+
+            await using var stream =
+                archivo.OpenReadStream(maxFileSize);
+
+            using var archivoContent =
+                new StreamContent(stream);
+
+            archivoContent.Headers.ContentType =
+                new MediaTypeHeaderValue(
+                    string.IsNullOrWhiteSpace(archivo.ContentType)
+                        ? "application/octet-stream"
+                        : archivo.ContentType);
+
+            contenido.Add(
+                archivoContent,
+                "archivo",
+                archivo.Name);
+
+            var response =
+                await Http.PostAsync(
+                    "api/Categoria/upload-imagen",
+                    contenido);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var detalle =
+                    await response.Content.ReadAsStringAsync();
+
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    $"No se pudo subir la imagen. {detalle}");
+
+                return;
+            }
+
+            var resultado =
+                await response.Content
+                    .ReadFromJsonAsync<ImagenUploadResponse>();
+
+            if (resultado == null ||
+                string.IsNullOrWhiteSpace(resultado.Url))
+            {
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    "La API no devolvió la URL de la imagen.");
+
+                return;
+            }
+
+            formModel.Imagen =
+                resultado.Url;
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al subir la imagen: {ex.Message}");
+        }
+        finally
+        {
+            subiendoImagen = false;
+
+            await InvokeAsync(
+                StateHasChanged);
+        }
+    }
+
+
+    private sealed class ImagenUploadResponse
+    {
+        public string Url { get; set; } =
+            string.Empty;
+
+        public string NombreArchivo { get; set; } =
+            string.Empty;
+    }
+
+
+    // ============================================================
+    // GUARDAR
+    // ============================================================
+
+    private async Task GuardarCategoria()
+    {
+        if (!AuthState.EsAdministrador)
+            return;
+
+        guardando = true;
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
             HttpResponseMessage response;
 
-            if (categoriaActual.CategoriaId == 0)
+
+            if (esEdicion)
             {
-                // CREAR: POST
-                response = await Http.PostAsJsonAsync("api/Categoria", categoriaActual);
+                formModel.FechaModificacion =
+                    DateTime.Now;
+
+                response =
+                    await Http.PutAsJsonAsync(
+                        "api/Categoria",
+                        formModel);
             }
             else
             {
-                // EDITAR: PUT (Revisa si tu API espera el ID en la URL o solo en el body)
-                categoriaActual.FechaModificacion = DateTime.Now;
-                response = await Http.PutAsJsonAsync($"api/Categoria/{categoriaActual.CategoriaId}", categoriaActual);
+                formModel.FechaCreacion =
+                    DateTime.Now;
+
+                response =
+                    await Http.PostAsJsonAsync(
+                        "api/Categoria",
+                        formModel);
             }
+
 
             if (response.IsSuccessStatusCode)
             {
                 await CerrarModal();
+
                 await CargarCategorias();
+
+                return;
             }
-            else
-            {
-                var errorDetalle = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error HTTP {(int)response.StatusCode}: {errorDetalle}");
-                await JS.InvokeVoidAsync("alert", $"No se pudo guardar la categoría. Servidor respondió: {response.StatusCode}");
-            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al guardar ({response.StatusCode}).");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Excepción al guardar categoría: {ex.Message}");
-            await JS.InvokeVoidAsync("alert", $"Error de conexión: {ex.Message}");
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error de conexión: {ex.Message}");
         }
         finally
         {
@@ -353,29 +1274,50 @@
         }
     }
 
+
+    // ============================================================
+    // ELIMINAR
+    // ============================================================
+
     private async Task EliminarCategoria(int id)
     {
-        bool confirmado = await JS.InvokeAsync<bool>("confirm", "¿Estás seguro de eliminar esta categoría?");
-        if (confirmado)
-        {
-            try
-            {
-                await AplicarTokenAutorizacion();
-                var response = await Http.DeleteAsync($"api/Categoria/{id}");
+        if (!AuthState.EsAdministrador)
+            return;
 
-                if (response.IsSuccessStatusCode)
-                {
-                    await CargarCategorias();
-                }
-                else
-                {
-                    await JS.InvokeVoidAsync("alert", "Error al intentar eliminar la categoría.");
-                }
-            }
-            catch (Exception ex)
+        var confirmado =
+            await JS.InvokeAsync<bool>(
+                "confirm",
+                "¿Estás seguro de eliminar esta categoría?");
+
+        if (!confirmado)
+            return;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+            var response =
+                await Http.DeleteAsync(
+                    $"api/Categoria/{id}");
+
+
+            if (response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error al eliminar categoría: {ex.Message}");
+                await CargarCategorias();
+
+                return;
             }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"No se pudo eliminar la categoría. Código: {response.StatusCode}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al eliminar: {ex.Message}");
         }
     }
 }

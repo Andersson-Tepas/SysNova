@@ -1,0 +1,931 @@
+﻿@page "/resenas"
+
+@using SysNova.DTO
+@using SysNova.Web.Services
+
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject AuthStateService AuthState
+
+<PageTitle>Reseñas y Opiniones - SysNova Tech</PageTitle>
+
+<div class="container-fluid min-vh-100 p-4 main-container">
+
+    <!-- ========================================================= -->
+    <!-- ENCABEZADO -->
+    <!-- ========================================================= -->
+
+    <header class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pb-3 mb-4 border-bottom border-secondary border-opacity-25">
+
+        <div>
+
+            <h1 class="h2 fw-bold text-white mb-1">
+                Reseñas y Valoraciones
+            </h1>
+
+            <p class="text-secondary small mb-0">
+                Gestión de opiniones y comentarios sobre productos
+            </p>
+
+        </div>
+
+
+        <!-- CLIENTE AUTENTICADO PUEDE ESCRIBIR RESEÑA -->
+        @if (AuthState.EsCliente)
+        {
+            <button class="btn btn-primary d-inline-flex align-items-center gap-2 fw-semibold px-3 py-2"
+                    @onclick="AbrirModalCrear">
+
+                <svg width="18"
+                     height="18"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+
+                    <path d="M12 5v14M5 12h14" />
+
+                </svg>
+
+                Escribir Reseña
+
+            </button>
+        }
+
+    </header>
+
+
+    <!-- ========================================================= -->
+    <!-- PANEL ADMIN -->
+    <!-- ========================================================= -->
+    @if (esAdmin)
+    {
+        <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 mb-4 text-white">
+
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 px-3">
+
+                <h6 class="mb-0 text-white-50">
+                    Moderación de Reseñas
+                </h6>
+
+                <div class="small">
+
+                    Total reseñas:
+
+                    <strong class="text-info">
+                        @listaResenas.Count
+                    </strong>
+
+                    <span class="mx-2 text-secondary">
+                        |
+                    </span>
+
+                    Activas:
+
+                    <strong class="text-success">
+                        @listaResenas.Count(r => r.Activo)
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    <!-- ========================================================= -->
+    <!-- LAYOUT PRINCIPAL -->
+    <!-- ========================================================= -->
+
+    <div class="row g-4">
+
+
+        <!-- ===================================================== -->
+        <!-- SIDEBAR -->
+        <!-- ===================================================== -->
+
+        <aside class="col-12 col-lg-3">
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Búsqueda
+                </h6>
+
+                <input type="text"
+                       class="form-control input-dark"
+                       placeholder="Comentario o ID Cliente..."
+                       @bind="busquedaTexto"
+                       @bind:event="oninput" />
+
+            </div>
+
+
+            <div class="card bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 mb-3">
+
+                <h6 class="text-uppercase text-secondary fw-bold fs-7 mb-3">
+                    Filtrar por Calificación
+                </h6>
+
+                <select class="form-select form-select-sm input-dark"
+                        @bind="filtroCalificacion">
+
+                    <option value="0">
+                        Todas las estrellas
+                    </option>
+
+                    <option value="5">
+                        ⭐⭐⭐⭐⭐ (5)
+                    </option>
+
+                    <option value="4">
+                        ⭐⭐⭐⭐ (4)
+                    </option>
+
+                    <option value="3">
+                        ⭐⭐⭐ (3)
+                    </option>
+
+                    <option value="2">
+                        ⭐⭐ (2)
+                    </option>
+
+                    <option value="1">
+                        ⭐ (1)
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <button class="btn btn-outline-secondary w-100 btn-sm text-white"
+                    @onclick="LimpiarFiltros">
+
+                Limpiar Filtros
+
+            </button>
+
+        </aside>
+
+
+        <!-- ===================================================== -->
+        <!-- MAIN -->
+        <!-- ===================================================== -->
+
+        <main class="col-12 col-lg-9">
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom border-secondary border-opacity-25">
+
+                <span class="text-secondary small">
+
+                    Mostrando
+
+                    <strong class="text-white">
+                        @ResenasFiltradas.Count()
+                    </strong>
+
+                    reseñas
+
+                </span>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- CARGANDO -->
+            <!-- ================================================= -->
+            @if (cargando)
+            {
+                <div class="text-center py-5">
+
+                    <div class="spinner-border text-primary mb-3"
+                         role="status">
+                    </div>
+
+                    <p class="text-secondary mb-0">
+                        Cargando valoraciones...
+                    </p>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- SIN RESULTADOS -->
+            <!-- ================================================= -->
+            @if (!cargando && !ResenasFiltradas.Any())
+            {
+                <div class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-25">
+
+                    <p class="fs-5 mb-0">
+                        ⭐ No se encontraron reseñas registradas.
+                    </p>
+
+                </div>
+            }
+
+
+            <!-- ================================================= -->
+            <!-- RESULTADOS -->
+            <!-- ================================================= -->
+            @if (!cargando && ResenasFiltradas.Any())
+            {
+                <div class="row row-cols-1 row-cols-md-2 g-3">
+
+                    @foreach (var item in ResenasFiltradas)
+                    {
+                        <div class="col">
+
+                            <div class="card h-100 bg-dark bg-opacity-50 border-secondary border-opacity-25 text-white p-3 shadow-sm d-flex flex-column justify-content-between position-relative"
+                                 style="opacity: @(!item.Activo ? "0.6" : "1");">
+
+                                <div>
+
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+
+                                        <div>
+
+                                            <h6 class="mb-0 fw-bold">
+                                                Cliente ID: @item.ClienteId
+                                            </h6>
+
+                                            <small class="text-secondary">
+                                                Producto ID: @item.ProductoId
+                                            </small>
+
+                                        </div>
+
+
+                                        <div class="text-warning fs-6">
+
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                @if (i <= item.Calificacion)
+                                                {
+                                                    <span>★</span>
+                                                }
+
+                                                @if (i > item.Calificacion)
+                                                {
+                                                    <span class="text-secondary">
+                                                        ☆
+                                                    </span>
+                                                }
+                                            }
+
+                                        </div>
+
+                                    </div>
+
+
+                                    <p class="text-secondary small mb-3">
+                                        @item.Comentario
+                                    </p>
+
+                                </div>
+
+
+                                <div>
+
+                                    <div class="d-flex justify-content-between align-items-center border-top border-secondary border-opacity-25 pt-2">
+
+                                        <small class="text-secondary">
+                                            @item.Fecha.ToString("dd/MM/yyyy")
+                                        </small>
+
+
+                                        <!-- SOLO ADMIN -->
+                                        @if (esAdmin)
+                                        {
+                                            <div class="d-flex gap-2">
+
+                                                <button class="btn btn-sm btn-outline-warning py-0 px-2"
+                                                        @onclick="() => ToggleActivo(item)">
+
+                                                    @(item.Activo
+                                                                                            ? "Ocultar"
+                                                                                            : "Mostrar")
+
+                                    </button>
+
+
+                                                <button class="btn btn-sm btn-outline-danger py-0 px-2"
+                                                        @onclick="() => EliminarResena(item.ResenaId)">
+
+                                                    🗑️
+
+                                                </button>
+
+                                            </div>
+                                                                }
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+        </main>
+
+    </div>
+
+</div>
+
+
+<!-- ============================================================= -->
+<!-- MODAL CREAR RESEÑA -->
+<!-- ============================================================= -->
+@if (mostrarModal && AuthState.EsCliente)
+{
+    <div class="custom-modal-backdrop">
+
+        <div class="custom-modal-dialog">
+
+            <div class="modal-content border-secondary border-opacity-25 shadow-lg text-white modal-dark-content">
+
+
+                <div class="modal-header border-secondary border-opacity-25 pb-3">
+
+                    <h5 class="modal-title text-white">
+                        Nueva Reseña
+                    </h5>
+
+
+                    <button type="button"
+                            class="btn-close btn-close-white"
+                            @onclick="CerrarModal">
+                    </button>
+
+                </div>
+
+
+                <EditForm Model="@formModel"
+                          OnValidSubmit="GuardarResena">
+
+                    <DataAnnotationsValidator />
+
+
+                    <div class="modal-body py-3">
+
+
+                        <div class="row g-3 mb-3">
+
+
+                            <div class="col-6">
+
+                                <label class="form-label small text-secondary">
+                                    ID Cliente
+                                </label>
+
+
+                                <InputNumber class="form-control input-dark"
+                                             @bind-Value="formModel.ClienteId" />
+
+                            </div>
+
+
+                            <div class="col-6">
+
+                                <label class="form-label small text-secondary">
+                                    ID Producto
+                                </label>
+
+
+                                <InputNumber class="form-control input-dark"
+                                             @bind-Value="formModel.ProductoId" />
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Calificación (1 a 5 Estrellas)
+                            </label>
+
+
+                            <InputSelect class="form-select input-dark"
+                                         @bind-Value="formModel.Calificacion">
+
+                                <option value="5">
+                                    5 Estrellas (Excelente)
+                                </option>
+
+                                <option value="4">
+                                    4 Estrellas (Muy Bueno)
+                                </option>
+
+                                <option value="3">
+                                    3 Estrellas (Regular)
+                                </option>
+
+                                <option value="2">
+                                    2 Estrellas (Malo)
+                                </option>
+
+                                <option value="1">
+                                    1 Estrella (Pésimo)
+                                </option>
+
+                            </InputSelect>
+
+                        </div>
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label small text-secondary">
+                                Comentario
+                            </label>
+
+
+                            <InputTextArea class="form-control input-dark"
+                                           rows="3"
+                                           @bind-Value="formModel.Comentario"
+                                           placeholder="¿Qué opinas de este producto?" />
+
+
+                            <ValidationMessage For="@(() => formModel.Comentario)"
+                                               class="text-danger small" />
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="modal-footer border-secondary border-opacity-25 pt-2">
+
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-sm"
+                                @onclick="CerrarModal">
+
+                            Cancelar
+
+                        </button>
+
+
+                        <button type="submit"
+                                class="btn btn-primary btn-sm px-3"
+                                disabled="@guardando">
+
+                            @(guardando
+                                                    ? "Enviando..."
+                                                    : "Publicar Reseña")
+
+                    </button>
+
+                    </div>
+
+                </EditForm>
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+
+@code {
+
+    // =========================================================
+    // DATOS
+    // =========================================================
+
+    private List<ResenaDTO> listaResenas = new();
+
+    private ResenaDTO formModel = new();
+
+
+    // =========================================================
+    // ESTADO
+    // =========================================================
+
+    private bool esAdmin = false;
+
+    private bool cargando = true;
+
+    private bool guardando = false;
+
+    private bool mostrarModal = false;
+
+
+    // =========================================================
+    // FILTROS
+    // =========================================================
+
+    private string busquedaTexto = "";
+
+    private int filtroCalificacion = 0;
+
+
+    // =========================================================
+    // PRIMER RENDER
+    // =========================================================
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+
+        try
+        {
+            /*
+             * AuthStateService usa localStorage,
+             * por eso se inicializa después
+             * del primer render interactivo.
+             */
+
+            await AuthState.InicializarAsync();
+
+
+            esAdmin =
+                AuthState.EsAdministrador;
+
+
+            await CargarResenas();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error inicializando Reseñas: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+
+            await InvokeAsync(
+                StateHasChanged);
+        }
+    }
+
+
+    // =========================================================
+    // TOKEN JWT
+    // =========================================================
+
+    private async Task AplicarTokenAutorizacion()
+    {
+        try
+        {
+            var token =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "authToken");
+
+
+            if (!string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue(
+                        "Bearer",
+                        token);
+            }
+
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Http.DefaultRequestHeaders.Authorization = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error token: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // CARGAR RESEÑAS
+    // =========================================================
+
+    private async Task CargarResenas()
+    {
+        cargando = true;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            var res =
+                await Http.GetFromJsonAsync<List<ResenaDTO>>(
+                    "api/resena");
+
+
+            if (res != null)
+            {
+                listaResenas = res;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al consultar API: {ex.Message}");
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
+
+
+    // =========================================================
+    // FILTRADO
+    // =========================================================
+
+    private IEnumerable<ResenaDTO> ResenasFiltradas
+    {
+        get
+        {
+            IEnumerable<ResenaDTO> res =
+                listaResenas;
+
+
+            /*
+             * ADMIN:
+             * puede ver activas e inactivas.
+             *
+             * CLIENTE / PÚBLICO:
+             * solamente reseñas activas.
+             */
+
+            if (!esAdmin)
+            {
+                res =
+                    res.Where(
+                        r => r.Activo);
+            }
+
+
+            if (!string.IsNullOrWhiteSpace(busquedaTexto))
+            {
+                res =
+                    res.Where(r =>
+
+                        (r.Comentario != null &&
+                         r.Comentario.Contains(
+                             busquedaTexto,
+                             StringComparison.OrdinalIgnoreCase))
+
+                        ||
+
+                        r.ClienteId
+                            .ToString()
+                            .Contains(
+                                busquedaTexto));
+            }
+
+
+            if (filtroCalificacion > 0)
+            {
+                res =
+                    res.Where(
+                        r => r.Calificacion ==
+                             filtroCalificacion);
+            }
+
+
+            return res.OrderByDescending(
+                r => r.Fecha);
+        }
+    }
+
+
+    // =========================================================
+    // LIMPIAR FILTROS
+    // =========================================================
+
+    private void LimpiarFiltros()
+    {
+        busquedaTexto = "";
+
+        filtroCalificacion = 0;
+    }
+
+
+    // =========================================================
+    // SCROLL MODAL
+    // =========================================================
+
+    private async Task BloquearScrollFondo(
+        bool bloquear)
+    {
+        try
+        {
+            var style =
+                bloquear
+                    ? "hidden"
+                    : "auto";
+
+
+            await JS.InvokeVoidAsync(
+                "eval",
+                $"document.body.style.overflow = '{style}'");
+        }
+        catch
+        {
+        }
+    }
+
+
+    // =========================================================
+    // ABRIR CREAR
+    // =========================================================
+
+    private async Task AbrirModalCrear()
+    {
+        if (!AuthState.EsCliente)
+            return;
+
+
+        formModel =
+            new ResenaDTO
+            {
+                Calificacion = 5,
+
+                ClienteId = 1,
+
+                ProductoId = 1,
+
+                Fecha =
+                    DateTime.Now,
+
+                FechaCreacion =
+                    DateTime.Now,
+
+                Activo = true
+            };
+
+
+        mostrarModal = true;
+
+
+        await BloquearScrollFondo(
+            true);
+    }
+
+
+    // =========================================================
+    // CERRAR
+    // =========================================================
+
+    private async Task CerrarModal()
+    {
+        mostrarModal = false;
+
+
+        await BloquearScrollFondo(
+            false);
+    }
+
+
+    // =========================================================
+    // GUARDAR RESEÑA
+    // =========================================================
+
+    private async Task GuardarResena()
+    {
+        if (!AuthState.EsCliente)
+            return;
+
+
+        guardando = true;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            var response =
+                await Http.PostAsJsonAsync(
+                    "api/resena",
+                    formModel);
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CerrarModal();
+
+                await CargarResenas();
+
+                return;
+            }
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error al guardar la reseña ({response.StatusCode}).");
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Error de conexión: {ex.Message}");
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+
+    // =========================================================
+    // ACTIVAR / OCULTAR
+    // =========================================================
+
+    private async Task ToggleActivo(
+        ResenaDTO item)
+    {
+        if (!esAdmin)
+            return;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            item.Activo =
+                !item.Activo;
+
+
+            item.FechaModificacion =
+                DateTime.Now;
+
+
+            var response =
+                await Http.PutAsJsonAsync(
+                    "api/resena",
+                    item);
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarResenas();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al actualizar estado: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // ELIMINAR
+    // =========================================================
+
+    private async Task EliminarResena(int id)
+    {
+        if (!esAdmin)
+            return;
+
+
+        bool confirmado =
+            await JS.InvokeAsync<bool>(
+                "confirm",
+                "¿Deseas eliminar esta reseña?");
+
+
+        if (!confirmado)
+            return;
+
+
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+
+            var response =
+                await Http.DeleteAsync(
+                    $"api/resena/{id}");
+
+
+            if (response.IsSuccessStatusCode)
+            {
+                await CargarResenas();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al eliminar: {ex.Message}");
+        }
+    }
+}
