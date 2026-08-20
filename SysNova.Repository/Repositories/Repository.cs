@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using Microsoft.EntityFrameworkCore;
 using SysNova.DAL.Context;
 using SysNova.Repository.Interfaces;
-using System.Linq.Expressions;
 
 namespace SysNova.Repository.Repositories
 {
@@ -44,22 +44,175 @@ namespace SysNova.Repository.Repositories
 
         public async Task<T> AddAsync(T entity)
         {
-            await _dbSet.AddAsync(entity);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _dbSet.AddAsync(entity);
 
-            return entity;
+                await _context.SaveChangesAsync();
+
+                return entity;
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("================================================");
+                Console.WriteLine("ERROR DE ENTITY FRAMEWORK AL GUARDAR");
+                Console.WriteLine("================================================");
+                Console.WriteLine($"Entidad: {typeof(T).Name}");
+                Console.WriteLine($"Mensaje EF: {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine(
+                        $"InnerException: {ex.InnerException.Message}");
+                }
+
+                if (ex.InnerException?.InnerException != null)
+                {
+                    Console.WriteLine(
+                        $"InnerException 2: {ex.InnerException.InnerException.Message}");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("DETALLE COMPLETO:");
+                Console.WriteLine(ex);
+                Console.WriteLine("================================================");
+                Console.WriteLine();
+
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("================================================");
+                Console.WriteLine("ERROR GENERAL AL GUARDAR");
+                Console.WriteLine("================================================");
+                Console.WriteLine($"Entidad: {typeof(T).Name}");
+                Console.WriteLine($"Mensaje: {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine(
+                        $"InnerException: {ex.InnerException.Message}");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("DETALLE COMPLETO:");
+                Console.WriteLine(ex);
+                Console.WriteLine("================================================");
+                Console.WriteLine();
+
+                throw;
+            }
         }
 
         public async Task UpdateAsync(T entity)
         {
-            _dbSet.Update(entity);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _dbSet.Update(entity);
+
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("================================================");
+                Console.WriteLine("ERROR DE ENTITY FRAMEWORK AL ACTUALIZAR");
+                Console.WriteLine("================================================");
+                Console.WriteLine($"Entidad: {typeof(T).Name}");
+                Console.WriteLine($"Mensaje EF: {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine(
+                        $"InnerException: {ex.InnerException.Message}");
+                }
+
+                if (ex.InnerException?.InnerException != null)
+                {
+                    Console.WriteLine(
+                        $"InnerException 2: {ex.InnerException.InnerException.Message}");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("DETALLE COMPLETO:");
+                Console.WriteLine(ex);
+                Console.WriteLine("================================================");
+                Console.WriteLine();
+
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("================================================");
+                Console.WriteLine("ERROR GENERAL AL ACTUALIZAR");
+                Console.WriteLine("================================================");
+                Console.WriteLine($"Entidad: {typeof(T).Name}");
+                Console.WriteLine($"Mensaje: {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine(
+                        $"InnerException: {ex.InnerException.Message}");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("DETALLE COMPLETO:");
+                Console.WriteLine(ex);
+                Console.WriteLine("================================================");
+                Console.WriteLine();
+
+                throw;
+            }
         }
 
         public async Task DeleteAsync(T entity)
         {
-            _dbSet.Remove(entity);
-            await _context.SaveChangesAsync();
+            try
+            {
+                _dbSet.Remove(entity);
+
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("================================================");
+                Console.WriteLine("ERROR DE ENTITY FRAMEWORK AL ELIMINAR");
+                Console.WriteLine("================================================");
+                Console.WriteLine($"Entidad: {typeof(T).Name}");
+                Console.WriteLine($"Mensaje EF: {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine(
+                        $"InnerException: {ex.InnerException.Message}");
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("DETALLE COMPLETO:");
+                Console.WriteLine(ex);
+                Console.WriteLine("================================================");
+                Console.WriteLine();
+
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine();
+                Console.WriteLine("================================================");
+                Console.WriteLine("ERROR GENERAL AL ELIMINAR");
+                Console.WriteLine("================================================");
+                Console.WriteLine($"Entidad: {typeof(T).Name}");
+                Console.WriteLine($"Mensaje: {ex.Message}");
+                Console.WriteLine(ex);
+                Console.WriteLine("================================================");
+                Console.WriteLine();
+
+                throw;
+            }
         }
 
         public async Task<bool> ExistsAsync(

@@ -1,10 +1,14 @@
 ﻿@page "/"
+@using System.Text
+@using System.Text.Json
 @using System.Net.Http.Json
 @using SysNova.DTO
 @using SysNova.Web.Services
+@using SysNova.Web.Components.Pages
 @inject HttpClient Http
 @inject CarritoService CarritoState
 @inject AuthStateService AuthState
+@inject IJSRuntime JS
 
 <PageTitle>NEXOTech - Inicio</PageTitle>
 
@@ -272,8 +276,8 @@
                     <div class="product-img-wrapper">
 
                         <img src="@(string.IsNullOrEmpty(prod.ImagenPrincipal)
-                                                                                                                                                          ? "images/laptop-hero.png"
-                                                                                                                                                          : prod.ImagenPrincipal)"
+                                                                                                                                                                                                                                                                              ? "images/laptop-hero.png"
+                                                                                                                                                                                                                                                                              : prod.ImagenPrincipal)"
                      alt="@prod.Nombre" />
 
                     </div>
@@ -659,7 +663,7 @@
 
 
 <!-- TESTIMONIOS - BASE DE DATOS -->
-<section class="testimonials-section">
+<section id="resenas" class="testimonials-section">
 
     <div class="section-header">
 
@@ -674,6 +678,20 @@
         <p class="section-subtitle">
             Opiniones reales registradas en nuestra plataforma.
         </p>
+
+        @if (AuthState.EsCliente)
+        {
+            <div class="mt-3">
+
+                <button type="button"
+                        class="btn-primary"
+                        style="position:relative; z-index:50; pointer-events:auto;"
+                        @onclick="AbrirModalResenas">
+                    ⭐ Agregar reseña
+                </button>
+
+            </div>
+        }
 
     </div>
 
@@ -690,21 +708,18 @@
             {
                 <div class="testimonial-card">
 
-                    <div class="quote-mark">
-                        “
-                    </div>
-
-                    <div class="testimonial-stars">
+                    <div class="testimonial-stars"
+                         aria-label="@($"{resena.Calificacion} de 5 estrellas")">
 
                         @for (int i = 1; i <= 5; i++)
                         {
                             if (i <= resena.Calificacion)
                             {
-                                <span>★</span>
+                                <span class="testimonial-star filled">★</span>
                             }
                             else
                             {
-                                <span>☆</span>
+                                <span class="testimonial-star empty">★</span>
                             }
                         }
 
@@ -714,23 +729,68 @@
                         "@resena.Comentario"
                     </p>
 
-                    <div class="testimonial-user">
+                    <div class="testimonial-user"
+                         style="display:flex;align-items:center;gap:.8rem;">
 
                         <div class="user-avatar">
-                            C@resena.ClienteId
+                            ★
                         </div>
 
-                        <div class="user-info">
+                        <div class="user-info"
+                             style="flex:1;min-width:0;">
 
                             <h4>
-                                Cliente #@resena.ClienteId
+                                @ObtenerNombreClienteResena(resena)
                             </h4>
 
                             <p>
-                                Producto #@resena.ProductoId
+                                @ObtenerNombreProductoResena(resena.ProductoId)
                             </p>
 
                         </div>
+
+                        @if (EsMiResena(resena))
+                        {
+                            <div style="display:flex;align-items:center;gap:.4rem;">
+
+                                <button type="button"
+                                        title="Editar mi reseña"
+                                        aria-label="Editar mi reseña"
+                                        @onclick="() => EditarMiResena(resena)"
+                                        style="
+                                                                                            width:34px;
+                                                                                            height:34px;
+                                                                                            display:flex;
+                                                                                            align-items:center;
+                                                                                            justify-content:center;
+                                                                                            border-radius:9px;
+                                                                                            border:1px solid rgba(59,130,246,.45);
+                                                                                            background:rgba(37,99,235,.12);
+                                                                                            color:#60a5fa;
+                                                                                            cursor:pointer;">
+                                    ✏️
+                                </button>
+
+                                <button type="button"
+                                        title="Eliminar mi reseña"
+                                        aria-label="Eliminar mi reseña"
+                                        @onclick="() => EliminarMiResena(resena)"
+                                        style="
+                                                                                            width:34px;
+                                                                                            height:34px;
+                                                                                            display:flex;
+                                                                                            align-items:center;
+                                                                                            justify-content:center;
+                                                                                            border-radius:9px;
+                                                                                            border:1px solid rgba(239,68,68,.45);
+                                                                                            background:rgba(220,38,38,.12);
+                                                                                            color:#f87171;
+                                                                                            cursor:pointer;">
+                                    🗑️
+                                </button>
+
+                            </div>
+                        }
 
                     </div>
 
@@ -747,6 +807,12 @@
     </div>
 
 </section>
+
+
+<!-- MODAL DE RESEÑAS DEL CLIENTE -->
+<Resena @ref="resenaModal"
+        Productos="listaProductos"
+        OnResenaGuardada="CargarResenasBD" />
 
 
 <!-- PREGUNTAS FRECUENTES - BASE DE DATOS -->
@@ -913,7 +979,7 @@
 
 
 <!-- CONTACTO -->
-<section class="contact-section">
+<section id="contacto" class="contact-section">
 
     <div class="section-header">
 
@@ -1028,7 +1094,9 @@
 
     private List<ResenaDTO> listaResenas = new();
 
+    private Resena? resenaModal;
 
+    private int clienteIdActualResenas = 0;
     // =========================================================
     // PREGUNTAS FRECUENTES
     // =========================================================
@@ -1066,6 +1134,31 @@
         await CargarPreguntasBD();
 
         await CargarBlogsBD();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        try
+        {
+            await AuthState.InicializarAsync();
+
+            if (AuthState.EsCliente)
+            {
+                clienteIdActualResenas =
+                    await ObtenerClienteIdActualResenas();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al inicializar sesión en Inicio: {ex.Message}");
+        }
+
+        await InvokeAsync(StateHasChanged);
     }
 
 
@@ -1373,6 +1466,187 @@
         // Después de agregar, abrimos el drawer del carrito
         // para que el usuario vea inmediatamente lo añadido.
         CarritoState.SolicitarAbrirCarrito();
+    }
+
+
+    // =========================================================
+    // MODAL DE RESEÑAS
+    // =========================================================
+
+    private async Task AbrirModalResenas()
+    {
+        if (resenaModal == null)
+        {
+            Console.WriteLine(
+                "No se pudo obtener la referencia al componente Resena.");
+            return;
+        }
+
+        await resenaModal.AbrirAsync();
+    }
+
+
+    private bool EsMiResena(
+        ResenaDTO resena)
+    {
+        return AuthState.EsCliente &&
+               clienteIdActualResenas > 0 &&
+               resena.ClienteId == clienteIdActualResenas;
+    }
+
+
+    private string ObtenerNombreClienteResena(
+        ResenaDTO resena)
+    {
+        if (EsMiResena(resena))
+        {
+            if (!string.IsNullOrWhiteSpace(AuthState.Nombre))
+                return AuthState.Nombre;
+
+            if (!string.IsNullOrWhiteSpace(AuthState.Correo))
+                return AuthState.Correo;
+        }
+
+        return "Cliente verificado";
+    }
+
+
+    private async Task EditarMiResena(
+        ResenaDTO resena)
+    {
+        if (!EsMiResena(resena) ||
+            resenaModal == null)
+        {
+            return;
+        }
+
+        await resenaModal.AbrirEditarAsync(
+            resena.ResenaId);
+    }
+
+
+    private async Task EliminarMiResena(
+        ResenaDTO resena)
+    {
+        if (!EsMiResena(resena) ||
+            resenaModal == null)
+        {
+            return;
+        }
+
+        await resenaModal.EliminarAsync(
+            resena.ResenaId);
+    }
+
+
+    private async Task<int> ObtenerClienteIdActualResenas()
+    {
+        var token =
+            await JS.InvokeAsync<string?>(
+                "localStorage.getItem",
+                "authToken");
+
+        if (string.IsNullOrWhiteSpace(token))
+            return 0;
+
+        try
+        {
+            var partes =
+                token.Split('.');
+
+            if (partes.Length != 3)
+                return 0;
+
+            var payload =
+                partes[1]
+                    .Replace('-', '+')
+                    .Replace('_', '/');
+
+            switch (payload.Length % 4)
+            {
+                case 2:
+                    payload += "==";
+                    break;
+
+                case 3:
+                    payload += "=";
+                    break;
+            }
+
+            var bytes =
+                Convert.FromBase64String(
+                    payload);
+
+            var json =
+                Encoding.UTF8.GetString(
+                    bytes);
+
+            using var documento =
+                JsonDocument.Parse(
+                    json);
+
+            var root =
+                documento.RootElement;
+
+            var idTexto =
+                ObtenerClaimInicio(
+                    root,
+                    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier")
+                ?? ObtenerClaimInicio(
+                    root,
+                    "nameid")
+                ?? ObtenerClaimInicio(
+                    root,
+                    "sub");
+
+            return int.TryParse(
+                idTexto,
+                out var id)
+                    ? id
+                    : 0;
+        }
+        catch
+        {
+            return 0;
+        }
+    }
+
+
+    private static string? ObtenerClaimInicio(
+        JsonElement root,
+        string nombre)
+    {
+        if (!root.TryGetProperty(
+            nombre,
+            out var valor))
+        {
+            return null;
+        }
+
+        if (valor.ValueKind ==
+            JsonValueKind.String)
+        {
+            return valor.GetString();
+        }
+
+        if (valor.ValueKind ==
+            JsonValueKind.Number)
+        {
+            return valor.GetRawText();
+        }
+
+        return null;
+    }
+
+
+    private string ObtenerNombreProductoResena(
+        int productoId)
+    {
+        return listaProductos
+            .FirstOrDefault(
+                p => p.ProductoId == productoId)
+            ?.Nombre
+            ?? "Producto";
     }
 
 }

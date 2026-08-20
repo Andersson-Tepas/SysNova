@@ -51,7 +51,24 @@ namespace SysNova.BL.Services
 
         public async Task UpdateAsync(CategoriaDTO categoriaDto)
         {
-            var entity = _mapper.Map<Categoria>(categoriaDto);
+            var entity = await _repository.GetByIdAsync(categoriaDto.CategoriaId);
+
+            if (entity == null)
+            {
+                throw new KeyNotFoundException(
+                    $"No se encontró la categoría con ID {categoriaDto.CategoriaId}.");
+            }
+
+            entity.Nombre = categoriaDto.Nombre;
+            entity.Descripcion = categoriaDto.Descripcion;
+            entity.Icono = categoriaDto.Icono;
+
+            entity.Imagen = categoriaDto.Imagen;
+
+            entity.Activo = categoriaDto.Activo;
+
+            entity.FechaModificacion = DateTime.Now;
+
             await _repository.UpdateAsync(entity);
         }
 

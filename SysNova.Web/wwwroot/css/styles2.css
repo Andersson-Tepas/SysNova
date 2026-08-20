@@ -16,32 +16,64 @@
     border: 1px solid #f59e0b !important;
 }
 
-/* MODAL FIJO CENTRADO Y SIN SCROLL EN FONDO */
+/* =========================================================
+   MODAL EXCLUSIVO DE PRODUCTOS
+   Solo este modal tiene scroll interno.
+   ========================================================= */
+
 .custom-modal-backdrop {
     background-color: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(4px);
     position: fixed;
-    top: 0;
-    left: 0;
+    inset: 0;
     width: 100vw;
     height: 100vh;
     z-index: 1050;
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden !important; /* Bloquea cualquier scroll en la capa del fondo */
+    padding: 1rem;
+    overflow: hidden !important;
 }
 
 .custom-modal-dialog {
     width: 100%;
     max-width: 550px;
-    margin: auto !important; /* Garantiza el centrado perfecto */
+    max-height: 90vh;
+    margin: auto !important;
 }
 
-.custom-modal-body {
-    max-height: 60vh !important;
-    overflow-y: auto !important; /* Solo la cajita interna del formulario tendrá scroll si es necesario */
-}
+    .custom-modal-dialog .modal-dark-content {
+        background-color: #1e293b;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+        .custom-modal-dialog .modal-dark-content > .modal-header {
+            flex: 0 0 auto;
+        }
+
+    .custom-modal-dialog ::deep .producto-modal-form {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .custom-modal-dialog .custom-modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        max-height: none !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .custom-modal-dialog .modal-footer {
+        flex: 0 0 auto;
+    }
 
 /* Contenedor principal */
 .main-container {

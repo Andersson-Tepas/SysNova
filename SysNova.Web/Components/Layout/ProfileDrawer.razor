@@ -2,15 +2,27 @@
 @inject AuthStateService AuthState
 @using SysNova.Web.Services
 
-<div class="profile-backdrop @(IsOpen ? "show" : "")" @onclick="Close"></div>
+<div class="profile-backdrop @(IsOpen ? "show" : "")"
+     @onclick="Close">
+</div>
 
 <aside class="profile-drawer @(IsOpen ? "is-open" : "")">
 
     <!-- Header -->
     <div class="profile-header">
+
         <div>
-            <span class="profile-subtitle">MI CUENTA</span>
-            <h2 class="profile-title">Perfil NEXO</h2>
+            <span class="profile-subtitle">
+                @(IsAdmin
+                                ? "ADMINISTRACIÓN"
+                                : "MI CUENTA")
+            </span>
+
+            <h2 class="profile-title">
+                @(IsAdmin
+                                ? "Panel NEXO"
+                                : "Perfil NEXO")
+            </h2>
         </div>
 
         <button type="button"
@@ -25,19 +37,29 @@
                  stroke="currentColor"
                  stroke-width="2">
 
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
+                <line x1="18"
+                      y1="6"
+                      x2="6"
+                      y2="18">
+                </line>
+
+                <line x1="6"
+                      y1="6"
+                      x2="18"
+                      y2="18">
+                </line>
 
             </svg>
 
         </button>
+
     </div>
 
 
     <!-- Body -->
     <div class="profile-body">
 
-        <!-- Tarjeta de Bienvenida -->
+        <!-- Tarjeta de bienvenida -->
         <div class="user-hero-card">
 
             <div class="user-avatar-circle">
@@ -48,24 +70,35 @@
                 </span>
             </div>
 
-            <h3 class="user-greeting">
-                Hola,
-                @(string.IsNullOrWhiteSpace(UserName)
-                                ? "Usuario"
-                                : UserName)
-            </h3>
+            <div class="profile-hero-heading">
 
-            <p class="user-subtext">
-                Tu espacio personal en NEXO Tech.
-            </p>
+                <div>
+                    <h3 class="user-greeting">
+                        Hola,
+                        @(string.IsNullOrWhiteSpace(UserName)
+                                                ? "Usuario"
+                                                : UserName)
+                    </h3>
+
+                    <p class="user-subtext">
+                        @(IsAdmin
+                                                ? "Gestiona el contenido y las operaciones de NEXO Tech."
+                                                : "Tu espacio personal en NEXO Tech.")
+                    </p>
+                </div>
+
+                <span class="profile-role-pill @(IsAdmin ? "admin" : "client")">
+                    @(IsAdmin ? "ADMIN" : "CLIENTE")
+                </span>
+
+            </div>
 
         </div>
 
 
-        <!-- Lista de Navegación / Accesos Directos -->
+        <!-- Información de cuenta -->
         <div class="profile-info-list">
 
-            <!-- Correo -->
             <div class="info-card">
 
                 <div class="info-icon">
@@ -75,11 +108,13 @@
                          stroke="currentColor"
                          stroke-width="2">
 
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2">
+                        </path>
 
                         <circle cx="12"
                                 cy="7"
-                                r="4"></circle>
+                                r="4">
+                        </circle>
 
                     </svg>
 
@@ -101,107 +136,198 @@
 
             </div>
 
+        </div>
 
-            <!-- Mis Pedidos / Gestión -->
-            <div class="info-card info-card-clickable"
-                 @onclick='() => NavegarA("/pedidos")'
-                 style="cursor: pointer;">
 
-                <div class="info-icon">
+        @if (IsAdmin)
+        {
+            <!-- =================================================
+                 ACCESOS ADMINISTRATIVOS
+                 ================================================= -->
+            <section class="profile-shortcuts-section">
 
-                    <svg viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="2">
+                <div class="profile-section-heading">
+                    <span>ACCESOS ADMINISTRATIVOS</span>
+                    <small>Gestión rápida</small>
+                </div>
 
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                <div class="profile-shortcuts-grid">
 
-                    </svg>
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/pedidos")'>
+                        <span class="profile-shortcut-icon">📦</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Pedidos</strong>
+                            <small>Gestionar ventas</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/productos")'>
+                        <span class="profile-shortcut-icon">💻</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Productos</strong>
+                            <small>Catálogo y stock</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/categorias")'>
+                        <span class="profile-shortcut-icon">🗂️</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Categorías</strong>
+                            <small>Organizar catálogo</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/marcas")'>
+                        <span class="profile-shortcut-icon">🏷️</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Marcas</strong>
+                            <small>Fabricantes</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/banners")'>
+                        <span class="profile-shortcut-icon">🖼️</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Banners</strong>
+                            <small>Promociones</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick="IrAResenasInicio">
+                        <span class="profile-shortcut-icon">⭐</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Reseñas</strong>
+                            <small>Ver testimonios del inicio</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/preguntasfrecuentes")'>
+                        <span class="profile-shortcut-icon">❓</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Preguntas</strong>
+                            <small>FAQ del sitio</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/blog")'>
+                        <span class="profile-shortcut-icon">📰</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Blog</strong>
+                            <small>Contenido</small>
+                        </span>
+                    </button>
 
                 </div>
 
-                <div class="info-details">
+            </section>
+        }
+        else
+        {
+            <!-- =================================================
+                 ACCESOS DEL CLIENTE
+                 ================================================= -->
+            <section class="profile-shortcuts-section">
 
-                    <span class="info-label">
-                        @(IsAdmin
-                                                ? "Gestión Global"
-                                                : "Mis compras")
-                    </span>
+                <div class="profile-section-heading">
+                    <span>MI CUENTA</span>
+                    <small>Accesos rápidos</small>
+                </div>
 
-                    <span class="info-value">
-                        @(IsAdmin
-                                                ? "Administrar Pedidos"
-                                                : $"{RecentOrdersCount} pedidos realizados")
-                    </span>
+                <div class="profile-shortcuts-grid client-grid">
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/pedidos")'>
+                        <span class="profile-shortcut-icon">📦</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Mis pedidos</strong>
+                            <small>
+                                @RecentOrdersCount realizados
+                            </small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/favoritos")'>
+                        <span class="profile-shortcut-icon">♥</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Favoritos</strong>
+                            <small>Lista de deseos</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick='() => NavegarA("/productos")'>
+                        <span class="profile-shortcut-icon">🛍️</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Productos</strong>
+                            <small>Seguir comprando</small>
+                        </span>
+                    </button>
+
+                    <button type="button"
+                            class="profile-shortcut"
+                            @onclick="IrAResenasInicio">
+                        <span class="profile-shortcut-icon">⭐</span>
+                        <span class="profile-shortcut-text">
+                            <strong>Reseñas</strong>
+                            <small>Ir a testimonios</small>
+                        </span>
+                    </button>
 
                 </div>
+
+            </section>
+        }
+
+
+        <!-- Estado -->
+        <div class="info-card info-card-status">
+
+            <div class="info-icon-check">
+
+                <svg viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2.5">
+
+                    <polyline points="20 6 9 17 4 12">
+                    </polyline>
+
+                </svg>
 
             </div>
 
-
-            <!-- Mis Favoritos -->
-            <div class="info-card info-card-clickable"
-                 @onclick='() => NavegarA("/favoritos")'
-                 style="cursor: pointer;">
-
-                <div class="info-icon">
-
-                    <svg viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="2">
-
-                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 3.8 3 5.5l7 7Z"></path>
-
-                    </svg>
-
-                </div>
-
-                <div class="info-details">
-
-                    <span class="info-label">
-                        Lista de Deseos
-                    </span>
-
-                    <span class="info-value">
-                        Mis Favoritos
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- Estado de la Cuenta -->
-            <div class="info-card info-card-status">
-
-                <div class="info-icon-check">
-
-                    <svg viewBox="0 0 24 24"
-                         fill="none"
-                         stroke="currentColor"
-                         stroke-width="2.5">
-
-                        <polyline points="20 6 9 17 4 12"></polyline>
-
-                    </svg>
-
-                </div>
-
-                <span class="status-text">
-                    @(IsAdmin
-                                        ? "Cuenta Admin NEXO activa"
-                                        : "Cuenta NEXO activa")
-                </span>
-
-            </div>
+            <span class="status-text">
+                @(IsAdmin
+                                ? "Cuenta Administrador NEXO activa"
+                                : "Cuenta Cliente NEXO activa")
+            </span>
 
         </div>
 
     </div>
 
 
-    <!-- Footer / Cerrar Sesión -->
+    <!-- Footer / Cerrar sesión -->
     <div class="profile-footer">
 
         <button type="button"
@@ -213,14 +339,17 @@
                  stroke="currentColor"
                  stroke-width="2">
 
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4">
+                </path>
 
-                <polyline points="16 17 21 12 16 7"></polyline>
+                <polyline points="16 17 21 12 16 7">
+                </polyline>
 
                 <line x1="21"
                       y1="12"
                       x2="9"
-                      y2="12"></line>
+                      y2="12">
+                </line>
 
             </svg>
 
@@ -243,16 +372,24 @@
 
 
     [Parameter]
-    public string UserName { get; set; } = string.Empty;
+    public string UserName { get; set; } =
+        string.Empty;
 
     [Parameter]
-    public string UserEmail { get; set; } = string.Empty;
+    public string UserEmail { get; set; } =
+        string.Empty;
 
     [Parameter]
-    public bool IsAdmin { get; set; } = false;
+    public bool IsAdmin { get; set; } =
+        false;
 
     [Parameter]
-    public int RecentOrdersCount { get; set; } = 0;
+    public bool IsClient { get; set; } =
+        false;
+
+    [Parameter]
+    public int RecentOrdersCount { get; set; } =
+        0;
 
     [Parameter]
     public EventCallback OnLogout { get; set; }
@@ -262,15 +399,30 @@
     {
         IsOpen = false;
 
-        await IsOpenChanged.InvokeAsync(IsOpen);
+        await IsOpenChanged.InvokeAsync(
+            IsOpen);
     }
 
 
-    private async Task NavegarA(string ruta)
+    private async Task NavegarA(
+        string ruta)
     {
         await Close();
 
-        Navigation.NavigateTo(ruta);
+        Navigation.NavigateTo(
+            ruta);
+    }
+
+
+    private async Task IrAResenasInicio()
+    {
+        await Close();
+
+        // Navega al Inicio y posiciona el navegador
+        // exactamente en la sección de reseñas.
+        Navigation.NavigateTo(
+            "/#resenas",
+            forceLoad: true);
     }
 
 
@@ -280,32 +432,18 @@
 
         try
         {
-            // ==========================================
-            // CERRAR SESIÓN REAL
-            // ==========================================
-
             await AuthState.CerrarSesionAsync();
         }
         catch
         {
-            // Evitamos que un error de localStorage
+            // Evita que un error de localStorage
             // impida cerrar visualmente la sesión.
         }
-
-
-        // ==========================================
-        // AVISAR AL LAYOUT
-        // ==========================================
 
         if (OnLogout.HasDelegate)
         {
             await OnLogout.InvokeAsync();
         }
-
-
-        // ==========================================
-        // VOLVER AL INICIO
-        // ==========================================
 
         Navigation.NavigateTo(
             "/",

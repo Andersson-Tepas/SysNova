@@ -1551,3 +1551,299 @@ app {
         border-left: none;
     }
 }
+
+
+/* =========================================================
+   NEXO - NAVEGACIÓN ADMINISTRATIVA
+   ========================================================= */
+
+/* Mantiene el header compacto aunque el menú esté abierto. */
+.sn-navbar {
+    position: relative;
+    overflow: visible;
+}
+
+.sn-navbar-content {
+    position: relative;
+    min-height: 44px;
+    overflow: visible;
+}
+
+/* Contexto del panel administrador, reemplaza el buscador. */
+.sn-admin-heading {
+    min-width: 155px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-shrink: 0;
+    line-height: 1.05;
+}
+
+.sn-admin-heading-kicker {
+    margin-bottom: 4px;
+    color: #fbbf24;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.18em;
+}
+
+.sn-admin-heading strong {
+    color: #f8fafc;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Badge ADMIN a la derecha. */
+.sn-role-badge {
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.10em;
+    white-space: nowrap;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.sn-role-admin {
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.10);
+    border: 1px solid rgba(251, 191, 36, 0.30);
+}
+
+/* Contenedor del dropdown. */
+.sn-admin-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Botón Administración. */
+.sn-admin-menu-trigger {
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 12px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    background: transparent;
+    color: #94a3b8;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+        color 0.18s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease;
+}
+
+.sn-admin-menu-trigger svg {
+    width: 15px;
+    height: 15px;
+    transition: transform 0.18s ease;
+}
+
+.sn-admin-menu-trigger:hover,
+.sn-admin-menu-trigger.is-open {
+    color: #ffffff;
+    background: #161b22;
+    border-color: #2d3748;
+}
+
+.sn-admin-menu-trigger.is-open svg {
+    transform: rotate(180deg);
+}
+
+/* Dropdown flotante: NO aumenta la altura del navbar. */
+.sn-admin-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 10000;
+    width: 390px;
+    padding: 12px;
+    border: 1px solid #293241;
+    border-radius: 18px;
+    background: #0f141b;
+    box-shadow:
+        0 28px 70px rgba(0, 0, 0, 0.50),
+        0 8px 24px rgba(0, 0, 0, 0.28);
+    color: #ffffff;
+}
+
+/* Flechita visual del dropdown. */
+.sn-admin-dropdown::before {
+    content: "";
+    position: absolute;
+    top: -7px;
+    right: 32px;
+    width: 12px;
+    height: 12px;
+    border-top: 1px solid #293241;
+    border-left: 1px solid #293241;
+    background: #0f141b;
+    transform: rotate(45deg);
+}
+
+/* Encabezado del dropdown. */
+.sn-admin-dropdown-header {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 5px 5px 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #222b37;
+}
+
+.sn-admin-dropdown-header > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sn-admin-dropdown-kicker {
+    margin-bottom: 3px;
+    color: #718096;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+}
+
+.sn-admin-dropdown-header strong {
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.sn-admin-dropdown-badge {
+    height: 23px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0 8px;
+    border-radius: 999px;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.09);
+    border: 1px solid rgba(251, 191, 36, 0.24);
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: 0.09em;
+}
+
+/* Tarjetas del menú. */
+.sn-admin-dropdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.sn-admin-dropdown-item {
+    min-width: 0;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 10px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: #dbe4ef;
+    text-decoration: none;
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.sn-admin-dropdown-item:hover,
+.sn-admin-dropdown-item.active {
+    color: #ffffff;
+    background: #171e27;
+    border-color: #303b49;
+    transform: translateY(-1px);
+}
+
+.sn-admin-item-icon {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    border-radius: 9px;
+    background: #1a222d;
+    font-size: 14px;
+}
+
+.sn-admin-item-copy {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sn-admin-item-copy strong {
+    overflow: hidden;
+    color: #f8fafc;
+    font-size: 11.5px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.sn-admin-dropdown-item.active .sn-admin-item-copy strong {
+    color: #fbbf24;
+}
+
+.sn-admin-item-copy small {
+    margin-top: 2px;
+    overflow: hidden;
+    color: #718096;
+    font-size: 9.5px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* Evita que el navbar del admin se deforme. */
+.sn-actions {
+    position: relative;
+    z-index: 2;
+}
+
+@media (max-width: 1180px) {
+    .sn-admin-heading {
+        display: none;
+    }
+
+    .sn-nav-menu-inline {
+        gap: 14px;
+    }
+}
+
+/* En móvil el navbar principal ya oculta los enlaces.
+   El admin sigue teniendo acceso por ProfileDrawer. */
+@media (max-width: 1100px) {
+    .sn-admin-dropdown {
+        display: none;
+    }
+
+    .sn-role-badge {
+        display: none;
+    }
+
+    .sn-user-btn {
+        display: flex;
+    }
+}

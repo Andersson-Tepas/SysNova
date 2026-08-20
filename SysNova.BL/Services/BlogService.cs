@@ -51,7 +51,27 @@ namespace SysNova.BL.Services
 
         public async Task UpdateAsync(BlogDTO blogDto)
         {
-            var entity = _mapper.Map<Blog>(blogDto);
+            var entity = await _repository.GetByIdAsync(blogDto.BlogId);
+
+            if (entity == null)
+            {
+                throw new KeyNotFoundException(
+                    $"No se encontró el blog con ID {blogDto.BlogId}.");
+            }
+
+            entity.Titulo = blogDto.Titulo;
+            entity.Resumen = blogDto.Resumen;
+            entity.Contenido = blogDto.Contenido;
+
+            entity.Imagen = blogDto.Imagen;
+
+            entity.Autor = blogDto.Autor;
+            entity.FechaPublicacion = blogDto.FechaPublicacion;
+            entity.Visitas = blogDto.Visitas;
+
+            entity.Activo = blogDto.Activo;
+            entity.FechaModificacion = DateTime.Now;
+
             await _repository.UpdateAsync(entity);
         }
 

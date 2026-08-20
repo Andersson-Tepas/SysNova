@@ -8,6 +8,7 @@
 @inject HttpClient Http
 @inject IJSRuntime JS
 @inject AuthStateService AuthState
+@inject CarritoService Carrito
 
 <PageTitle>Productos - SysNova Tech</PageTitle>
 
@@ -334,8 +335,9 @@
 
                                 <button type="button"
                                         class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2 rounded-circle p-1 d-flex align-items-center justify-content-center z-3 border border-secondary border-opacity-50"
-                                        style="width: 34px; height: 34px;"
-                                        @onclick="() => ToggleFavorito(prod.ProductoId)"
+                                        style="width: 34px; height: 34px; z-index: 50 !important; pointer-events: auto;"
+                                        @onclick="async () => await ToggleFavorito(prod.ProductoId)"
+                                        @onclick:stopPropagation="true"
                                         title="@(esFav ? "Quitar de favoritos" : "Agregar a favoritos")">
 
                                     <svg width="18"
@@ -379,10 +381,10 @@
                                 <div class="position-relative bg-dark bg-opacity-50 text-center p-3 border-bottom border-secondary border-opacity-25 product-img-container">
 
                                     <img src="@(string.IsNullOrEmpty(prod.ImagenPrincipal)
-                                                                                                                                       ? "images/laptop-hero.png"
-                                                                                                                                       : prod.ImagenPrincipal)"
+                                                                                                                                                                                                                         ? "images/laptop-hero.png"
+                                                                                                                                                                                                                         : prod.ImagenPrincipal)"
                                  alt="@prod.Nombre"
-                                 class="img-fluid h-100 object-fit-contain" />
+                                 class="img-fluid h-100 object-fit-contain" style="pointer-events: none;" />
 
 
                                     <!-- ACCIONES ADMIN -->
@@ -550,12 +552,13 @@
 
 
                 <EditForm Model="@formModel"
-                          OnValidSubmit="GuardarProducto">
+                          OnValidSubmit="GuardarProducto"
+                          class="producto-modal-form">
 
                     <DataAnnotationsValidator />
 
 
-                    <div class="modal-body py-3">
+                    <div class="modal-body py-3 custom-modal-body">
 
                         <div class="row g-3 mb-3">
 
@@ -673,11 +676,22 @@
                             <div class="col-4">
 
                                 <label class="form-label small text-secondary">
-                                    ID Categoría
+                                    Categoría
                                 </label>
 
-                                <InputNumber class="form-control input-dark"
-                                             @bind-Value="formModel.CategoriaId" />
+                                <InputSelect class="form-select input-dark"
+                                             @bind-Value="formModel.CategoriaId">
+
+                                    <option value="0">Seleccionar...</option>
+
+                                @foreach (var categoria in listaCategorias.Where(c => c.Activo))
+                                    {
+                                        <option value="@categoria.CategoriaId">
+                                            @categoria.Nombre
+                                        </option>
+                                    }
+
+                                </InputSelect>
 
                             </div>
 
@@ -701,7 +715,7 @@
                                     PNG, JPG o WEBP · máximo 10 MB
                                 </small>
 
-                            @if (subiendoImagen)
+                                @if (subiendoImagen)
                                 {
                                     <div class="d-flex align-items-center gap-2 text-info small mt-2">
                                         <span class="spinner-border spinner-border-sm"></span>
@@ -720,17 +734,28 @@
                                     </div>
                                 }
 
-                        </div>
+                            </div>
 
 
-                        <div class="col-4">
+                            <div class="col-4">
 
-                            <label class="form-label small text-secondary">
-                                ID Marca
-                            </label>
+                                <label class="form-label small text-secondary">
+                                    Marca
+                                </label>
 
-                            <InputNumber class="form-control input-dark"
-                                         @bind-Value="formModel.MarcaId" />
+                                <InputSelect class="form-select input-dark"
+                                             @bind-Value="formModel.MarcaId">
+
+                                    <option value="0">Seleccionar...</option>
+
+                                    @foreach (var marca in listaMarcas.Where(m => m.Activo))
+                                    {
+                                        <option value="@marca.MarcaId">
+                                            @marca.Nombre
+                                        </option>
+                                    }
+
+                            </InputSelect>
 
                         </div>
 
@@ -834,6 +859,10 @@
 
     private List<ProductoDTO> listaProductos = new();
 
+    private List<CategoriaDTO> listaCategorias = new();
+
+    private List<MarcaDTO> listaMarcas = new();
+
     private ProductoDTO formModel = new();
 
     private HashSet<int> idsFavoritos = new();
@@ -854,6 +883,60 @@
     private bool esEdicion = false;
 
     private bool subiendoImagen = false;
+
+
+    // =========================================================
+    // CARGAR CATEGORÍAS
+    // =========================================================
+
+    private async Task CargarCategorias()
+    {
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+            var res =
+                await Http.GetFromJsonAsync<List<CategoriaDTO>>(
+                    "api/categoria");
+
+            if (res != null)
+            {
+                listaCategorias = res;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al cargar categorías: {ex.Message}");
+        }
+    }
+
+
+    // =========================================================
+    // CARGAR MARCAS
+    // =========================================================
+
+    private async Task CargarMarcas()
+    {
+        try
+        {
+            await AplicarTokenAutorizacion();
+
+            var res =
+                await Http.GetFromJsonAsync<List<MarcaDTO>>(
+                    "api/marca");
+
+            if (res != null)
+            {
+                listaMarcas = res;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error al cargar marcas: {ex.Message}");
+        }
+    }
 
 
     // =========================================================
@@ -889,7 +972,10 @@
             esAdmin =
                 AuthState.EsAdministrador;
 
-            await CargarProductos();
+            await Task.WhenAll(
+                CargarProductos(),
+                CargarCategorias(),
+                CargarMarcas());
         }
         catch (Exception ex)
         {
@@ -1019,57 +1105,63 @@
                     "localStorage.getItem",
                     "sysnova_favoritos");
 
-
-            if (!string.IsNullOrWhiteSpace(favsJson))
+            if (string.IsNullOrWhiteSpace(favsJson))
             {
-                var lista =
-                    System.Text.Json.JsonSerializer
-                        .Deserialize<List<int>>(favsJson);
-
-
-                if (lista != null)
-                {
-                    idsFavoritos =
-                        new HashSet<int>(lista);
-                }
+                idsFavoritos = new HashSet<int>();
+                return;
             }
+
+            var lista =
+                System.Text.Json.JsonSerializer
+                    .Deserialize<List<int>>(favsJson);
+
+            idsFavoritos =
+                lista != null
+                    ? new HashSet<int>(lista)
+                    : new HashSet<int>();
         }
         catch (Exception ex)
         {
             Console.WriteLine(
                 $"Error al cargar favoritos: {ex.Message}");
+
+            idsFavoritos = new HashSet<int>();
         }
     }
 
 
     private async Task ToggleFavorito(int id)
     {
-        if (idsFavoritos.Contains(id))
-        {
-            idsFavoritos.Remove(id);
-        }
-        else
-        {
-            idsFavoritos.Add(id);
-        }
-
-
         try
         {
+            if (idsFavoritos.Contains(id))
+            {
+                idsFavoritos.Remove(id);
+            }
+            else
+            {
+                idsFavoritos.Add(id);
+            }
+
             var json =
                 System.Text.Json.JsonSerializer
-                    .Serialize(idsFavoritos);
-
+                    .Serialize(idsFavoritos.ToList());
 
             await JS.InvokeVoidAsync(
                 "localStorage.setItem",
                 "sysnova_favoritos",
                 json);
+
+            await InvokeAsync(StateHasChanged);
         }
         catch (Exception ex)
         {
             Console.WriteLine(
                 $"Error al guardar favorito: {ex.Message}");
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"No se pudo actualizar favoritos: {ex.Message}");
         }
     }
 
@@ -1171,9 +1263,9 @@
         {
             Activo = true,
 
-            CategoriaId = 1,
+            CategoriaId = 0,
 
-            MarcaId = 1,
+            MarcaId = 0,
 
             Stock = 10,
 
@@ -1413,6 +1505,24 @@
             return;
         }
 
+        if (formModel.CategoriaId <= 0)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "Selecciona una categoría.");
+
+            return;
+        }
+
+        if (formModel.MarcaId <= 0)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "Selecciona una marca.");
+
+            return;
+        }
+
 
         guardando = true;
 
@@ -1544,7 +1654,16 @@
     private void AgregarAlCarrito(
         ProductoDTO prod)
     {
-        Console.WriteLine(
-            $"Agregado: {prod.Nombre}");
+        if (prod == null ||
+            prod.Stock <= 0)
+        {
+            return;
+        }
+
+        Carrito.AgregarProducto(
+            prod,
+            1);
+
+        Carrito.SolicitarAbrirCarrito();
     }
 }

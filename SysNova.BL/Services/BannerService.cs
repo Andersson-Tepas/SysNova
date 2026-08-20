@@ -51,7 +51,28 @@ namespace SysNova.BL.Services
 
         public async Task UpdateAsync(BannerDTO bannerDto)
         {
-            var entity = _mapper.Map<Banner>(bannerDto);
+            var entity = await _repository.GetByIdAsync(bannerDto.BannerId);
+
+            if (entity == null)
+            {
+                throw new KeyNotFoundException(
+                    $"No se encontró el banner con ID {bannerDto.BannerId}.");
+            }
+
+            entity.Titulo = bannerDto.Titulo;
+            entity.SubTitulo = bannerDto.SubTitulo;
+
+            entity.Imagen = bannerDto.Imagen;
+
+            entity.BotonTexto = bannerDto.BotonTexto;
+            entity.BotonUrl = bannerDto.BotonUrl;
+
+            entity.Orden = bannerDto.Orden;
+            entity.Mostrar = bannerDto.Mostrar;
+            entity.Activo = bannerDto.Activo;
+
+            entity.FechaModificacion = DateTime.Now;
+
             await _repository.UpdateAsync(entity);
         }
 

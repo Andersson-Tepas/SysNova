@@ -203,10 +203,6 @@
                             Más recientes
                         </option>
 
-                        <option value="id">
-                            ID
-                        </option>
-
                     </select>
 
                 </div>
@@ -276,10 +272,6 @@
 
                                 <tr>
 
-                                    <th class="ps-3 py-3">
-                                        ID
-                                    </th>
-
                                     <th class="py-3">
                                         Categoría
                                     </th>
@@ -309,11 +301,6 @@
 
                                     <tr style="opacity: @(!cat.Activo ? "0.6" : "1");">
 
-                                        <td class="ps-3 text-secondary font-monospace">
-                                            #@cat.CategoriaId
-                                        </td>
-
-
                                         <td>
 
                                             <div class="d-flex align-items-center gap-2">
@@ -322,9 +309,9 @@
                                                      style="width:36px;height:36px;">
 
                                                     <i class="@(string.IsNullOrEmpty(cat.Icono)
-                                                                                                                                                                      ? "bi bi-tag-fill"
-                                                                                                                                                                      : cat.Icono) text-primary fs-5">
-                                                                                                                                                                               </i>
+                                                                                                                                                                                                                             ? "bi bi-tag-fill"
+                                                                                                                                                                                                                             : cat.Icono) text-primary fs-5">
+                                                                                                                                                                                                                                      </i>
 
                                                 </div>
 
@@ -434,9 +421,9 @@
                                          style="width:54px;height:54px;">
 
                                         <i class="@(string.IsNullOrEmpty(cat.Icono)
-                                                                                                                                  ? "bi bi-laptop"
-                                                                                                                                  : cat.Icono) text-primary fs-3">
-                                                                                                                                           </i>
+                                                                                                                                                                             ? "bi bi-laptop"
+                                                                                                                                                                             : cat.Icono) text-primary fs-3">
+                                                                                                                                                                                      </i>
 
                                     </div>
 
@@ -969,12 +956,6 @@
             {
                 return resultado.OrderByDescending(
                     c => c.FechaCreacion);
-            }
-
-            if (criterioOrden == "id")
-            {
-                return resultado.OrderBy(
-                    c => c.CategoriaId);
             }
 
             return resultado.OrderBy(

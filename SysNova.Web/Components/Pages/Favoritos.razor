@@ -1,8 +1,12 @@
 ﻿@page "/favoritos"
+
 @using SysNova.DTO
+@using SysNova.Web.Services
+
 @inject HttpClient Http
 @inject IJSRuntime JS
 @inject NavigationManager Nav
+@inject CarritoService Carrito
 
 <PageTitle>Mis Favoritos - SysNova Tech</PageTitle>
 
@@ -16,7 +20,8 @@
 
         @if (productosFavoritos.Any())
         {
-            <button class="btn btn-outline-danger btn-sm" @onclick="VaciarFavoritos">
+            <button class="btn btn-outline-danger btn-sm"
+                    @onclick="VaciarFavoritos">
                 🗑️ Vaciar Favoritos
             </button>
         }
@@ -25,29 +30,48 @@
     @if (cargando)
     {
         <div class="text-center py-5">
-            <div class="spinner-border text-primary mb-3" role="status"></div>
-            <p class="text-secondary mb-0">Cargando tus favoritos...</p>
+            <div class="spinner-border text-primary mb-3"
+                 role="status">
+            </div>
+
+            <p class="text-secondary mb-0">
+                Cargando tus favoritos...
+            </p>
         </div>
     }
     else if (!productosFavoritos.Any())
     {
         <div class="text-center py-5 card bg-dark bg-opacity-25 border-secondary border-opacity-25">
-            <div class="display-1 mb-3">💔</div>
-            <h4 class="text-white mb-2">No tienes productos en tu lista de favoritos</h4>
-            <p class="text-secondary mb-4">Explora nuestro catálogo y presiona el corazón para guardar los que te gusten.</p>
+
+            <div class="display-1 mb-3">
+                💔
+            </div>
+
+            <h4 class="text-white mb-2">
+                No tienes productos en tu lista de favoritos
+            </h4>
+
+            <p class="text-secondary mb-4">
+                Explora nuestro catálogo y presiona el corazón para guardar los que te gusten.
+            </p>
+
             <div>
-                <button class="btn btn-primary" @onclick='() => Nav.NavigateTo("/productos")'>
+                <button class="btn btn-primary"
+                        @onclick='() => Nav.NavigateTo("/productos")'>
                     Ver Catálogo de Productos
                 </button>
             </div>
+
         </div>
     }
     else
     {
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 g-3">
+
             @foreach (var prod in productosFavoritos)
             {
                 <div class="col">
+
                     <div class="card h-100 border-secondary border-opacity-25 shadow-sm overflow-hidden text-white position-relative product-card">
 
                         <!-- BOTÓN QUITAR -->
@@ -59,70 +83,149 @@
                             ✕
                         </button>
 
+                        <!-- IMAGEN -->
                         <div class="position-relative bg-dark bg-opacity-50 text-center p-3 border-bottom border-secondary border-opacity-25 product-img-container">
-                            <img src="@(string.IsNullOrEmpty(prod.ImagenPrincipal) ? "images/laptop-hero.png" : prod.ImagenPrincipal)" alt="@prod.Nombre" class="img-fluid h-100 object-fit-contain" />
+
+                            <img src="@(string.IsNullOrEmpty(prod.ImagenPrincipal)
+                                                                 ? "images/laptop-hero.png"
+                                                                 : prod.ImagenPrincipal)"
+                                                                                        alt="@prod.Nombre"
+                                                                                        class="img-fluid h-100 object-fit-contain" />
+
                         </div>
 
+                        <!-- INFORMACIÓN -->
                         <div class="card-body d-flex flex-column justify-content-between p-3">
+
                             <div>
-                                <span class="badge bg-dark border border-secondary border-opacity-25 text-secondary fw-normal mb-2">SKU: @prod.CodigoSKU</span>
-                                <h5 class="card-title h6 text-white text-truncate mb-2" title="@prod.Nombre">@prod.Nombre</h5>
-                                <p class="card-text text-secondary small line-clamp-2 mb-3">@prod.Descripcion</p>
+
+                                <span class="badge bg-dark border border-secondary border-opacity-25 text-secondary fw-normal mb-2">
+                                    SKU: @prod.CodigoSKU
+                                </span>
+
+                                <h5 class="card-title h6 text-white text-truncate mb-2"
+                                    title="@prod.Nombre">
+                                    @prod.Nombre
+                                </h5>
+
+                                <p class="card-text text-secondary small line-clamp-2 mb-3">
+                                    @prod.Descripcion
+                                </p>
+
                             </div>
 
                             <div>
-                                <div class="fs-5 fw-bold text-success mb-3">US$ @prod.Precio.ToString("N2")</div>
 
-                                <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 btn-sm" disabled="@(prod.Stock <= 0)" @onclick="() => AgregarAlCarrito(prod)">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" /></svg>
-                                    @(prod.Stock <= 0 ? "Agotado" : "Añadir al carrito")
-                                </button>
+                                <div class="fs-5 fw-bold text-success mb-3">
+                                    US$ @prod.Precio.ToString("N2")
+                                </div>
+
+                                <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-center gap-2 btn-sm"
+                                        disabled="@(prod.Stock <= 0)"
+                                        @onclick="() => AgregarAlCarrito(prod)">
+
+                                    <svg width="16"
+                                         height="16"
+                                         viewBox="0 0 24 24"
+                                         fill="none"
+                                         stroke="currentColor"
+                                         stroke-width="2">
+
+                                        <path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+
+                                    </svg>
+
+                                    @(prod.Stock <= 0
+                                                                ? "Agotado"
+                                                                : "Añadir al carrito")
+
+                        </button>
+
                             </div>
+
                         </div>
+
                     </div>
+
                 </div>
-            }
+                }
+
         </div>
     }
+
 </div>
 
 @code {
+
     private List<ProductoDTO> productosFavoritos = new();
+
     private HashSet<int> idsFavoritos = new();
+
     private bool cargando = true;
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-        {
-            await CargarDatos();
-            StateHasChanged();
-        }
+        if (!firstRender)
+            return;
+
+        await CargarDatos();
+
+        await InvokeAsync(StateHasChanged);
     }
+
 
     private async Task CargarDatos()
     {
         cargando = true;
+
         try
         {
-            var favsJson = await JS.InvokeAsync<string>("localStorage.getItem", "sysnova_favoritos");
-            if (!string.IsNullOrEmpty(favsJson))
+            var favsJson =
+                await JS.InvokeAsync<string?>(
+                    "localStorage.getItem",
+                    "sysnova_favoritos");
+
+            if (string.IsNullOrWhiteSpace(favsJson))
             {
-                var listaIds = System.Text.Json.JsonSerializer.Deserialize<List<int>>(favsJson);
-                if (listaIds != null && listaIds.Any())
-                {
-                    idsFavoritos = new HashSet<int>(listaIds);
-                    var todos = await Http.GetFromJsonAsync<List<ProductoDTO>>("api/producto");
-                    if (todos != null)
-                    {
-                        productosFavoritos = todos.Where(p => idsFavoritos.Contains(p.ProductoId)).ToList();
-                    }
-                }
+                idsFavoritos.Clear();
+                productosFavoritos.Clear();
+                return;
+            }
+
+            var listaIds =
+                System.Text.Json.JsonSerializer
+                    .Deserialize<List<int>>(favsJson);
+
+            if (listaIds == null ||
+                !listaIds.Any())
+            {
+                idsFavoritos.Clear();
+                productosFavoritos.Clear();
+                return;
+            }
+
+            idsFavoritos =
+                new HashSet<int>(listaIds);
+
+            var todos =
+                await Http.GetFromJsonAsync<List<ProductoDTO>>(
+                    "api/producto");
+
+            if (todos != null)
+            {
+                productosFavoritos =
+                    todos
+                        .Where(p =>
+                            idsFavoritos.Contains(
+                                p.ProductoId))
+                        .ToList();
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al cargar favoritos: {ex.Message}");
+            Console.WriteLine(
+                $"Error al cargar favoritos: {ex.Message}");
         }
         finally
         {
@@ -130,38 +233,65 @@
         }
     }
 
+
     private async Task QuitarFavorito(int id)
     {
         idsFavoritos.Remove(id);
-        productosFavoritos.RemoveAll(p => p.ProductoId == id);
+
+        productosFavoritos.RemoveAll(
+            p => p.ProductoId == id);
 
         try
         {
-            var json = System.Text.Json.JsonSerializer.Serialize(idsFavoritos);
-            await JS.InvokeVoidAsync("localStorage.setItem", "sysnova_favoritos", json);
+            var json =
+                System.Text.Json.JsonSerializer
+                    .Serialize(idsFavoritos);
+
+            await JS.InvokeVoidAsync(
+                "localStorage.setItem",
+                "sysnova_favoritos",
+                json);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al actualizar favoritos: {ex.Message}");
+            Console.WriteLine(
+                $"Error al actualizar favoritos: {ex.Message}");
         }
     }
+
 
     private async Task VaciarFavoritos()
     {
         idsFavoritos.Clear();
+
         productosFavoritos.Clear();
+
         try
         {
-            await JS.InvokeVoidAsync("localStorage.removeItem", "sysnova_favoritos");
+            await JS.InvokeVoidAsync(
+                "localStorage.removeItem",
+                "sysnova_favoritos");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al vaciar favoritos: {ex.Message}");
+            Console.WriteLine(
+                $"Error al vaciar favoritos: {ex.Message}");
         }
     }
 
+
     private void AgregarAlCarrito(ProductoDTO prod)
     {
-        Console.WriteLine($"Agregado desde favoritos: {prod.Nombre}");
+        if (prod == null ||
+            prod.Stock <= 0)
+        {
+            return;
+        }
+
+        Carrito.AgregarProducto(
+            prod,
+            1);
+
+        Carrito.SolicitarAbrirCarrito();
     }
 }

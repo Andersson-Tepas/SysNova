@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Routing
 @using SysNova.DTO
 @using SysNova.Web.Components.Pages
 @using SysNova.Web.Services
@@ -42,7 +43,9 @@
             <div class="sn-container sn-navbar-content">
 
                 <!-- LOGO -->
-                <a href="/" class="sn-logo">
+                <NavLink href="/"
+                         Match="NavLinkMatch.All"
+                         class="sn-logo">
 
                     <div class="sn-logo-badge">
                         <span>⚡</span>
@@ -52,64 +55,108 @@
                         NEXO<span>Tech</span>
                     </span>
 
-                </a>
+                </NavLink>
 
 
                 <!-- BUSCADOR DESKTOP -->
-                <div class="sn-search sn-desktop-search">
+                @if (!AuthState.EsAdministrador)
+                {
+                    <div class="sn-search sn-desktop-search">
 
-                    <span class="sn-search-icon">
+                        <span class="sn-search-icon">
+                            <svg viewBox="0 0 24 24"
+                                 fill="none"
+                                 stroke="currentColor"
+                                 stroke-width="2">
+                                <circle cx="11"
+                                        cy="11"
+                                        r="7">
+                                </circle>
 
-                        <svg viewBox="0 0 24 24"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="2">
+                                <path d="m20 20-3.5-3.5">
+                                </path>
+                            </svg>
+                        </span>
 
-                            <circle cx="11"
-                                    cy="11"
-                                    r="7">
-                            </circle>
+                        <input type="search"
+                               placeholder="Busca laptops, audífonos, smartphones..."
+                               aria-label="Buscar productos" />
 
-                            <path d="m20 20-3.5-3.5">
-                            </path>
-
-                        </svg>
-
-                    </span>
-
-                    <input type="search"
-                           placeholder="Busca laptops, audífonos, smartphones..."
-                           aria-label="Buscar productos" />
-
-                </div>
+                    </div>
+                }
 
 
                 <!-- MENÚ DE NAVEGACIÓN -->
                 <nav class="sn-nav-menu-inline">
 
-                    <a href="/" class="sn-nav-link active">
-                        Inicio
-                    </a>
+                    @* =====================================================
+                       PÚBLICO / CLIENTE
+                       ===================================================== *@
+                    @if (!AuthState.EsAdministrador)
+                    {
+                        <NavLink href="/"
+                                 Match="NavLinkMatch.All"
+                                 class="sn-nav-link">
+                            Inicio
+                        </NavLink>
 
-                    <a href="/categorias" class="sn-nav-link">
-                        Categorías
-                    </a>
+                        <NavLink href="/categorias"
+                                 class="sn-nav-link">
+                            Categorías
+                        </NavLink>
 
-                    <a href="/productos" class="sn-nav-link">
-                        Productos
-                    </a>
+                        <NavLink href="/productos"
+                                 class="sn-nav-link">
+                            Productos
+                        </NavLink>
 
-                    <a href="/ofertas" class="sn-nav-link">
-                        Ofertas
-                    </a>
+                        <NavLink href="/ofertas"
+                                 class="sn-nav-link">
+                            Ofertas
+                        </NavLink>
 
-                    <a href="/blog" class="sn-nav-link">
-                        Blog
-                    </a>
+                        <NavLink href="/blog"
+                                 class="sn-nav-link">
+                            Blog
+                        </NavLink>
 
-                    <a href="/contacto" class="sn-nav-link">
-                        Contacto
-                    </a>
+                        <NavLink href="/#contacto"
+                                 class="sn-nav-link">
+                            Contacto
+                        </NavLink>
+
+                        @if (AuthState.EsCliente)
+                        {
+                            <NavLink href="/pedidos"
+                                     class="sn-nav-link sn-nav-client">
+                                Mis pedidos
+                            </NavLink>
+                        }
+                    }
+
+
+                    @* =====================================================
+                       ADMINISTRADOR
+                       ===================================================== *@
+                    @if (AuthState.EsAdministrador)
+                    {
+                        <NavLink href="/"
+                                 Match="NavLinkMatch.All"
+                                 class="sn-nav-link">
+                            Inicio
+                        </NavLink>
+
+                        <NavLink href="/productos"
+                                 class="sn-nav-link">
+                            Productos
+                        </NavLink>
+
+                        <NavLink href="/pedidos"
+                                 class="sn-nav-link">
+                            Pedidos
+                        </NavLink>
+
+                    }
 
                 </nav>
 
@@ -117,10 +164,19 @@
                 <!-- ACCIONES DERECHA -->
                 <div class="sn-actions">
 
+                    @if (AuthState.EsAdministrador)
+                    {
+                        <span class="sn-role-badge sn-role-admin">
+                            ADMIN
+                        </span>
+                    }
+
+
                     <!-- PERFIL -->
                     <button type="button"
                             class="sn-action-button sn-user-btn"
                             aria-label="Mi cuenta"
+                            title="Mi cuenta"
                             @onclick="AbrirPerfil">
 
                         <svg viewBox="0 0 24 24"
@@ -141,81 +197,88 @@
                     </button>
 
 
-                    <!-- CARRITO -->
-                    <button type="button"
-                            class="sn-action-button sn-cart-button"
-                            aria-label="Carrito de compras"
-                            @onclick="AbrirCarrito">
-
-                        <svg viewBox="0 0 24 24"
-                             fill="none"
-                             stroke="currentColor"
-                             stroke-width="2">
-
-                            <circle cx="9"
-                                    cy="20"
-                                    r="1">
-                            </circle>
-
-                            <circle cx="19"
-                                    cy="20"
-                                    r="1">
-                            </circle>
-
-                            <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6">
-                            </path>
-
-                        </svg>
-
-                        @if (cantidadTotal > 0)
-                        {
-                            <span class="sn-cart-count">
-                                @cantidadTotal
-                            </span>
-                        }
-
-                    </button>
-
-                </div>
-
-            </div>
-
-
-            <!-- BUSCADOR MÓVIL -->
-            <div class="sn-mobile-search-row">
-
-                <div class="sn-container">
-
-                    <div class="sn-search">
-
-                        <span class="sn-search-icon">
+                    <!-- CARRITO: PÚBLICO Y CLIENTE -->
+                    @if (!AuthState.EsAdministrador)
+                    {
+                        <button type="button"
+                                class="sn-action-button sn-cart-button"
+                                aria-label="Carrito de compras"
+                                title="Carrito"
+                                @onclick="AbrirCarrito">
 
                             <svg viewBox="0 0 24 24"
                                  fill="none"
                                  stroke="currentColor"
                                  stroke-width="2">
 
-                                <circle cx="11"
-                                        cy="11"
-                                        r="7">
+                                <circle cx="9"
+                                        cy="20"
+                                        r="1">
                                 </circle>
 
-                                <path d="m20 20-3.5-3.5">
+                                <circle cx="19"
+                                        cy="20"
+                                        r="1">
+                                </circle>
+
+                                <path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.6L21 8H6">
                                 </path>
 
                             </svg>
 
-                        </span>
+                            @if (cantidadTotal > 0)
+                            {
+                                <span class="sn-cart-count">
+                                    @cantidadTotal
+                                </span>
+                            }
 
-                        <input type="search"
-                               placeholder="Buscar productos..."
-                               aria-label="Buscar productos" />
-
-                    </div>
+                        </button>
+                    }
 
                 </div>
 
             </div>
+
+
+            <!-- BUSCADOR MÓVIL: NO SE MUESTRA EN ADMIN -->
+            @if (!AuthState.EsAdministrador)
+            {
+                <div class="sn-mobile-search-row">
+
+                    <div class="sn-container">
+
+                        <div class="sn-search">
+
+                            <span class="sn-search-icon">
+
+                                <svg viewBox="0 0 24 24"
+                                     fill="none"
+                                     stroke="currentColor"
+                                     stroke-width="2">
+
+                                    <circle cx="11"
+                                            cy="11"
+                                            r="7">
+                                    </circle>
+
+                                    <path d="m20 20-3.5-3.5">
+                                    </path>
+
+                                </svg>
+
+                            </span>
+
+                            <input type="search"
+                                   placeholder="Buscar productos..."
+                                   aria-label="Buscar productos" />
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
 
         </div>
 
@@ -233,7 +296,10 @@
 
 
     <!-- CARRITO -->
-    <Carrito @bind-IsOpen="isCartOpen" />
+    @if (!AuthState.EsAdministrador)
+    {
+        <Carrito @bind-IsOpen="isCartOpen" />
+    }
 
 
     <!-- PERFIL -->
@@ -241,6 +307,7 @@
                    UserName="@usuarioNombre"
                    UserEmail="@usuarioEmail"
                    IsAdmin="@AuthState.EsAdministrador"
+                   IsClient="@AuthState.EsCliente"
                    RecentOrdersCount="@pedidosCount"
                    OnLogout="CerrarSesion" />
 
@@ -267,7 +334,6 @@
     private bool isCartOpen = false;
 
     private bool isProfileOpen = false;
-
     private string usuarioNombre = string.Empty;
 
     private string usuarioEmail = string.Empty;
@@ -275,18 +341,19 @@
     private int pedidosCount = 0;
 
 
-    // Cantidad real compartida del carrito.
     private int cantidadTotal =>
         CarritoState.CantidadTotal;
 
 
     protected override void OnInitialized()
     {
-        CarritoState.OnChange += ActualizarCarrito;
+        CarritoState.OnChange +=
+            ActualizarCarrito;
     }
 
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
     {
         if (!firstRender)
             return;
@@ -309,14 +376,7 @@
     {
         try
         {
-            /*
-             * AuthStateService utiliza localStorage,
-             * por eso esta carga se hace después
-             * del primer render interactivo.
-             */
-
             await AuthState.InicializarAsync();
-
 
             usuarioEmail =
                 AuthState.Correo;
@@ -324,9 +384,10 @@
             usuarioNombre =
                 AuthState.Nombre;
 
-
-            if (string.IsNullOrWhiteSpace(usuarioNombre) &&
-                !string.IsNullOrWhiteSpace(usuarioEmail))
+            if (string.IsNullOrWhiteSpace(
+                    usuarioNombre) &&
+                !string.IsNullOrWhiteSpace(
+                    usuarioEmail))
             {
                 usuarioNombre =
                     usuarioEmail.Split('@')[0];
@@ -345,6 +406,9 @@
 
     private void AbrirCarrito()
     {
+        if (AuthState.EsAdministrador)
+            return;
+
         isCartOpen = true;
     }
 
@@ -353,13 +417,11 @@
     {
         await AuthState.InicializarAsync();
 
-
         usuarioEmail =
             AuthState.Correo;
 
         usuarioNombre =
             AuthState.Nombre;
-
 
         if (!AuthState.EstaAutenticado)
         {
@@ -369,7 +431,6 @@
             return;
         }
 
-
         isProfileOpen = true;
     }
 
@@ -377,12 +438,15 @@
     private void CerrarSesion()
     {
         isProfileOpen = false;
+        isCartOpen = false;
 
         usuarioNombre =
             string.Empty;
 
         usuarioEmail =
             string.Empty;
+
+        pedidosCount = 0;
     }
 
 

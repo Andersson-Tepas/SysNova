@@ -51,7 +51,24 @@ namespace SysNova.BL.Services
 
         public async Task UpdateAsync(MarcaDTO marcaDto)
         {
-            var entity = _mapper.Map<Marca>(marcaDto);
+            var entity = await _repository.GetByIdAsync(marcaDto.MarcaId);
+
+            if (entity == null)
+            {
+                throw new KeyNotFoundException(
+                    $"No se encontró la marca con ID {marcaDto.MarcaId}.");
+            }
+
+            entity.Nombre = marcaDto.Nombre;
+            entity.Descripcion = marcaDto.Descripcion;
+
+            entity.Logo = marcaDto.Logo;
+
+            entity.Pais = marcaDto.Pais;
+            entity.Activo = marcaDto.Activo;
+
+            entity.FechaModificacion = DateTime.Now;
+
             await _repository.UpdateAsync(entity);
         }
 

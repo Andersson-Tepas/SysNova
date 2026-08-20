@@ -51,7 +51,38 @@ namespace SysNova.BL.Services
 
         public async Task UpdateAsync(ProductoDTO productoDto)
         {
-            var entity = _mapper.Map<Producto>(productoDto);
+            var entity = await _repository.GetByIdAsync(productoDto.ProductoId);
+
+            if (entity == null)
+            {
+                throw new KeyNotFoundException(
+                    $"No se encontró el producto con ID {productoDto.ProductoId}.");
+            }
+
+            entity.Nombre = productoDto.Nombre;
+            entity.Descripcion = productoDto.Descripcion;
+            entity.CodigoSKU = productoDto.CodigoSKU;
+            entity.CodigoBarra = productoDto.CodigoBarra;
+
+            entity.Precio = productoDto.Precio;
+            entity.PrecioAnterior = productoDto.PrecioAnterior;
+            entity.PorcentajeDescuento = productoDto.PorcentajeDescuento;
+
+            entity.Stock = productoDto.Stock;
+            entity.StockMinimo = productoDto.StockMinimo;
+
+            entity.Destacado = productoDto.Destacado;
+            entity.Nuevo = productoDto.Nuevo;
+
+            entity.ImagenPrincipal = productoDto.ImagenPrincipal;
+
+            entity.CategoriaId = productoDto.CategoriaId;
+            entity.MarcaId = productoDto.MarcaId;
+
+            entity.Activo = productoDto.Activo;
+
+            entity.FechaModificacion = DateTime.Now;
+
             await _repository.UpdateAsync(entity);
         }
 
