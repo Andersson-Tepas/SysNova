@@ -1,12 +1,26 @@
 ﻿@inject NavigationManager Navigation
 @inject AuthStateService AuthState
+@inject IJSRuntime JS
 @using SysNova.Web.Services
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
 
 <div class="profile-backdrop @(IsOpen ? "show" : "")"
-     @onclick="Close">
+     @onclick="Close"
+     @onwheel:preventDefault="true"
+     @ontouchmove:preventDefault="true"
+     style="
+        overscroll-behavior:none;
+        touch-action:none;">
 </div>
 
-<aside class="profile-drawer @(IsOpen ? "is-open" : "")">
+<aside class="profile-drawer @(IsOpen ? "is-open" : "")"
+       @onwheel:preventDefault="true"
+       @ontouchmove:preventDefault="true"
+       style="
+          overflow:hidden !important;
+          overscroll-behavior:none;
+          touch-action:none;">
 
     <!-- Header -->
     <div class="profile-header">
@@ -57,7 +71,10 @@
 
 
     <!-- Body -->
-    <div class="profile-body">
+    <div class="profile-body"
+         style="
+            overflow:hidden !important;
+            overscroll-behavior:none;">
 
         <!-- Tarjeta de bienvenida -->
         <div class="user-hero-card">
@@ -364,6 +381,8 @@
 
 @code {
 
+    private bool? ultimoEstadoScrollBloqueado;
+
     [Parameter]
     public bool IsOpen { get; set; }
 
@@ -393,6 +412,51 @@
 
     [Parameter]
     public EventCallback OnLogout { get; set; }
+
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
+    {
+        // Al cargar la página por primera vez, el drawer está cerrado.
+        // NO llamamos a JavaScript todavía porque no hay nada que
+        // desbloquear y así evitamos errores si ui-scroll.js aún
+        // no terminó de cargarse.
+        if (ultimoEstadoScrollBloqueado is null)
+        {
+            ultimoEstadoScrollBloqueado = IsOpen;
+
+            if (!IsOpen)
+                return;
+        }
+
+        if (ultimoEstadoScrollBloqueado == IsOpen)
+            return;
+
+        try
+        {
+            if (IsOpen)
+            {
+                await JS.InvokeVoidAsync(
+                    "nexoUiScroll.lock");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync(
+                    "nexoUiScroll.unlock");
+            }
+
+            ultimoEstadoScrollBloqueado = IsOpen;
+        }
+        catch (JSException ex)
+        {
+            Console.WriteLine(
+                $"No se pudo cambiar el bloqueo de scroll: {ex.Message}");
+        }
+        catch (JSDisconnectedException)
+        {
+            // El circuito de Blazor ya se cerró.
+        }
+    }
 
 
     private async Task Close()
@@ -449,4 +513,24 @@
             "/",
             forceLoad: true);
     }
+
+    public async ValueTask DisposeAsync()
+    {
+        // Solo intentamos desbloquear si alguna vez
+        // llegamos a abrir el drawer.
+        if (ultimoEstadoScrollBloqueado != true)
+            return;
+
+        try
+        {
+            await JS.InvokeVoidAsync(
+                "nexoUiScroll.unlock");
+        }
+        catch
+        {
+            // No bloqueamos la destrucción del componente
+            // si el navegador/circuito ya no está disponible.
+        }
+    }
+
 }

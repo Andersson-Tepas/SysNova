@@ -11,17 +11,50 @@ namespace SysNova.DAL.Context
 {
     public class SysNovaDbContext : DbContext
     {
-        public SysNovaDbContext(DbContextOptions<SysNovaDbContext> options)
+        public SysNovaDbContext(
+            DbContextOptions<SysNovaDbContext> options)
             : base(options)
         {
         }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
+
+        protected override void OnModelCreating(
+            ModelBuilder modelBuilder)
         {
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(SysNovaDbContext).Assembly);
+            // ==========================================
+            // CONFIGURACIONES DE ENTIDADES
+            // ==========================================
+
+            modelBuilder.ApplyConfigurationsFromAssembly(
+                typeof(SysNovaDbContext).Assembly);
+
+
+            // ==========================================
+            // GOOGLE AUTH - CLIENTE
+            // ==========================================
+            //
+            // GoogleSubject corresponde al claim "sub"
+            // entregado por Google.
+            //
+            // Debe ser único cuando tenga un valor,
+            // pero permitimos NULL porque los clientes
+            // registrados normalmente todavía no tendrán
+            // una cuenta Google vinculada.
+            //
+
+            modelBuilder.Entity<Cliente>()
+                .HasIndex(c => c.GoogleSubject)
+                .IsUnique()
+                .HasFilter("[GoogleSubject] IS NOT NULL");
+
+
+            // ==========================================
+            // BASE
+            // ==========================================
 
             base.OnModelCreating(modelBuilder);
         }
+
 
         #region Catalogo
 
@@ -35,11 +68,13 @@ namespace SysNova.DAL.Context
 
         #endregion
 
+
         #region Clientes
 
         public DbSet<Cliente> Clientes { get; set; }
 
         #endregion
+
 
         #region Seguridad
 
@@ -48,6 +83,7 @@ namespace SysNova.DAL.Context
         public DbSet<Rol> Roles { get; set; }
 
         #endregion
+
 
         #region Ventas
 
@@ -68,6 +104,7 @@ namespace SysNova.DAL.Context
         public DbSet<Envio> Envios { get; set; }
 
         #endregion
+
 
         #region Sitio Web
 

@@ -592,646 +592,6 @@ app {
 
 
 /* =========================================================
-   NEXO AUTH
-   Login + Register
-   ========================================================= */
-
-* {
-    box-sizing: border-box;
-}
-
-.auth-page {
-    min-height: 100vh;
-    width: 100%;
-    background: #141414;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 32px;
-}
-
-
-/* =========================================================
-   TARJETA PRINCIPAL
-   ========================================================= */
-
-.auth-card {
-    width: min(1204px, 100%);
-    min-height: 586px;
-    display: grid;
-    grid-template-columns: 46% 54%;
-    background: #080808;
-    border: 1px solid #252525;
-    border-radius: 26px;
-    overflow: hidden;
-    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
-}
-
-
-/* =========================================================
-   PANEL IZQUIERDO (DESKTOP)
-   ========================================================= */
-
-.auth-brand-panel {
-    position: relative;
-    background: #e8e8e8;
-    color: #111111;
-    padding: 40px 42px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-
-
-/* =========================================================
-   LOGO DESKTOP Y MÓVIL
-   ========================================================= */
-
-.brand-logo {
-    position: relative;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 20px;
-    font-weight: 700;
-    color: #111111;
-}
-
-    .brand-logo > span > span {
-        font-weight: 500;
-    }
-
-.brand-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: #d1d1d1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    .brand-icon svg {
-        width: 21px;
-        height: 21px;
-        fill: #111111;
-    }
-
-.mobile-brand-logo {
-    display: none;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 24px;
-    font-size: 20px;
-    font-weight: 700;
-    color: #ffffff;
-}
-
-    .mobile-brand-logo .brand-icon {
-        background: #ffffff;
-    }
-
-    .mobile-brand-logo > span > span {
-        font-weight: 400;
-        color: #a6a6a6;
-    }
-
-
-/* =========================================================
-   CONTENIDO DEL PANEL IZQUIERDO
-   ========================================================= */
-
-.brand-content {
-    position: relative;
-    z-index: 3;
-    margin-top: 98px;
-}
-
-.brand-eyebrow {
-    margin-bottom: 20px;
-    font-size: 14px;
-    line-height: 1.2;
-    letter-spacing: 3px;
-    font-weight: 600;
-    color: #172b3f;
-}
-
-.brand-content h1 {
-    margin: 0;
-    font-size: 36px;
-    line-height: 1.08;
-    font-weight: 700;
-    letter-spacing: -1px;
-    color: #101010;
-}
-
-.brand-content p {
-    margin: 24px 0 0;
-    font-size: 17px;
-    line-height: 1.65;
-    color: #415266;
-}
-
-
-/* =========================================================
-   BENEFICIOS
-   ========================================================= */
-
-.brand-benefits {
-    position: relative;
-    z-index: 3;
-    margin-top: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-}
-
-.benefit {
-    display: flex;
-    align-items: center;
-    gap: 13px;
-    font-size: 15px;
-    color: #243b52;
-}
-
-.benefit-icon {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    border-radius: 50%;
-    background: #292929;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-    .benefit-icon svg {
-        width: 15px;
-        height: 15px;
-        fill: none;
-        stroke: #ffffff;
-        stroke-width: 2;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-
-
-/* =========================================================
-   CÍRCULOS DECORATIVOS
-   ========================================================= */
-
-.decor-circle {
-    position: absolute;
-    border: 38px solid #d0d0d0;
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.decor-circle-top {
-    width: 300px;
-    height: 300px;
-    right: -100px;
-    top: -100px;
-}
-
-.decor-circle-bottom {
-    width: 300px;
-    height: 300px;
-    left: -120px;
-    bottom: -120px;
-}
-
-
-/* =========================================================
-   PANEL DERECHO
-   ========================================================= */
-
-.auth-form-panel {
-    background: #080808;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-}
-
-.auth-form-container {
-    width: 100%;
-    max-width: 468px;
-    margin: 0 auto;
-    padding: 42px 20px;
-}
-
-
-/* =========================================================
-   TITULOS
-   ========================================================= */
-
-.form-eyebrow {
-    margin-bottom: 14px;
-    font-size: 14px;
-    letter-spacing: 2.8px;
-    font-weight: 600;
-    color: #ffffff;
-}
-
-.auth-form-container h2 {
-    margin: 0;
-    font-size: 36px;
-    line-height: 1.15;
-    font-weight: 700;
-    letter-spacing: -1px;
-    color: #ffffff;
-}
-
-.form-description {
-    margin: 14px 0 0;
-    font-size: 17px;
-    line-height: 1.55;
-    color: #a6a6a6;
-}
-
-
-/* =========================================================
-   FORMULARIO
-   ========================================================= */
-
-.auth-form {
-    margin-top: 34px;
-    display: flex;
-    flex-direction: column;
-    gap: 17px;
-}
-
-.form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-}
-
-    .form-group label {
-        font-size: 14px;
-        font-weight: 600;
-        color: #ffffff;
-    }
-
-
-/* =========================================================
-   INPUTS (CORREGIDO PADDING E ICONOS)
-   ========================================================= */
-
-.input-wrapper {
-    position: relative !important;
-    width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-}
-
-    .input-wrapper input {
-        width: 100% !important;
-        height: 51px !important;
-        box-sizing: border-box !important;
-        /* Padding exacto: 50px izquierda despeja el texto del icono */
-        padding: 0 46px 0 50px !important;
-        border-radius: 16px !important;
-        border: 1px solid #323232 !important;
-        background: #080808 !important;
-        color: #ffffff !important;
-        outline: none !important;
-        font-family: inherit !important;
-        font-size: 15px !important;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-        .input-wrapper input::placeholder {
-            color: #777777 !important;
-        }
-
-        .input-wrapper input:focus {
-            border-color: #686868 !important;
-            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04) !important;
-        }
-
-
-/* =========================================================
-   ICONOS INPUT (IZQUIERDA)
-   ========================================================= */
-
-.input-icon {
-    position: absolute !important;
-    left: 18px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 18px !important;
-    height: 18px !important;
-    fill: none !important;
-    stroke: #858585 !important;
-    stroke-width: 1.6 !important;
-    stroke-linecap: round !important;
-    stroke-linejoin: round !important;
-    pointer-events: none !important;
-    z-index: 10 !important;
-}
-
-
-/* =========================================================
-   BOTÓN MOSTRAR CONTRASEÑA (DERECHA)
-   ========================================================= */
-
-.password-toggle {
-    position: absolute !important;
-    right: 14px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    width: 30px !important;
-    height: 30px !important;
-    padding: 0 !important;
-    border: 0 !important;
-    background: transparent !important;
-    color: #858585 !important;
-    cursor: pointer !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    z-index: 10 !important;
-}
-
-    .password-toggle svg {
-        width: 18px !important;
-        height: 18px !important;
-        fill: none !important;
-        stroke: currentColor !important;
-        stroke-width: 1.6 !important;
-        stroke-linecap: round !important;
-        stroke-linejoin: round !important;
-    }
-
-
-/* =========================================================
-   OPCIONES LOGIN
-   ========================================================= */
-
-.form-options {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 1px;
-    font-size: 14px;
-}
-
-.remember-option {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    color: #a6a6a6;
-    cursor: pointer;
-}
-
-    .remember-option input {
-        appearance: none;
-        width: 14px;
-        height: 14px;
-        margin: 0;
-        border: 1px solid #777777;
-        border-radius: 1px;
-        background: #ffffff;
-        cursor: pointer;
-        position: relative;
-    }
-
-        .remember-option input:checked::after {
-            content: "";
-            position: absolute;
-            left: 3px;
-            top: 0;
-            width: 5px;
-            height: 9px;
-            border-right: 2px solid #111111;
-            border-bottom: 2px solid #111111;
-            transform: rotate(45deg);
-        }
-
-.form-options a {
-    color: #ffffff;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-    .form-options a:hover {
-        text-decoration: underline;
-    }
-
-
-/* =========================================================
-   TÉRMINOS REGISTRO
-   ========================================================= */
-
-.terms-option {
-    margin-top: 1px;
-    font-size: 13px;
-    color: #a6a6a6;
-}
-
-    .terms-option label {
-        display: flex;
-        align-items: flex-start;
-        gap: 9px;
-        cursor: pointer;
-    }
-
-    .terms-option input {
-        appearance: none;
-        width: 14px;
-        height: 14px;
-        min-width: 14px;
-        margin: 1px 0 0;
-        border: 1px solid #777777;
-        border-radius: 1px;
-        background: #ffffff;
-        cursor: pointer;
-        position: relative;
-    }
-
-        .terms-option input:checked::after {
-            content: "";
-            position: absolute;
-            left: 3px;
-            top: 0;
-            width: 5px;
-            height: 9px;
-            border-right: 2px solid #111111;
-            border-bottom: 2px solid #111111;
-            transform: rotate(45deg);
-        }
-
-    .terms-option a {
-        color: #ffffff;
-        text-decoration: none;
-    }
-
-        .terms-option a:hover {
-            text-decoration: underline;
-        }
-
-
-/* =========================================================
-   BOTÓN PRINCIPAL
-   ========================================================= */
-
-.auth-button {
-    width: 100%;
-    height: 49px;
-    margin-top: 2px;
-    border: none;
-    border-radius: 16px;
-    background: #e9e9e9;
-    color: #111111;
-    font-family: inherit;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
-    transition: background 0.2s ease, transform 0.15s ease;
-}
-
-    .auth-button svg {
-        width: 18px;
-        height: 18px;
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.8;
-        stroke-linecap: round;
-        stroke-linejoin: round;
-    }
-
-    .auth-button:hover {
-        background: #ffffff;
-    }
-
-    .auth-button:active {
-        transform: scale(0.99);
-    }
-
-
-/* =========================================================
-   ENLACES LOGIN / REGISTER
-   ========================================================= */
-
-.auth-switch {
-    margin-top: 34px;
-    text-align: center;
-    font-size: 14px;
-    color: #8f8f8f;
-}
-
-    .auth-switch a {
-        color: #ffffff;
-        text-decoration: none;
-        font-weight: 600;
-        margin-left: 4px;
-    }
-
-        .auth-switch a:hover {
-            text-decoration: underline;
-        }
-
-
-/* =========================================================
-   REGISTER
-   ========================================================= */
-
-.register-container {
-    padding-top: 35px;
-}
-
-    .register-container .auth-form {
-        margin-top: 31px;
-        gap: 15px;
-    }
-
-
-/* =========================================================
-   RESPONSIVE AUTH
-   ========================================================= */
-
-@media (max-width: 900px) {
-
-    .auth-page {
-        padding: 16px;
-        min-height: 100vh;
-        align-items: center;
-    }
-
-    .auth-card {
-        grid-template-columns: 1fr !important;
-        max-width: 520px;
-        min-height: auto;
-        border-radius: 20px;
-    }
-
-    .auth-brand-panel {
-        display: none !important;
-    }
-
-    .mobile-brand-logo {
-        display: flex !important;
-    }
-
-    .auth-form-panel {
-        min-height: auto;
-        width: 100%;
-        padding: 0;
-    }
-
-    .auth-form-container {
-        max-width: 100%;
-        padding: 36px 28px;
-    }
-
-        .auth-form-container h2 {
-            font-size: 30px;
-        }
-
-    .form-description {
-        font-size: 15px;
-    }
-}
-
-
-@media (max-width: 480px) {
-
-    .auth-page {
-        padding: 0;
-    }
-
-    .auth-card {
-        border: none;
-        border-radius: 0;
-        min-height: 100vh;
-        box-shadow: none;
-    }
-
-    .auth-form-container {
-        padding: 32px 20px;
-    }
-
-    .brand-eyebrow,
-    .form-eyebrow {
-        font-size: 12px;
-        letter-spacing: 2px;
-    }
-
-    .form-options {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
-    }
-}
-
-
-/* =========================================================
    ESTILOS CARRITO DRAWER Y BACKDROP
    ========================================================= */
 
@@ -1641,28 +1001,25 @@ app {
     line-height: 1;
     cursor: pointer;
     white-space: nowrap;
-    transition:
-        color 0.18s ease,
-        background-color 0.18s ease,
-        border-color 0.18s ease;
+    transition: color 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
-.sn-admin-menu-trigger svg {
-    width: 15px;
-    height: 15px;
-    transition: transform 0.18s ease;
-}
+    .sn-admin-menu-trigger svg {
+        width: 15px;
+        height: 15px;
+        transition: transform 0.18s ease;
+    }
 
-.sn-admin-menu-trigger:hover,
-.sn-admin-menu-trigger.is-open {
-    color: #ffffff;
-    background: #161b22;
-    border-color: #2d3748;
-}
+    .sn-admin-menu-trigger:hover,
+    .sn-admin-menu-trigger.is-open {
+        color: #ffffff;
+        background: #161b22;
+        border-color: #2d3748;
+    }
 
-.sn-admin-menu-trigger.is-open svg {
-    transform: rotate(180deg);
-}
+        .sn-admin-menu-trigger.is-open svg {
+            transform: rotate(180deg);
+        }
 
 /* Dropdown flotante: NO aumenta la altura del navbar. */
 .sn-admin-dropdown {
@@ -1675,25 +1032,23 @@ app {
     border: 1px solid #293241;
     border-radius: 18px;
     background: #0f141b;
-    box-shadow:
-        0 28px 70px rgba(0, 0, 0, 0.50),
-        0 8px 24px rgba(0, 0, 0, 0.28);
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.50), 0 8px 24px rgba(0, 0, 0, 0.28);
     color: #ffffff;
 }
 
-/* Flechita visual del dropdown. */
-.sn-admin-dropdown::before {
-    content: "";
-    position: absolute;
-    top: -7px;
-    right: 32px;
-    width: 12px;
-    height: 12px;
-    border-top: 1px solid #293241;
-    border-left: 1px solid #293241;
-    background: #0f141b;
-    transform: rotate(45deg);
-}
+    /* Flechita visual del dropdown. */
+    .sn-admin-dropdown::before {
+        content: "";
+        position: absolute;
+        top: -7px;
+        right: 32px;
+        width: 12px;
+        height: 12px;
+        border-top: 1px solid #293241;
+        border-left: 1px solid #293241;
+        background: #0f141b;
+        transform: rotate(45deg);
+    }
 
 /* Encabezado del dropdown. */
 .sn-admin-dropdown-header {
@@ -1708,11 +1063,11 @@ app {
     border-bottom: 1px solid #222b37;
 }
 
-.sn-admin-dropdown-header > div {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-}
+    .sn-admin-dropdown-header > div {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+    }
 
 .sn-admin-dropdown-kicker {
     margin-bottom: 3px;
@@ -1763,19 +1118,16 @@ app {
     background: transparent;
     color: #dbe4ef;
     text-decoration: none;
-    transition:
-        background-color 0.18s ease,
-        border-color 0.18s ease,
-        transform 0.18s ease;
+    transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
 }
 
-.sn-admin-dropdown-item:hover,
-.sn-admin-dropdown-item.active {
-    color: #ffffff;
-    background: #171e27;
-    border-color: #303b49;
-    transform: translateY(-1px);
-}
+    .sn-admin-dropdown-item:hover,
+    .sn-admin-dropdown-item.active {
+        color: #ffffff;
+        background: #171e27;
+        border-color: #303b49;
+        transform: translateY(-1px);
+    }
 
 .sn-admin-item-icon {
     width: 32px;
@@ -1794,14 +1146,14 @@ app {
     flex-direction: column;
 }
 
-.sn-admin-item-copy strong {
-    overflow: hidden;
-    color: #f8fafc;
-    font-size: 11.5px;
-    font-weight: 700;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
+    .sn-admin-item-copy strong {
+        overflow: hidden;
+        color: #f8fafc;
+        font-size: 11.5px;
+        font-weight: 700;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
 
 .sn-admin-dropdown-item.active .sn-admin-item-copy strong {
     color: #fbbf24;
