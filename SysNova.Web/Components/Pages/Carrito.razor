@@ -1,6 +1,10 @@
 ﻿@using SysNova.DTO
 @using SysNova.Web.Services
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
 
+@inject HttpClient Http
+@inject NavigationManager Navigation
 @inject IJSRuntime JS
 @inject CarritoService CarritoState
 
@@ -160,8 +164,8 @@
                         <div class="item-img-box">
 
                             <img src="@(string.IsNullOrEmpty(producto.ImagenPrincipal)
-                                                                 ? "/placeholder.png"
-                                                                 : producto.ImagenPrincipal)"
+                                                                                                  ? "/placeholder.png"
+                                                                                                  : producto.ImagenPrincipal)"
                          alt="@producto.Nombre"
                          class="item-img" />
 
@@ -231,8 +235,8 @@
                                         class="btn-qty"
                                         aria-label="Disminuir cantidad"
                                         @onclick="() => ActualizarCantidad(
-                                                                            producto.ProductoId,
-                                                                            cantidad - 1)">
+                                                                                                            producto.ProductoId,
+                                                                                                            cantidad - 1)">
 
                             <svg xmlns="http://www.w3.org/2000/svg"
                                  width="12"
@@ -261,8 +265,8 @@
                                 aria-label="Aumentar cantidad"
                                 disabled="@(cantidad >= producto.Stock)"
                                 @onclick="() => ActualizarCantidad(
-                                                                            producto.ProductoId,
-                                                                            cantidad + 1)">
+                                                                                                            producto.ProductoId,
+                                                                                                            cantidad + 1)">
 
                             <svg xmlns="http://www.w3.org/2000/svg"
                                  width="12"
@@ -337,7 +341,53 @@
 </aside>
 
 
+@* ========================================================= *@
+@* MODAL DE CHECKOUT / PAGO                                  *@
+@* ========================================================= *@
+
+<MetodoPago @bind-Visible="mostrarCheckout"
+            Items="@CheckoutItems"
+            Total="@CarritoState.Total"
+            CurrencySymbol="US$"
+            OnPay="ProcesarPago" />
+
+
 @code {
+
+    // =========================================================
+    // CHECKOUT / PAGO
+    // =========================================================
+
+    private bool mostrarCheckout = false;
+
+
+    // Convierte los items reales del CarritoService al modelo
+    // visual que consume CheckoutPaymentModal.
+    //
+    // Usamos SubTotal / Cantidad para obtener el precio unitario
+    // sin asumir el nombre exacto de la propiedad de precio
+    // dentro de ProductoDTO.
+    private IReadOnlyList<MetodoPago.CheckoutModalItem>
+        CheckoutItems =>
+            CarritoState.Items
+                .Where(item =>
+                    item.Cantidad > 0)
+                .Select(item =>
+                    new MetodoPago.CheckoutModalItem
+                    {
+                        Cantidad =
+                            item.Cantidad,
+
+                        Nombre =
+                            item.Producto.Nombre,
+
+                        Precio =
+                            item.SubTotal /
+                            item.Cantidad
+                    })
+                .ToList();
+
+
 
     // =========================================================
     // PARÁMETROS
@@ -505,12 +555,255 @@
     // FINALIZAR COMPRA
     // =========================================================
 
-    private void FinalizarCompra()
+    private async Task FinalizarCompra()
     {
-        /*
-         * Después conectaremos aquí
-         * la lógica del checkout.
-         */
+        // No abrimos checkout si no existen productos.
+        if (!CarritoState.Items.Any())
+            return;
+
+
+        // Cerramos el drawer primero.
+        IsOpen = false;
+
+
+        await IsOpenChanged.InvokeAsync(
+            false);
+
+
+        // Liberamos el bloqueo del drawer.
+        // CheckoutPaymentModal aplicará su propio bloqueo
+        // inmediatamente al mostrarse.
+        await BloquearScroll(
+            false);
+
+
+        // Abrimos el modal de pago.
+        mostrarCheckout =
+            true;
+
+
+        await InvokeAsync(
+            StateHasChanged);
+    }
+
+
+    // =========================================================
+    // PROCESAR MÉTODO DE PAGO
+    // =========================================================
+    //
+    // El modal ya entrega:
+    //
+    // card   -> tarjeta / Stripe
+    // paypal -> PayPal
+    // cash   -> pago contra entrega
+    //
+    // En el siguiente paso conectaremos este método
+    // con Pedido + MetodoPago + API real.
+    // =========================================================
+
+    // =========================================================
+    // PROCESAR PAGO
+    // =========================================================
+
+    private async Task ProcesarPago(
+        string metodo)
+    {
+        // ==========================================
+        // 1. POR AHORA SOLO EFECTIVO
+        // ==========================================
+
+        if (!string.Equals(
+                metodo,
+                "cash",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "Por ahora únicamente está habilitado el pago en efectivo.");
+
+            return;
+        }
+
+
+        // ==========================================
+        // 2. VALIDAR CARRITO
+        // ==========================================
+
+        if (!CarritoState.Items.Any())
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                "Tu carrito está vacío.");
+
+            mostrarCheckout =
+                false;
+
+            return;
+        }
+
+
+        // ==========================================
+        // 3. OBTENER JWT
+        // ==========================================
+
+        var token =
+            await JS.InvokeAsync<string?>(
+                "localStorage.getItem",
+                "authToken");
+
+
+        if (string.IsNullOrWhiteSpace(
+                token))
+        {
+            mostrarCheckout =
+                false;
+
+
+            await InvokeAsync(
+                StateHasChanged);
+
+
+            Navigation.NavigateTo(
+                "/login",
+                forceLoad: true);
+
+            return;
+        }
+
+
+        // ==========================================
+        // 4. CREAR REQUEST
+        // ==========================================
+
+        var checkout =
+            new CheckoutPedidoDTO
+            {
+                Metodo =
+                    "cash",
+
+                Items =
+                    CarritoState.Items
+                        .Select(item =>
+                            new CheckoutPedidoItemDTO
+                            {
+                                ProductoId =
+                                    item.Producto.ProductoId,
+
+                                Cantidad =
+                                    item.Cantidad
+                            })
+                        .ToList()
+            };
+
+
+        try
+        {
+            // ======================================
+            // 5. CREAR PETICIÓN HTTP
+            // ======================================
+
+            using var request =
+                new HttpRequestMessage(
+                    HttpMethod.Post,
+                    "api/Pedido/checkout");
+
+
+            // Mandamos el JWT.
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    token);
+
+
+            // Mandamos carrito.
+            request.Content =
+                JsonContent.Create(
+                    checkout);
+
+
+            // ======================================
+            // 6. LLAMAR API
+            // ======================================
+
+            var response =
+                await Http.SendAsync(
+                    request);
+
+
+            // ======================================
+            // 7. ERROR DE API
+            // ======================================
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error =
+                    await response.Content
+                        .ReadFromJsonAsync<AuthResponseDTO>();
+
+
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    error?.Mensaje
+                    ?? "No se pudo procesar el pedido.");
+
+                return;
+            }
+
+
+            // ======================================
+            // 8. LEER PEDIDO CREADO
+            // ======================================
+
+            var resultado =
+                await response.Content
+                    .ReadFromJsonAsync<CheckoutPedidoResponseDTO>();
+
+
+            if (resultado == null ||
+                resultado.PedidoId <= 0)
+            {
+                await JS.InvokeVoidAsync(
+                    "alert",
+                    "El servidor no devolvió un pedido válido.");
+
+                return;
+            }
+
+
+            // ======================================
+            // 9. PEDIDO EXITOSO
+            // ======================================
+
+            CarritoState.Vaciar();
+
+
+            mostrarCheckout =
+                false;
+
+
+            await InvokeAsync(
+                StateHasChanged);
+
+
+            // ======================================
+            // 10. CONFIRMACIÓN TEMPORAL
+            // ======================================
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Pedido {resultado.NumeroPedido} creado correctamente. " +
+                $"Total: US$ {resultado.Total:N2}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error procesando checkout: {ex.Message}");
+
+
+            await JS.InvokeVoidAsync(
+                "alert",
+                "No se pudo conectar con el servidor para procesar el pedido.");
+        }
     }
 
 

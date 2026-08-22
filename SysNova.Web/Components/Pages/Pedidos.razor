@@ -1,31 +1,42 @@
 ﻿@page "/pedidos"
+
 @using SysNova.DTO
 @using SysNova.EN.Enums
+@using System.Net
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+@using System.Text
+@using System.Text.Json
+
 @inject HttpClient Http
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <div class="main-container min-vh-100 p-4 p-md-5">
-    <!-- CABECERA -->
+
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-4 gap-3">
         <div>
             <span class="text-gold fw-bold text-uppercase fs-7 tracking-wider">
                 @(esAdmin ? "Panel de Control" : "Historial de Compras")
             </span>
+
             <h1 class="fw-bold text-white mb-0 fs-2">
                 @(esAdmin ? "Gestión Global de Pedidos" : "Mis Pedidos")
             </h1>
         </div>
 
-        <!-- FILTRO ADMIN -->
         @if (esAdmin)
         {
             <div class="d-flex align-items-center gap-2">
                 <span class="text-secondary fs-7">Estado:</span>
-                <select class="form-select input-dark text-white rounded-3 fs-7" @onchange="FiltrarPorEstado">
+
+                <select class="form-select input-dark text-white rounded-3 fs-7"
+                        @onchange="FiltrarPorEstado">
                     <option value="">Todos los estados</option>
+
                     @foreach (var estado in Enum.GetValues<EstadoPedido>())
                     {
-                        <option value="@estado">@estado</option>
+                        <option value="@estado">@ObtenerTextoEstado(estado)</option>
                     }
                 </select>
             </div>
@@ -40,19 +51,28 @@
             </div>
         </div>
     }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="product-card rounded-4 p-5 text-center my-4 border border-danger border-opacity-25">
+            <i class="bi bi-exclamation-circle text-danger display-4 mb-3"></i>
+            <h3 class="text-white fw-bold fs-4">No pudimos cargar los pedidos</h3>
+            <p class="text-secondary fs-7 max-w-md mx-auto mb-0">@error</p>
+        </div>
+    }
     else if (!pedidosFiltrados.Any())
     {
         <div class="product-card rounded-4 p-5 text-center my-4 border border-secondary border-opacity-10">
             <i class="bi bi-box-seam text-secondary display-1 mb-3"></i>
             <h3 class="text-white fw-bold fs-4">No se encontraron pedidos</h3>
             <p class="text-secondary fs-7 max-w-md mx-auto">
-                @(esAdmin ? "No existen registros registrados en la plataforma bajo este filtro." : "Aún no has realizado ninguna orden de compra.")
-            </p>
-        </div>
-    }
+                @(esAdmin
+                            ? "No existen pedidos bajo este filtro."
+                            : "Aún no has realizado ninguna orden de compra.")
+        </p>
+    </div>
+        }
     else
     {
-        <!-- TABLA/LISTADO DE PEDIDOS -->
         <div class="product-card rounded-4 overflow-hidden border border-secondary border-opacity-10 shadow-custom">
             <div class="table-responsive">
                 <table class="table table-dark table-hover align-middle mb-0 bg-transparent">
@@ -64,56 +84,73 @@
                             <th class="py-3 px-4">IVA</th>
                             <th class="py-3 px-4">Total</th>
                             <th class="py-3 px-4">Estado</th>
-                            @if (esAdmin)
-                            {
-                                <th class="py-3 px-4 text-center">Acciones</th>
-                            }
+                            <th class="py-3 px-4 text-center">Acciones</th>
                         </tr>
                     </thead>
+
                     <tbody class="fs-7">
                         @foreach (var pedido in pedidosFiltrados)
                         {
                             <tr class="border-bottom border-secondary border-opacity-10">
-                                <td class="py-3 px-4 fw-bold text-white">
-                                    #@pedido.NumeroPedido
-                                </td>
+                                <td class="py-3 px-4 fw-bold text-white">#@pedido.NumeroPedido</td>
+
                                 <td class="py-3 px-4 text-secondary">
-                                    @pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm")
+                                    @(pedido.FechaPedido.ToString("dd/MM/yyyy HH:mm"))
                                 </td>
-                                <td class="py-3 px-4 text-white">US$ @pedido.SubTotal.ToString("N0")</td>
-                                <td class="py-3 px-4 text-secondary">US$ @pedido.IVA.ToString("N0")</td>
-                                <td class="py-3 px-4 fw-bold text-gold">US$ @pedido.Total.ToString("N0")</td>
+
+                                <td class="py-3 px-4 text-white">
+                                    US$ @(pedido.SubTotal.ToString("N2"))
+                                </td>
+
+                                <td class="py-3 px-4 text-secondary">
+                                    US$ @(pedido.IVA.ToString("N2"))
+                                </td>
+
+                                <td class="py-3 px-4 fw-bold text-gold">
+                                    US$ @(pedido.Total.ToString("N2"))
+                                </td>
+
                                 <td class="py-3 px-4">
                                     @if (esAdmin)
                                     {
-                                        <!-- SELECT CAMBIO DE ESTADO (ADMIN) -->
                                         <select class="form-select form-select-sm input-dark text-white rounded-2 fs-7"
                                                 value="@pedido.Estado"
                                                 @onchange="(e) => CambiarEstadoPedido(pedido, e)">
-                                            @foreach (var est in Enum.GetValues<EstadoPedido>())
+                                            @foreach (var estado in Enum.GetValues<EstadoPedido>())
                                             {
-                                                <option value="@est">@est</option>
+                                                <option value="@estado">@ObtenerTextoEstado(estado)</option>
                                             }
                                         </select>
                                     }
                                     else
                                     {
-                                        <!-- BADGE CLIENTE -->
                                         <span class="badge @ObtenerClaseBadge(pedido.Estado) px-3 py-2 rounded-pill fw-medium">
-                                            @pedido.Estado
+                                            @ObtenerTextoEstado(pedido.Estado)
                                         </span>
                                     }
                                 </td>
-                                @if (esAdmin)
-                                {
-                                    <td class="py-3 px-4 text-center">
-                                        <button class="btn btn-sm btn-outline-danger border-0 rounded-circle p-2"
-                                                title="Eliminar pedido"
-                                                @onclick="() => EliminarPedido(pedido.PedidoId)">
-                                            <i class="bi bi-trash3-fill"></i>
+
+                                <td class="py-3 px-4 text-center">
+                                    <div class="d-flex justify-content-center align-items-center gap-2">
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-light rounded-pill px-3"
+                                                title="Ver detalle del pedido"
+                                                @onclick="() => VerDetalle(pedido.NumeroPedido)">
+                                            <i class="bi bi-eye me-1"></i>
+                                            Ver detalle
                                         </button>
-                                    </td>
-                                }
+
+                                        @if (esAdmin)
+                                        {
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-danger rounded-circle p-2"
+                                                    title="Eliminar pedido"
+                                                    @onclick="() => EliminarPedido(pedido.PedidoId)">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -124,32 +161,105 @@
 </div>
 
 @code {
-    [Parameter] public bool esAdmin { get; set; } = false; // Alterna modo Cliente / Admin
-
     private bool cargando = true;
+    private string? error;
+    private bool esAdmin = false;
+    private string rolActual = string.Empty;
+
     private List<PedidoDTO> listaPedidos = new();
     private List<PedidoDTO> pedidosFiltrados = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (!firstRender)
+            return;
+
         await CargarPedidos();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task<string?> ObtenerTokenAsync()
+    {
+        return await JS.InvokeAsync<string?>(
+            "localStorage.getItem",
+            "authToken");
     }
 
     private async Task CargarPedidos()
     {
         cargando = true;
+        error = null;
+
         try
         {
-            var result = await Http.GetFromJsonAsync<List<PedidoDTO>>("api/Pedido");
-            if (result != null)
+            var token = await ObtenerTokenAsync();
+
+            if (string.IsNullOrWhiteSpace(token))
             {
-                listaPedidos = result.OrderByDescending(p => p.FechaPedido).ToList();
-                pedidosFiltrados = listaPedidos;
+                Navigation.NavigateTo("/login");
+                return;
             }
+
+            rolActual = ObtenerRolDesdeToken(token);
+
+            esAdmin = string.Equals(
+                rolActual,
+                "Administrador",
+                StringComparison.OrdinalIgnoreCase);
+
+            var endpoint = esAdmin
+                ? "api/Pedido"
+                : "api/Pedido/mis-pedidos";
+
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                endpoint);
+
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            if (response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                error = esAdmin
+                    ? "El administrador no tiene permiso para consultar la lista global de pedidos."
+                    : "No tienes permiso para consultar tus pedidos.";
+                return;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(
+                    $"Error cargando pedidos. HTTP {(int)response.StatusCode}");
+
+                error =
+                    $"Ocurrió un error al cargar los pedidos. HTTP {(int)response.StatusCode}.";
+                return;
+            }
+
+            var resultado = await response.Content
+                .ReadFromJsonAsync<List<PedidoDTO>>();
+
+            listaPedidos = resultado?
+                .OrderByDescending(p => p.FechaPedido)
+                .ToList()
+                ?? new List<PedidoDTO>();
+
+            pedidosFiltrados = listaPedidos.ToList();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al cargar pedidos: {ex.Message}");
+            Console.WriteLine(
+                $"Error al cargar pedidos: {ex.Message}");
+
+            error = "No fue posible conectar con el servidor.";
         }
         finally
         {
@@ -157,66 +267,266 @@
         }
     }
 
+    private void VerDetalle(string numeroPedido)
+    {
+        if (string.IsNullOrWhiteSpace(numeroPedido))
+            return;
+
+        Navigation.NavigateTo(
+            $"/pedidos/{Uri.EscapeDataString(numeroPedido)}");
+    }
+
     private void FiltrarPorEstado(ChangeEventArgs e)
     {
         var valor = e.Value?.ToString();
-        if (string.IsNullOrEmpty(valor))
+
+        if (string.IsNullOrWhiteSpace(valor))
         {
-            pedidosFiltrados = listaPedidos;
+            pedidosFiltrados = listaPedidos.ToList();
+            return;
         }
-        else if (Enum.TryParse<EstadoPedido>(valor, out var estadoSeleccionado))
+
+        if (Enum.TryParse<EstadoPedido>(
+                valor,
+                out var estadoSeleccionado))
         {
-            pedidosFiltrados = listaPedidos.Where(p => p.Estado == estadoSeleccionado).ToList();
+            pedidosFiltrados = listaPedidos
+                .Where(p => p.Estado == estadoSeleccionado)
+                .ToList();
         }
     }
 
-    private async Task CambiarEstadoPedido(PedidoDTO pedido, ChangeEventArgs e)
+    private async Task CambiarEstadoPedido(
+        PedidoDTO pedido,
+        ChangeEventArgs e)
     {
-        if (Enum.TryParse<EstadoPedido>(e.Value?.ToString(), out var nuevoEstado))
-        {
-            pedido.Estado = nuevoEstado;
-            pedido.FechaModificacion = DateTime.Now;
+        if (!esAdmin)
+            return;
 
-            try
+        if (!Enum.TryParse<EstadoPedido>(
+                e.Value?.ToString(),
+                out var nuevoEstado))
+            return;
+
+        if (pedido.Estado == nuevoEstado)
+            return;
+
+        var estadoAnterior = pedido.Estado;
+
+        pedido.Estado = nuevoEstado;
+        pedido.FechaModificacion = DateTime.Now;
+
+        try
+        {
+            var token = await ObtenerTokenAsync();
+
+            if (string.IsNullOrWhiteSpace(token))
             {
-                var response = await Http.PutAsJsonAsync("api/Pedido", pedido);
-                if (!response.IsSuccessStatusCode)
-                {
-                    await CargarPedidos(); // Revertir si la API falla
-                }
+                pedido.Estado = estadoAnterior;
+                Navigation.NavigateTo("/login");
+                return;
             }
-            catch (Exception ex)
+
+            using var request = new HttpRequestMessage(
+                HttpMethod.Put,
+                "api/Pedido");
+
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            request.Content = JsonContent.Create(pedido);
+
+            var response = await Http.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                Console.WriteLine($"Error actualizando estado: {ex.Message}");
+                pedido.Estado = estadoAnterior;
+                Navigation.NavigateTo("/login");
+                return;
             }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                pedido.Estado = estadoAnterior;
+
+                Console.WriteLine(
+                    $"No se pudo actualizar el pedido. HTTP {(int)response.StatusCode}");
+
+                await CargarPedidos();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            pedido.Estado = estadoAnterior;
+
+            Console.WriteLine(
+                $"Error actualizando estado: {ex.Message}");
+
+            await CargarPedidos();
+            await InvokeAsync(StateHasChanged);
         }
     }
 
     private async Task EliminarPedido(int id)
     {
+        if (!esAdmin)
+            return;
+
         try
         {
-            var response = await Http.DeleteAsync($"api/Pedido/{id}");
+            var token = await ObtenerTokenAsync();
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            using var request = new HttpRequestMessage(
+                HttpMethod.Delete,
+                $"api/Pedido/{id}");
+
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+
+            var response = await Http.SendAsync(request);
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
             if (response.IsSuccessStatusCode)
             {
                 listaPedidos.RemoveAll(p => p.PedidoId == id);
                 pedidosFiltrados.RemoveAll(p => p.PedidoId == id);
+
+                await InvokeAsync(StateHasChanged);
+                return;
             }
+
+            Console.WriteLine(
+                $"No se pudo eliminar el pedido. HTTP {(int)response.StatusCode}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error al eliminar pedido: {ex.Message}");
+            Console.WriteLine(
+                $"Error al eliminar pedido: {ex.Message}");
         }
     }
 
-    private string ObtenerClaseBadge(EstadoPedido estado)
+    private static string ObtenerRolDesdeToken(string token)
     {
-        return estado.ToString().ToLower() switch
+        try
         {
-            "pendiente" => "bg-warning text-dark",
-            "enviado" => "bg-info text-dark",
-            "entregado" => "bg-success text-white",
-            "cancelado" => "bg-danger text-white",
+            var partes = token.Split('.');
+
+            if (partes.Length < 2)
+                return string.Empty;
+
+            var payload = partes[1]
+                .Replace('-', '+')
+                .Replace('_', '/');
+
+            switch (payload.Length % 4)
+            {
+                case 2:
+                    payload += "==";
+                    break;
+
+                case 3:
+                    payload += "=";
+                    break;
+            }
+
+            var bytes = Convert.FromBase64String(payload);
+            var json = Encoding.UTF8.GetString(bytes);
+
+            using var documento = JsonDocument.Parse(json);
+            var root = documento.RootElement;
+
+            if (root.TryGetProperty("role", out var role))
+                return ObtenerValorClaim(role);
+
+            const string roleClaim =
+                "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+
+            if (root.TryGetProperty(roleClaim, out var microsoftRole))
+                return ObtenerValorClaim(microsoftRole);
+
+            if (root.TryGetProperty("roles", out var roles))
+                return ObtenerValorClaim(roles);
+
+            return string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error leyendo rol del JWT: {ex.Message}");
+
+            return string.Empty;
+        }
+    }
+
+    private static string ObtenerValorClaim(JsonElement claim)
+    {
+        if (claim.ValueKind == JsonValueKind.String)
+            return claim.GetString() ?? string.Empty;
+
+        if (claim.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var item in claim.EnumerateArray())
+            {
+                if (item.ValueKind != JsonValueKind.String)
+                    continue;
+
+                var valor = item.GetString();
+
+                if (string.Equals(
+                        valor,
+                        "Administrador",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return valor ?? string.Empty;
+                }
+            }
+
+            foreach (var item in claim.EnumerateArray())
+            {
+                if (item.ValueKind == JsonValueKind.String)
+                    return item.GetString() ?? string.Empty;
+            }
+        }
+
+        return string.Empty;
+    }
+
+    private static string ObtenerTextoEstado(EstadoPedido estado)
+    {
+        return estado switch
+        {
+            EstadoPedido.Pendiente => "Pendiente",
+            EstadoPedido.Confirmado => "Confirmado",
+            EstadoPedido.Preparando => "Preparando",
+            EstadoPedido.Enviado => "Enviado",
+            EstadoPedido.Entregado => "Entregado",
+            EstadoPedido.Cancelado => "Cancelado",
+            _ => estado.ToString()
+        };
+    }
+
+    private static string ObtenerClaseBadge(EstadoPedido estado)
+    {
+        return estado switch
+        {
+            EstadoPedido.Pendiente => "bg-warning text-dark",
+            EstadoPedido.Confirmado => "bg-primary text-white",
+            EstadoPedido.Preparando => "bg-info text-dark",
+            EstadoPedido.Enviado => "bg-primary text-white",
+            EstadoPedido.Entregado => "bg-success text-white",
+            EstadoPedido.Cancelado => "bg-danger text-white",
             _ => "bg-secondary text-white"
         };
     }

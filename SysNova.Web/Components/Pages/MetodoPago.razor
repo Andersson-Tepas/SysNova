@@ -1,0 +1,477 @@
+﻿@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@if (Visible)
+{
+    <div class="checkout-overlay"
+         role="presentation"
+         @onclick="CerrarDesdeFondo">
+
+        <section class="checkout-modal"
+                 role="dialog"
+                 aria-modal="true"
+                 aria-labelledby="checkout-title"
+                 @onclick:stopPropagation="true">
+
+            <!-- ==========================================
+                 HEADER
+                 ========================================== -->
+            <header class="checkout-header">
+
+                <div>
+                    <div class="checkout-eyebrow">
+                        CHECKOUT SEGURO
+                    </div>
+
+                    <h2 id="checkout-title">
+                        Finaliza tu pedido
+                    </h2>
+                </div>
+
+                <button type="button"
+                        class="checkout-close"
+                        aria-label="Cerrar checkout"
+                        @onclick="CerrarAsync">
+
+                    <svg viewBox="0 0 24 24"
+                         aria-hidden="true">
+                        <path d="M6 6l12 12M18 6 6 18" />
+                    </svg>
+
+                </button>
+
+            </header>
+
+
+            <!-- ==========================================
+                 BODY
+                 ========================================== -->
+            <div class="checkout-body">
+
+                <!-- ======================================
+                     MÉTODOS DE PAGO
+                     ====================================== -->
+                <div class="checkout-payment-column">
+
+                    <h3>
+                        Elige tu método de pago
+                    </h3>
+
+
+                    <div class="checkout-methods">
+
+                        <!-- TARJETA -->
+                        <button type="button"
+                                class="@MetodoClass("card")"
+                                @onclick='() => SeleccionarMetodo("card")'>
+
+                            <span class="checkout-method-icon checkout-method-icon-light">
+
+                                <svg viewBox="0 0 24 24"
+                                     aria-hidden="true">
+                                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                                    <path d="M3 9h18" />
+                                    <path d="M7 15h4" />
+                                </svg>
+
+                            </span>
+
+                            <span class="checkout-method-copy">
+
+                                <strong>
+                                    Tarjeta crédito o débito
+                                </strong>
+
+                                <small>
+                                    Pago seguro procesado por Stripe
+                                </small>
+
+                            </span>
+
+                            <span class="@RadioClass("card")"></span>
+
+                        </button>
+
+
+                        <!-- PAYPAL -->
+                        <button type="button"
+                                class="@MetodoClass("paypal")"
+                                @onclick='() => SeleccionarMetodo("paypal")'>
+
+                            <span class="checkout-method-icon">
+
+                                <svg viewBox="0 0 24 24"
+                                     aria-hidden="true">
+                                    <path d="M7 4h8.2a4.8 4.8 0 0 1 0 9.6H12l-1 5.4H6.5L9 6.5" />
+                                    <path d="M11.2 9.2h4.2" />
+                                </svg>
+
+                            </span>
+
+                            <span class="checkout-method-copy">
+
+                                <strong>
+                                    PayPal
+                                </strong>
+
+                                <small>
+                                    Paga con tu cuenta PayPal
+                                </small>
+
+                            </span>
+
+                            <span class="@RadioClass("paypal")"></span>
+
+                        </button>
+
+
+                        <!-- EFECTIVO -->
+                        <button type="button"
+                                class="@MetodoClass("cash")"
+                                @onclick='() => SeleccionarMetodo("cash")'>
+
+                            <span class="checkout-method-icon">
+
+                                <svg viewBox="0 0 24 24"
+                                     aria-hidden="true">
+                                    <rect x="3" y="6" width="18" height="12" rx="2" />
+                                    <circle cx="12" cy="12" r="2.2" />
+                                    <path d="M6.5 9.5h1M16.5 14.5h1" />
+                                </svg>
+
+                            </span>
+
+                            <span class="checkout-method-copy">
+
+                                <strong>
+                                    Pago en efectivo
+                                </strong>
+
+                                <small>
+                                    Contra entrega en tu domicilio
+                                </small>
+
+                            </span>
+
+                            <span class="@RadioClass("cash")"></span>
+
+                        </button>
+
+                    </div>
+
+
+                    <!-- SEGURIDAD -->
+                    <div class="checkout-security">
+
+                        <svg viewBox="0 0 24 24"
+                             aria-hidden="true">
+                            <path d="M12 3 5.5 5.8v5.6c0 4.1 2.7 7.8 6.5 9.6 3.8-1.8 6.5-5.5 6.5-9.6V5.8L12 3Z" />
+                            <path d="m9 12 2 2 4-4" />
+                        </svg>
+
+                        <span>
+                            Tus datos de pago están protegidos con cifrado seguro.
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ======================================
+                     RESUMEN
+                     ====================================== -->
+                <aside class="checkout-summary">
+
+                    <h3>
+                        Resumen
+                    </h3>
+
+
+                    <div class="checkout-summary-items">
+
+                        @foreach (var item in ItemsVisibles)
+                        {
+                            <div class="checkout-summary-row">
+
+                                <span class="checkout-summary-name">
+                                    @item.Cantidad × @item.Nombre
+                                </span>
+
+                                <strong>
+                                    @CurrencySymbol @FormatearMonto(item.Precio)
+                                </strong>
+
+                            </div>
+                        }
+
+                </div>
+
+
+                <div class="checkout-summary-divider"></div>
+
+
+                <div class="checkout-total">
+
+                    <span>
+                        Total
+                    </span>
+
+                    <strong>
+                        @CurrencySymbol @FormatearMonto(TotalVisible)
+                    </strong>
+
+                </div>
+
+
+                <button type="button"
+                        class="checkout-pay-button"
+                        disabled="@Procesando"
+                        @onclick="PagarAsync">
+
+                    @(Procesando
+                                        ? "Procesando..."
+                                        : "Pagar de forma segura")
+
+                </button>
+
+                </aside>
+
+            </div>
+
+        </section>
+
+    </div>
+}
+
+@code {
+
+    // =====================================================
+    // PARÁMETROS
+    // =====================================================
+
+    [Parameter]
+    public bool Visible { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> VisibleChanged { get; set; }
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnPay { get; set; }
+
+    [Parameter]
+    public IReadOnlyList<CheckoutModalItem>? Items { get; set; }
+
+    [Parameter]
+    public decimal? Total { get; set; }
+
+    [Parameter]
+    public string CurrencySymbol { get; set; } = "US$";
+
+
+    // =====================================================
+    // ESTADO
+    // =====================================================
+
+    private string metodoSeleccionado = "card";
+
+    private bool Procesando = false;
+
+    private bool? ultimoEstadoScroll;
+
+
+    // =====================================================
+    // DATOS MOCK PARA PREVISUALIZAR
+    // Luego los conectaremos al carrito real.
+    // =====================================================
+
+    private static readonly IReadOnlyList<CheckoutModalItem>
+        ItemsDemo =
+        new List<CheckoutModalItem>
+        {
+            new()
+            {
+                Cantidad = 1,
+                Nombre = "NEXO UltraBook Pro",
+                Precio = 1299m
+            },
+
+            new()
+            {
+                Cantidad = 1,
+                Nombre = "NEXO Sound Max",
+                Precio = 249m
+            },
+
+            new()
+            {
+                Cantidad = 1,
+                Nombre = "NEXO Phone X",
+                Precio = 899m
+            }
+        };
+
+
+    private IReadOnlyList<CheckoutModalItem>
+        ItemsVisibles =>
+            Items is { Count: > 0 }
+                ? Items
+                : ItemsDemo;
+
+
+    private decimal TotalVisible =>
+        Total
+        ?? ItemsVisibles.Sum(x =>
+            x.Precio * x.Cantidad);
+
+
+    // =====================================================
+    // MÉTODO DE PAGO
+    // =====================================================
+
+    private void SeleccionarMetodo(
+        string metodo)
+    {
+        metodoSeleccionado =
+            metodo;
+    }
+
+
+    private string MetodoClass(
+        string metodo)
+    {
+        return metodoSeleccionado == metodo
+            ? "checkout-method checkout-method-selected"
+            : "checkout-method";
+    }
+
+
+    private string RadioClass(
+        string metodo)
+    {
+        return metodoSeleccionado == metodo
+            ? "checkout-radio checkout-radio-selected"
+            : "checkout-radio";
+    }
+
+
+    // =====================================================
+    // PAGAR
+    // =====================================================
+
+    private async Task PagarAsync()
+    {
+        if (Procesando)
+            return;
+
+        Procesando =
+            true;
+
+        try
+        {
+            if (OnPay.HasDelegate)
+            {
+                await OnPay.InvokeAsync(
+                    metodoSeleccionado);
+            }
+        }
+        finally
+        {
+            Procesando =
+                false;
+        }
+    }
+
+
+    // =====================================================
+    // CERRAR
+    // =====================================================
+
+    private async Task CerrarDesdeFondo()
+    {
+        await CerrarAsync();
+    }
+
+
+    private async Task CerrarAsync()
+    {
+        if (VisibleChanged.HasDelegate)
+        {
+            await VisibleChanged.InvokeAsync(
+                false);
+        }
+
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+
+
+    // =====================================================
+    // BLOQUEO DE SCROLL
+    // =====================================================
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
+    {
+        if (ultimoEstadoScroll == Visible)
+            return;
+
+        ultimoEstadoScroll =
+            Visible;
+
+        await JS.InvokeVoidAsync(
+            Visible
+                ? "nexoCheckoutModal.lockScroll"
+                : "nexoCheckoutModal.unlockScroll");
+    }
+
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync(
+                "nexoCheckoutModal.unlockScroll");
+        }
+        catch
+        {
+            // El circuito puede estar cerrándose.
+        }
+    }
+
+
+    // =====================================================
+    // FORMATO
+    // =====================================================
+
+    private static string FormatearMonto(
+        decimal monto)
+    {
+        return monto.ToString(
+            "#,##0",
+            System.Globalization.CultureInfo.InvariantCulture)
+            .Replace(",", ".");
+    }
+
+
+    // =====================================================
+    // ITEM TEMPORAL DEL MODAL
+    // =====================================================
+
+    public sealed class CheckoutModalItem
+    {
+        public int Cantidad { get; set; }
+
+        public string Nombre { get; set; } =
+            string.Empty;
+
+        public decimal Precio { get; set; }
+    }
+}

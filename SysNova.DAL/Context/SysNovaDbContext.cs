@@ -3,9 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using SysNova.EN.Entities;
 
 using Microsoft.EntityFrameworkCore;
+
+using SysNova.EN.Entities;
 
 namespace SysNova.DAL.Context
 {
@@ -32,15 +33,6 @@ namespace SysNova.DAL.Context
             // ==========================================
             // GOOGLE AUTH - CLIENTE
             // ==========================================
-            //
-            // GoogleSubject corresponde al claim "sub"
-            // entregado por Google.
-            //
-            // Debe ser único cuando tenga un valor,
-            // pero permitimos NULL porque los clientes
-            // registrados normalmente todavía no tendrán
-            // una cuenta Google vinculada.
-            //
 
             modelBuilder.Entity<Cliente>()
                 .HasIndex(c => c.GoogleSubject)
@@ -52,9 +44,14 @@ namespace SysNova.DAL.Context
             // BASE
             // ==========================================
 
-            base.OnModelCreating(modelBuilder);
+            base.OnModelCreating(
+                modelBuilder);
         }
 
+
+        // ==========================================
+        // CATÁLOGO
+        // ==========================================
 
         #region Catalogo
 
@@ -69,12 +66,20 @@ namespace SysNova.DAL.Context
         #endregion
 
 
+        // ==========================================
+        // CLIENTES
+        // ==========================================
+
         #region Clientes
 
         public DbSet<Cliente> Clientes { get; set; }
 
         #endregion
 
+
+        // ==========================================
+        // SEGURIDAD
+        // ==========================================
 
         #region Seguridad
 
@@ -85,28 +90,47 @@ namespace SysNova.DAL.Context
         #endregion
 
 
+        // ==========================================
+        // VENTAS / CHECKOUT
+        // ==========================================
+
         #region Ventas
 
         public DbSet<Carrito> Carritos { get; set; }
 
         public DbSet<DetalleCarrito> DetallesCarrito { get; set; }
 
+
+        // Método seleccionado en checkout:
+        // Efectivo / Tarjeta / PayPal
         public DbSet<MetodoPago> MetodosPago { get; set; }
 
+
+        // Cabecera del pedido.
         public DbSet<Pedido> Pedidos { get; set; }
 
+
+        // Productos pertenecientes al pedido.
         public DbSet<DetallePedido> DetallesPedido { get; set; }
+
 
         public DbSet<Favorito> Favoritos { get; set; }
 
         public DbSet<Resena> Resenas { get; set; }
 
+
+        // Después nos servirá para la pantalla
+        // de seguimiento del pedido.
         public DbSet<Envio> Envios { get; set; }
 
         #endregion
 
 
-        #region Sitio Web
+        // ==========================================
+        // SITIO WEB
+        // ==========================================
+
+        #region SitioWeb
 
         public DbSet<Banner> Banners { get; set; }
 

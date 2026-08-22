@@ -1,5 +1,1886 @@
-﻿<h3>DetallePedido</h3>
+﻿@page "/pedidos/{NumeroPedido}"
+
+@using SysNova.DTO
+@using SysNova.EN.Enums
+
+@using System.Net
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+@using System.Text
+@using System.Text.Json
+
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+
+<div class="pedido-detail-page min-vh-100 p-4 p-md-5">
+
+    <div class="container-xl">
+
+
+        @* ==========================================
+           VOLVER
+           ========================================== *@
+
+        <button type="button"
+                class="btn btn-link
+                       text-secondary
+                       text-decoration-none
+                       p-0
+                       mb-4"
+                @onclick="Volver">
+
+            <i class="bi bi-arrow-left me-2"></i>
+
+            @(esAdmin
+                        ? "Volver a pedidos"
+                        : "Volver a mis pedidos")
+
+        </button>
+
+
+
+        @* ==========================================
+           CARGANDO
+           ========================================== *@
+
+        @if (cargando)
+        {
+            <div class="d-flex
+                                justify-content-center
+                                align-items-center
+                                py-5">
+
+                <div class="spinner-border text-warning"
+                     role="status">
+
+                    <span class="visually-hidden">
+                        Cargando...
+                    </span>
+
+                </div>
+
+            </div>
+        }
+
+
+        @* ==========================================
+           ERROR
+           ========================================== *@
+
+        else if (!string.IsNullOrWhiteSpace(error))
+        {
+            <div class="card
+                                bg-dark
+                                border-secondary
+                                border-opacity-25
+                                rounded-4
+                                p-5
+                                text-center">
+
+                <div class="mb-3">
+
+                    <i class="bi
+                                      bi-exclamation-circle
+                                      text-danger
+                                      display-4">
+                    </i>
+
+                </div>
+
+
+                <h2 class="text-white fw-bold mb-3">
+
+                    No pudimos cargar este pedido
+
+                </h2>
+
+
+                <p class="text-secondary mb-4">
+
+                    @error
+
+                </p>
+
+
+                <div>
+
+                    <button type="button"
+                            class="btn
+                                           btn-light
+                                           rounded-pill
+                                           px-4"
+                            @onclick="Volver">
+
+                        Volver a pedidos
+
+                    </button>
+
+                </div>
+
+            </div>
+        }
+
+
+        @* ==========================================
+           DETALLE
+           ========================================== *@
+
+        else if (pedido is PedidoDetalleClienteDTO detalle)
+        {
+
+            @* ======================================
+               CABECERA
+               ====================================== *@
+
+            <div class="d-flex
+                                flex-column
+                                flex-lg-row
+                                justify-content-between
+                                align-items-lg-end
+                                gap-3
+                                mb-4">
+
+                <div>
+
+                    <span class="text-gold
+                                         fw-bold
+                                         text-uppercase
+                                         small">
+
+                        @(esAdmin
+                                            ? "Administrar pedido"
+                                            : "Detalle del pedido")
+
+                    </span>
+
+
+                    <h1 class="text-white
+                                       fw-bold
+                                       display-6
+                                       mb-2">
+
+                        Pedido #@detalle.NumeroPedido
+
+                    </h1>
+
+
+                    <p class="text-secondary mb-0">
+
+                        Realizado el
+                        @(detalle.FechaPedido.ToString(
+                                            "dd/MM/yyyy 'a las' HH:mm"))
+
+                </p>
+
+                </div>
+
+
+                <div>
+
+                    <span class="badge
+                                         @ObtenerClaseBadge(detalle.Estado)
+                                         rounded-pill
+                                         px-4
+                                         py-3">
+
+                        @ObtenerTextoEstado(detalle.Estado)
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            @* ======================================
+               PANEL ADMIN
+               ====================================== *@
+
+        @if (esAdmin)
+            {
+                <div class="card
+                                            bg-dark
+                                            border-secondary
+                                            border-opacity-25
+                                            rounded-4
+                                            p-4
+                                            mb-4">
+
+                    <div class="d-flex
+                                                flex-column
+                                                flex-lg-row
+                                                justify-content-between
+                                                align-items-lg-end
+                                                gap-3">
+
+                        <div class="flex-grow-1">
+
+                            <span class="text-gold
+                                                         fw-bold
+                                                         text-uppercase
+                                                         small">
+
+                                Administración
+
+                            </span>
+
+
+                            <h2 class="text-white
+                                                       fw-bold
+                                                       fs-4
+                                                       mb-1">
+
+                                Cambiar estado del pedido
+
+                            </h2>
+
+
+                            <p class="text-secondary
+                                                      small
+                                                      mb-0">
+
+                                Actualiza el progreso de este pedido.
+
+                            </p>
+
+                        </div>
+
+
+                        <div class="d-flex
+                                                    flex-column
+                                                    flex-sm-row
+                                                    gap-2
+                                                    align-items-sm-end">
+
+                            <div>
+
+                                <label class="text-secondary
+                                                              small
+                                                              mb-2
+                                                              d-block">
+
+                                    Nuevo estado
+
+                                </label>
+
+
+                                <select class="form-select
+                                                               bg-dark
+                                                               text-white
+                                                               border-secondary
+                                                               rounded-3"
+                                        @bind="estadoSeleccionado"
+                                        disabled="@guardandoEstado">
+
+                                    @foreach (
+                                                                var estado
+                                                                in Enum.GetValues<EstadoPedido>())
+                                    {
+                                        <option value="@estado">
+
+                                            @ObtenerTextoEstado(estado)
+
+                                        </option>
+                                    }
+
+                                </select>
+
+                            </div>
+
+
+                            <button type="button"
+                                    class="btn
+                                                           btn-warning
+                                                           fw-bold
+                                                           rounded-3
+                                                           px-4"
+                                    disabled="@(!PuedeGuardarEstado)"
+                                    @onclick="GuardarEstado">
+
+                                @if (guardandoEstado)
+                                {
+                                    <span class="spinner-border
+                                                                         spinner-border-sm
+                                                                         me-2">
+                                    </span>
+
+                                    <span>
+                                        Guardando...
+                                    </span>
+                                }
+                                else
+                                {
+                                    <i class="bi
+                                                                      bi-check2-circle
+                                                                      me-2">
+                                    </i>
+
+                                    <span>
+                                        Guardar estado
+                                    </span>
+                                }
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    @if (!string.IsNullOrWhiteSpace(mensajeEstado))
+                    {
+                        <div class="alert
+                                                            @(estadoGuardadoCorrectamente
+                                                                                                  ? "alert-success"
+                                                                                                  : "alert-danger")
+                                    rounded-3
+                                    mt-3
+                                    mb-0">
+
+                            @mensajeEstado
+
+                        </div>
+                        }
+
+                </div>
+            }
+
+
+
+            @* ======================================
+               CANCELADO
+               ====================================== *@
+
+            @if (detalle.Estado == EstadoPedido.Cancelado)
+            {
+                <div class="alert
+                                            alert-danger
+                                            border-danger
+                                            border-opacity-25
+                                            rounded-4
+                                            d-flex
+                                            align-items-center
+                                            gap-3">
+
+                    <i class="bi
+                                              bi-x-circle
+                                              fs-4">
+                    </i>
+
+
+                    <div>
+
+                        <strong class="d-block">
+
+                            Pedido cancelado
+
+                        </strong>
+
+
+                        <span>
+
+                            Este pedido fue marcado como cancelado.
+
+                        </span>
+
+                    </div>
+
+                </div>
+            }
+
+
+
+            @* ======================================
+               SEGUIMIENTO
+               ====================================== *@
+
+            @if (detalle.Estado != EstadoPedido.Cancelado)
+            {
+                <div class="card
+                                            bg-dark
+                                            border-secondary
+                                            border-opacity-25
+                                            rounded-4
+                                            p-4
+                                            mb-4">
+
+                    <div class="d-flex
+                                                justify-content-between
+                                                align-items-center
+                                                mb-4">
+
+                        <div>
+
+                            <span class="text-gold
+                                                         fw-bold
+                                                         text-uppercase
+                                                         small">
+
+                                Seguimiento
+
+                            </span>
+
+
+                            <h2 class="text-white
+                                                       fw-bold
+                                                       fs-4
+                                                       mb-0">
+
+                                Estado del pedido
+
+                            </h2>
+
+                        </div>
+
+
+                        <span class="text-secondary small">
+
+                            @ObtenerTextoEstado(detalle.Estado)
+
+                        </span>
+
+                    </div>
+
+
+
+                    @* ==================================
+                       TIMELINE
+                       ================================== *@
+
+                    <div class="row
+                                                row-cols-1
+                                                row-cols-md-5
+                                                g-3">
+
+                        @foreach (var paso in PasosPedido)
+                        {
+                            <div class="col">
+
+                                <div class="text-center">
+
+                                    <div class="d-flex
+                                                                        justify-content-center
+                                                                        mb-2">
+
+                                        <div class="rounded-circle
+                                                                            d-flex
+                                                                            align-items-center
+                                                                            justify-content-center
+                                                                            border
+                                                                            @ObtenerClasePaso(
+                                             detalle.Estado,
+                                                                                                                          paso.Estado)"
+                                 style="
+                                                width:48px;
+                                                height:48px;">
+
+                                <i class="bi @paso.Icono"></i>
+
+                            </div>
+
+                        </div>
+
+
+                        <strong class="d-block
+                                                   @ObtenerClaseTextoPaso(
+                                                                                                                       detalle.Estado,
+                                                                                                                       paso.Estado)">
+
+                            @paso.Titulo
+
+                        </strong>
+
+
+                        <small class="text-secondary">
+
+                            @paso.Descripcion
+
+                        </small>
+
+                    </div>
+
+                </div>
+                                }
+
+                    </div>
+
+                </div>
+            }
+
+
+
+        @* ======================================
+               CONTENIDO
+               ====================================== *@
+
+        <div class="row g-4">
+
+
+            @* ==================================
+                   PRODUCTOS
+                   ================================== *@
+
+            <div class="col-12 col-lg-8">
+
+                <div class="card
+                                bg-dark
+                                border-secondary
+                                border-opacity-25
+                                rounded-4
+                                p-4
+                                h-100">
+
+
+                    <div class="d-flex
+                                    justify-content-between
+                                    align-items-center
+                                    mb-4">
+
+                        <div>
+
+                            <span class="text-gold
+                                             fw-bold
+                                             text-uppercase
+                                             small">
+
+                                @(esAdmin
+                                                                ? "Contenido del pedido"
+                                                                : "Tu compra")
+
+                            </span>
+
+
+                            <h2 class="text-white
+                                           fw-bold
+                                           fs-4
+                                           mb-0">
+
+                                Productos
+
+                            </h2>
+
+                        </div>
+
+
+                        <span class="text-secondary small">
+
+                            @CantidadTotalProductos(detalle)
+
+                            @(CantidadTotalProductos(detalle) == 1
+                                                        ? "artículo"
+                                                        : "artículos")
+
+                        </span>
+
+                        </div>
+
+
+
+                    @if (
+                                        detalle.Productos == null
+                                        ||
+                                        !detalle.Productos.Any())
+                        {
+                            <div class="text-center
+                                                        text-secondary
+                                                        py-5">
+
+                                No hay productos registrados
+                                en este pedido.
+
+                            </div>
+                        }
+                        else
+                        {
+                            <div>
+
+                                @foreach (
+                                                        var producto
+                                                        in detalle.Productos)
+                                {
+                                    <div class="d-flex
+                                                                        flex-column
+                                                                        flex-sm-row
+                                                                        align-items-sm-center
+                                                                        gap-3
+                                                                        py-3
+                                                                        border-bottom
+                                                                        border-secondary
+                                                                        border-opacity-10">
+
+
+                                        @* ==========================
+                                           IMAGEN
+                                           ========================== *@
+
+                                        <div class="rounded-3
+                                                                            overflow-hidden
+                                                                            bg-black
+                                                                            border
+                                                                            border-secondary
+                                                                            border-opacity-25
+                                                                            flex-shrink-0"
+                                             style="
+                                                                        width:90px;
+                                                                        height:90px;">
+
+                                            <img src="@ObtenerImagen(
+                                                                                                                                                      producto.ImagenPrincipal)"
+                                                                                                                                                                                alt="@producto.Nombre"
+                                                                                                                                                                                class="w-100 h-100"
+                                                                                                                                                                                style="
+                                                                                                                                                                                                                                                                                         object-fit:contain;
+                                                                                                                                                                                                                                                                                         padding:8px;" />
+
+                                        </div>
+
+
+
+                                        @* ==========================
+                                           INFO
+                                           ========================== *@
+
+                                        <div class="flex-grow-1">
+
+                                            <h3 class="text-white
+                                                                               fw-bold
+                                                                               fs-6
+                                                                               mb-2">
+
+                                                @producto.Nombre
+
+                                            </h3>
+
+
+                                            <p class="text-secondary
+                                                                              small
+                                                                              mb-1">
+
+                                                Cantidad:
+
+                                                <span class="text-white
+                                                                                     fw-semibold">
+
+                                                    @producto.Cantidad
+
+                                                </span>
+
+                                            </p>
+
+
+                                            <p class="text-secondary
+                                                                              small
+                                                                              mb-0">
+
+                                                US$
+                                                @(producto
+                                                                                    .PrecioUnitario
+                                                                                    .ToString("N2"))
+                                                                                                    c/u
+
+                                            </p>
+
+                                        </div>
+
+
+
+                                        @* ==========================
+                                           SUBTOTAL
+                                           ========================== *@
+
+                                        <div class="text-sm-end">
+
+                                            <span class="text-white
+                                                                                 fw-bold">
+
+                                                US$
+                                                @(producto
+                                                                                    .SubTotal
+                                                                                    .ToString("N2"))
+
+                                </span>
+
+                                        </div>
+
+                                    </div>
+                                                }
+
+                            </div>
+                        }
+
+                    </div>
+
+                </div>
+
+
+
+                @* ==================================
+                   RESUMEN
+                   ================================== *@
+
+                <div class="col-12 col-lg-4">
+
+                    <div class="card
+                                        bg-dark
+                                        border-secondary
+                                        border-opacity-25
+                                        rounded-4
+                                        p-4">
+
+
+                        <span class="text-gold
+                                             fw-bold
+                                             text-uppercase
+                                             small">
+
+                            Resumen
+
+                        </span>
+
+
+                        <h2 class="text-white
+                                           fw-bold
+                                           fs-4
+                                           mb-4">
+
+                            Pedido
+
+                        </h2>
+
+
+
+                        <div class="d-flex
+                                            justify-content-between
+                                            mb-3">
+
+                            <span class="text-secondary">
+
+                                Subtotal
+
+                            </span>
+
+
+                            <span class="text-white">
+
+                                US$
+                                @(detalle.SubTotal.ToString("N2"))
+
+                            </span>
+
+                        </div>
+
+
+
+                        <div class="d-flex
+                                            justify-content-between
+                                            mb-3">
+
+                            <span class="text-secondary">
+
+                                IVA
+
+                            </span>
+
+
+                            <span class="text-white">
+
+                                US$
+                                @(detalle.IVA.ToString("N2"))
+
+                            </span>
+
+                        </div>
+
+
+
+                        @if (detalle.Descuento > 0)
+                        {
+                            <div class="d-flex
+                                                        justify-content-between
+                                                        mb-3">
+
+                                <span class="text-secondary">
+
+                                    Descuento
+
+                                </span>
+
+
+                                <span class="text-success">
+
+                                    - US$
+                                    @(detalle
+                                                                .Descuento
+                                                                .ToString("N2"))
+
+                        </span>
+
+                            </div>
+                                        }
+
+
+                        <hr class="border-secondary
+                                           border-opacity-25" />
+
+
+
+                        <div class="d-flex
+                                            justify-content-between
+                                            align-items-end
+                                            mb-4">
+
+                            <span class="text-white fw-bold">
+
+                                Total
+
+                            </span>
+
+
+                            <span class="text-gold
+                                                 fw-bold
+                                                 fs-3">
+
+                                US$
+                                @(detalle.Total.ToString("N2"))
+
+                            </span>
+
+                        </div>
+
+
+
+                        @* ==================================
+                           PAGO
+                           ================================== *@
+
+                        <div class="bg-black
+                                            bg-opacity-25
+                                            rounded-4
+                                            p-3
+                                            d-flex
+                                            align-items-center
+                                            gap-3">
+
+                            <div class="bg-light
+                                                text-dark
+                                                rounded-3
+                                                d-flex
+                                                align-items-center
+                                                justify-content-center
+                                                flex-shrink-0"
+                                 style="
+                                            width:44px;
+                                            height:44px;">
+
+                                <i class="bi
+                                                  bi-wallet2
+                                                  fs-5">
+                                </i>
+
+                            </div>
+
+
+                            <div>
+
+                                <span class="text-secondary
+                                                     small
+                                                     d-block">
+
+                                    Método de pago
+
+                                </span>
+
+
+                                <strong class="text-white">
+
+                                    @detalle.MetodoPago
+
+                                </strong>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+        }
+
+    </div>
+
+</div>
+
 
 @code {
 
+    // ==========================================
+    // URL
+    // ==========================================
+
+    [Parameter]
+    public string NumeroPedido { get; set; } =
+        string.Empty;
+
+
+
+    // ==========================================
+    // ESTADO GENERAL
+    // ==========================================
+
+    private bool cargando =
+        true;
+
+
+    private string? error;
+
+
+    private PedidoDetalleClienteDTO? pedido;
+
+
+
+    // ==========================================
+    // ROL
+    // ==========================================
+
+    private bool esAdmin =
+        false;
+
+
+    private string rolActual =
+        string.Empty;
+
+
+
+    // ==========================================
+    // ADMIN - ESTADO
+    // ==========================================
+
+    private EstadoPedido estadoSeleccionado =
+        EstadoPedido.Pendiente;
+
+
+    private bool guardandoEstado =
+        false;
+
+
+    private string? mensajeEstado;
+
+
+    private bool estadoGuardadoCorrectamente =
+        false;
+
+
+
+    // ==========================================
+    // BOTÓN GUARDAR
+    // ==========================================
+
+    private bool PuedeGuardarEstado =>
+        esAdmin
+        &&
+        pedido != null
+        &&
+        !guardandoEstado
+        &&
+        estadoSeleccionado != pedido.Estado;
+
+
+
+    // ==========================================
+    // PASOS
+    // ==========================================
+
+    private readonly IReadOnlyList<PasoPedidoViewModel>
+        PasosPedido =
+        new List<PasoPedidoViewModel>
+        {
+            new(
+                EstadoPedido.Pendiente,
+                "Pedido recibido",
+                "Tu compra fue registrada.",
+                "bi-receipt"),
+
+            new(
+                EstadoPedido.Confirmado,
+                "Confirmado",
+                "El pedido fue confirmado.",
+                "bi-check-circle"),
+
+            new(
+                EstadoPedido.Preparando,
+                "Preparando",
+                "Los productos están siendo preparados.",
+                "bi-box-seam"),
+
+            new(
+                EstadoPedido.Enviado,
+                "Enviado",
+                "El pedido salió para entrega.",
+                "bi-truck"),
+
+            new(
+                EstadoPedido.Entregado,
+                "Entregado",
+                "Pedido entregado correctamente.",
+                "bi-house-check")
+        };
+
+
+
+    // ==========================================
+    // INICIALIZACIÓN
+    // ==========================================
+
+    protected override async Task OnAfterRenderAsync(
+        bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+
+        await CargarDetalle();
+
+
+        await InvokeAsync(
+            StateHasChanged);
+    }
+
+
+
+    // ==========================================
+    // CARGAR DETALLE
+    // ==========================================
+
+    private async Task CargarDetalle()
+    {
+        cargando =
+            true;
+
+
+        error =
+            null;
+
+
+        pedido =
+            null;
+
+
+        mensajeEstado =
+            null;
+
+
+        try
+        {
+            // ==================================
+            // VALIDAR NÚMERO
+            // ==================================
+
+            if (string.IsNullOrWhiteSpace(
+                    NumeroPedido))
+            {
+                error =
+                    "El número de pedido no es válido.";
+
+                return;
+            }
+
+
+
+            // ==================================
+            // TOKEN
+            // ==================================
+
+            var token =
+                await ObtenerTokenAsync();
+
+
+            if (string.IsNullOrWhiteSpace(
+                    token))
+            {
+                Navigation.NavigateTo(
+                    "/login");
+
+                return;
+            }
+
+
+
+            // ==================================
+            // OBTENER ROL DEL JWT
+            // ==================================
+
+            rolActual =
+                ObtenerRolDesdeToken(
+                    token);
+
+
+            esAdmin =
+                string.Equals(
+                    rolActual,
+                    "Administrador",
+                    StringComparison.OrdinalIgnoreCase);
+
+
+
+            // ==================================
+            // ENDPOINT SEGÚN ROL
+            // ==================================
+
+            var endpoint =
+                esAdmin
+
+                    ? $"api/Pedido/admin/" +
+                      $"{Uri.EscapeDataString(NumeroPedido)}"
+
+                    : $"api/Pedido/mis-pedidos/" +
+                      $"{Uri.EscapeDataString(NumeroPedido)}";
+
+
+
+            // ==================================
+            // REQUEST
+            // ==================================
+
+            using var request =
+                new HttpRequestMessage(
+                    HttpMethod.Get,
+                    endpoint);
+
+
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    token);
+
+
+            var response =
+                await Http.SendAsync(
+                    request);
+
+
+
+            // ==================================
+            // UNAUTHORIZED
+            // ==================================
+
+            if (response.StatusCode ==
+                HttpStatusCode.Unauthorized)
+            {
+                Navigation.NavigateTo(
+                    "/login");
+
+                return;
+            }
+
+
+
+            // ==================================
+            // FORBIDDEN
+            // ==================================
+
+            if (response.StatusCode ==
+                HttpStatusCode.Forbidden)
+            {
+                error =
+                    "No tienes permiso para consultar este pedido.";
+
+                return;
+            }
+
+
+
+            // ==================================
+            // NOT FOUND
+            // ==================================
+
+            if (response.StatusCode ==
+                HttpStatusCode.NotFound)
+            {
+                error =
+                    esAdmin
+
+                        ? "El pedido no existe."
+
+                        : "El pedido no existe o no pertenece a tu cuenta.";
+
+                return;
+            }
+
+
+
+            // ==================================
+            // ERROR
+            // ==================================
+
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.WriteLine(
+                    $"Error detalle pedido. " +
+                    $"HTTP {(int)response.StatusCode}");
+
+
+                error =
+                    "Ocurrió un error al consultar el pedido.";
+
+                return;
+            }
+
+
+
+            // ==================================
+            // LEER
+            // ==================================
+
+            var resultado =
+                await response.Content
+                    .ReadFromJsonAsync<
+                        PedidoDetalleClienteDTO>();
+
+
+            if (resultado == null)
+            {
+                error =
+                    "El servidor no devolvió información del pedido.";
+
+                return;
+            }
+
+
+
+            pedido =
+                resultado;
+
+
+            estadoSeleccionado =
+                resultado.Estado;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error cargando detalle del pedido: " +
+                $"{ex.Message}");
+
+
+            error =
+                "No fue posible conectar con el servidor.";
+        }
+        finally
+        {
+            cargando =
+                false;
+        }
+    }
+
+
+
+    // ==========================================
+    // GUARDAR ESTADO - ADMIN
+    // ==========================================
+
+    private async Task GuardarEstado()
+    {
+        if (!esAdmin ||
+            pedido == null ||
+            guardandoEstado)
+        {
+            return;
+        }
+
+
+        if (estadoSeleccionado ==
+            pedido.Estado)
+        {
+            return;
+        }
+
+
+        guardandoEstado =
+            true;
+
+
+        mensajeEstado =
+            null;
+
+
+        estadoGuardadoCorrectamente =
+            false;
+
+
+        var estadoAnterior =
+            pedido.Estado;
+
+
+        try
+        {
+            // ==================================
+            // TOKEN
+            // ==================================
+
+            var token =
+                await ObtenerTokenAsync();
+
+
+            if (string.IsNullOrWhiteSpace(
+                    token))
+            {
+                Navigation.NavigateTo(
+                    "/login");
+
+                return;
+            }
+
+
+            // ==================================
+            // BODY
+            // ==================================
+
+            var dto =
+                new ActualizarEstadoPedidoDTO
+                {
+                    Estado =
+                        estadoSeleccionado
+                };
+
+
+            // ==================================
+            // PUT ESPECÍFICO DE ESTADO
+            // ==================================
+            //
+            // PUT api/Pedido/{id}/estado
+            //
+            // Ya NO descargamos el PedidoDTO
+            // completo ni usamos PUT api/Pedido.
+            // ==================================
+
+            using var request =
+                new HttpRequestMessage(
+                    HttpMethod.Put,
+                    $"api/Pedido/{pedido.PedidoId}/estado");
+
+
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    token);
+
+
+            request.Content =
+                JsonContent.Create(
+                    dto);
+
+
+            var response =
+                await Http.SendAsync(
+                    request);
+
+
+            // ==================================
+            // UNAUTHORIZED
+            // ==================================
+
+            if (response.StatusCode ==
+                HttpStatusCode.Unauthorized)
+            {
+                estadoSeleccionado =
+                    estadoAnterior;
+
+
+                Navigation.NavigateTo(
+                    "/login");
+
+                return;
+            }
+
+
+            // ==================================
+            // FORBIDDEN
+            // ==================================
+
+            if (response.StatusCode ==
+                HttpStatusCode.Forbidden)
+            {
+                estadoSeleccionado =
+                    estadoAnterior;
+
+
+                mensajeEstado =
+                    "No tienes permiso para actualizar este pedido.";
+
+                return;
+            }
+
+
+            // ==================================
+            // NOT FOUND
+            // ==================================
+
+            if (response.StatusCode ==
+                HttpStatusCode.NotFound)
+            {
+                estadoSeleccionado =
+                    estadoAnterior;
+
+
+                mensajeEstado =
+                    "El pedido ya no existe o no está disponible.";
+
+                return;
+            }
+
+
+            // ==================================
+            // BAD REQUEST
+            // ==================================
+
+            if (response.StatusCode ==
+                HttpStatusCode.BadRequest)
+            {
+                estadoSeleccionado =
+                    estadoAnterior;
+
+
+                mensajeEstado =
+                    "El estado seleccionado no es válido.";
+
+                return;
+            }
+
+
+            // ==================================
+            // OTRO ERROR
+            // ==================================
+
+            if (!response.IsSuccessStatusCode)
+            {
+                estadoSeleccionado =
+                    estadoAnterior;
+
+
+                Console.WriteLine(
+                    $"Error actualizando estado. " +
+                    $"HTTP {(int)response.StatusCode}");
+
+
+                mensajeEstado =
+                    "No fue posible actualizar el estado del pedido.";
+
+                return;
+            }
+
+
+            // ==================================
+            // ACTUALIZAR VISTA
+            // ==================================
+
+            pedido.Estado =
+                estadoSeleccionado;
+
+
+            estadoGuardadoCorrectamente =
+                true;
+
+
+            mensajeEstado =
+                $"Estado actualizado a " +
+                $"{ObtenerTextoEstado(estadoSeleccionado)}.";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"Error actualizando estado del pedido: " +
+                $"{ex.Message}");
+
+
+            estadoSeleccionado =
+                estadoAnterior;
+
+
+            mensajeEstado =
+                "Ocurrió un error al actualizar el pedido.";
+        }
+        finally
+        {
+            guardandoEstado =
+                false;
+        }
+    }
+
+
+
+    // ==========================================
+    // TOKEN
+    // ==========================================
+
+    private async Task<string?>
+        ObtenerTokenAsync()
+    {
+        return await JS.InvokeAsync<string?>(
+            "localStorage.getItem",
+            "authToken");
+    }
+
+
+
+    // ==========================================
+    // LEER ROL DEL JWT
+    // ==========================================
+    //
+    // No usamos userRol en localStorage.
+    // El rol viene directamente del JWT.
+    // ==========================================
+
+    private static string ObtenerRolDesdeToken(
+        string token)
+    {
+        try
+        {
+            var partes =
+                token.Split('.');
+
+
+            if (partes.Length < 2)
+            {
+                return string.Empty;
+            }
+
+
+            var payload =
+                partes[1]
+                    .Replace('-', '+')
+                    .Replace('_', '/');
+
+
+            switch (payload.Length % 4)
+            {
+                case 2:
+                    payload += "==";
+                    break;
+
+                case 3:
+                    payload += "=";
+                    break;
+            }
+
+
+            var bytes =
+                Convert.FromBase64String(
+                    payload);
+
+
+            var json =
+                Encoding.UTF8.GetString(
+                    bytes);
+
+
+            using var documento =
+                JsonDocument.Parse(
+                    json);
+
+
+            var root =
+                documento.RootElement;
+
+
+
+            // ==================================
+            // CLAIM "role"
+            // ==================================
+
+            if (root.TryGetProperty(
+                    "role",
+                    out var role))
+            {
+                return ObtenerValorClaim(
+                    role);
+            }
+
+
+
+            // ==================================
+            // CLAIM MICROSOFT ROLE
+            // ==================================
+
+            const string roleClaim =
+                "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+
+
+            if (root.TryGetProperty(
+                    roleClaim,
+                    out var microsoftRole))
+            {
+                return ObtenerValorClaim(
+                    microsoftRole);
+            }
+
+
+
+            // ==================================
+            // CLAIM "roles"
+            // ==================================
+
+            if (root.TryGetProperty(
+                    "roles",
+                    out var roles))
+            {
+                return ObtenerValorClaim(
+                    roles);
+            }
+
+
+            return string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"No se pudo leer el rol del JWT: " +
+                $"{ex.Message}");
+
+
+            return string.Empty;
+        }
+    }
+
+
+
+    // ==========================================
+    // EXTRAER CLAIM
+    // ==========================================
+
+    private static string ObtenerValorClaim(
+        JsonElement claim)
+    {
+        if (claim.ValueKind ==
+            JsonValueKind.String)
+        {
+            return claim.GetString()
+                ?? string.Empty;
+        }
+
+
+        if (claim.ValueKind ==
+            JsonValueKind.Array)
+        {
+            foreach (var item in claim.EnumerateArray())
+            {
+                var valor =
+                    item.GetString();
+
+
+                if (string.Equals(
+                        valor,
+                        "Administrador",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    return valor;
+                }
+            }
+
+
+            var primero =
+                claim
+                    .EnumerateArray()
+                    .FirstOrDefault();
+
+
+            return primero.ValueKind ==
+                   JsonValueKind.String
+
+                ? primero.GetString()
+                  ?? string.Empty
+
+                : string.Empty;
+        }
+
+
+        return string.Empty;
+    }
+
+
+
+    // ==========================================
+    // VOLVER
+    // ==========================================
+
+    private void Volver()
+    {
+        Navigation.NavigateTo(
+            "/pedidos");
+    }
+
+
+
+    // ==========================================
+    // CANTIDAD
+    // ==========================================
+
+    private static int CantidadTotalProductos(
+        PedidoDetalleClienteDTO detalle)
+    {
+        return detalle.Productos?
+            .Sum(
+                p =>
+                    p.Cantidad)
+
+            ?? 0;
+    }
+
+
+
+    // ==========================================
+    // IMAGEN
+    // ==========================================
+
+    private static string ObtenerImagen(
+        string? imagen)
+    {
+        return string.IsNullOrWhiteSpace(
+                imagen)
+
+            ? "/placeholder.png"
+
+            : imagen;
+    }
+
+
+
+    // ==========================================
+    // TEXTO ESTADO
+    // ==========================================
+
+    private static string ObtenerTextoEstado(
+        EstadoPedido estado)
+    {
+        return estado switch
+        {
+            EstadoPedido.Pendiente =>
+                "Pendiente",
+
+            EstadoPedido.Confirmado =>
+                "Confirmado",
+
+            EstadoPedido.Preparando =>
+                "Preparando",
+
+            EstadoPedido.Enviado =>
+                "Enviado",
+
+            EstadoPedido.Entregado =>
+                "Entregado",
+
+            EstadoPedido.Cancelado =>
+                "Cancelado",
+
+            _ =>
+                estado.ToString()
+        };
+    }
+
+
+
+    // ==========================================
+    // BADGE
+    // ==========================================
+
+    private static string ObtenerClaseBadge(
+        EstadoPedido estado)
+    {
+        return estado switch
+        {
+            EstadoPedido.Pendiente =>
+                "bg-warning text-dark",
+
+            EstadoPedido.Confirmado =>
+                "bg-primary text-white",
+
+            EstadoPedido.Preparando =>
+                "bg-info text-dark",
+
+            EstadoPedido.Enviado =>
+                "bg-primary text-white",
+
+            EstadoPedido.Entregado =>
+                "bg-success text-white",
+
+            EstadoPedido.Cancelado =>
+                "bg-danger text-white",
+
+            _ =>
+                "bg-secondary text-white"
+        };
+    }
+
+
+
+    // ==========================================
+    // TIMELINE
+    // ==========================================
+
+    private static string ObtenerClasePaso(
+        EstadoPedido estadoActual,
+        EstadoPedido estadoPaso)
+    {
+        if (estadoActual ==
+            EstadoPedido.Cancelado)
+        {
+            return
+                "border-secondary text-secondary";
+        }
+
+
+        if ((int)estadoActual >=
+            (int)estadoPaso)
+        {
+            return
+                "border-warning bg-warning text-dark";
+        }
+
+
+        return
+            "border-secondary text-secondary";
+    }
+
+
+
+    private static string ObtenerClaseTextoPaso(
+        EstadoPedido estadoActual,
+        EstadoPedido estadoPaso)
+    {
+        if (estadoActual ==
+            EstadoPedido.Cancelado)
+        {
+            return
+                "text-secondary";
+        }
+
+
+        if ((int)estadoActual >=
+            (int)estadoPaso)
+        {
+            return
+                "text-white";
+        }
+
+
+        return
+            "text-secondary";
+    }
+
+
+
+    // ==========================================
+    // VIEW MODEL TIMELINE
+    // ==========================================
+
+    private sealed record PasoPedidoViewModel(
+        EstadoPedido Estado,
+        string Titulo,
+        string Descripcion,
+        string Icono);
 }
